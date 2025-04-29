@@ -127,7 +127,6 @@ export default function addTestManagementTools(server: McpServer) {
       issues: z
         .array(z.string())
         .optional()
-        .nullish()
         .describe(
           "List of the linked Jira, Asana or Azure issues ID's. This should be strictly in array format not the string of json.",
         ),
@@ -149,14 +148,12 @@ export default function addTestManagementTools(server: McpServer) {
       tags: z
         .array(z.string())
         .optional()
-        .nullish()
         .describe(
           "Tags to attach to the test case. This should be strictly in array format not the string of json",
         ),
       custom_fields: z
         .record(z.string(), z.string())
         .optional()
-        .nullish()
         .describe("Map of custom field names to values."),
     },
     async (args) => {
