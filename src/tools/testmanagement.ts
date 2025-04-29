@@ -9,6 +9,7 @@ import {
   createTestCase as createTestCaseAPI,
   TestCaseCreateRequest,
   sanitizeArgs,
+  CreateTestCaseSchema,
 } from "./testmanagement-utils/create-testcase";
 
 /**
@@ -88,74 +89,7 @@ export default function addTestManagementTools(server: McpServer) {
   server.tool(
     "createTestCase",
     "Use this tool to create a test case in BrowserStack Test Management.",
-    {
-      project_identifier: z
-        .string()
-        .describe(
-          "The ID of the BrowserStack project in which to create the test case. Ask User if he want to create a new project if no project ID is provided using createProjectOrFolder tool.",
-        ),
-      folder_id: z
-        .string()
-        .describe(
-          "The ID of the folder under the project to create the test case in. If omitted, Ask user if he wants to create a new folder createProjectOrFolder tool.",
-        ),
-      name: z.string().describe("Name of the test case."),
-      description: z
-        .string()
-        .optional()
-        .nullish()
-        .describe("Brief description of the test case."),
-      owner: z
-        .string()
-        .email()
-        .describe("Email of the test case owner.")
-        .optional()
-        .nullish(),
-      preconditions: z
-        .string()
-        .optional()
-        .nullish()
-        .describe("Any preconditions (HTML allowed)."),
-      test_case_steps: z
-        .array(
-          z.object({
-            step: z.string().describe("Action to perform in this step."),
-            result: z.string().describe("Expected result of this step."),
-          }),
-        )
-        .describe("List of steps and expected results."),
-      issues: z
-        .array(z.string())
-        .optional()
-        .describe(
-          "List of the linked Jira, Asana or Azure issues ID's. This should be strictly in array format not the string of json.",
-        ),
-      issue_tracker: z
-        .object({
-          name: z
-            .string()
-            .nullish()
-            .describe(
-              "Issue tracker name,  For example, use jira for Jira, azure for Azure DevOps, or asana for Asana ​",
-            ),
-          host: z
-            .string()
-            .url()
-            .describe("Base URL of the issue tracker.")
-            .nullish(),
-        })
-        .optional(),
-      tags: z
-        .array(z.string())
-        .optional()
-        .describe(
-          "Tags to attach to the test case. This should be strictly in array format not the string of json",
-        ),
-      custom_fields: z
-        .record(z.string(), z.string())
-        .optional()
-        .describe("Map of custom field names to values."),
-    },
+    CreateTestCaseSchema.shape,
     async (args) => {
       return createTestCaseTool(args as TestCaseCreateRequest);
     },
