@@ -67,6 +67,14 @@ export async function createProjectOrFolder(
           headers: { "Content-Type": "application/json" },
         },
       );
+
+      if (!res.data.data.success) {
+        throw new Error(
+          `Failed to create project: ${JSON.stringify(res.data)}`,
+        );
+      }
+      // Project created successfully
+
       projId = res.data.project.identifier;
     } catch (err) {
       const msg =
@@ -106,6 +114,14 @@ export async function createProjectOrFolder(
           headers: { "Content-Type": "application/json" },
         },
       );
+
+      if (!res.data.data.success) {
+        throw new Error(
+          `Failed to create folder: ${JSON.stringify(res.data)}`,
+        );
+      }
+      // Folder created successfully
+
       const folder = res.data.folder;
       return {
         content: [
