@@ -2,10 +2,37 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
+  createProjectOrFolder,
+  CreateProjFoldSchema,
+} from "./testmanagement-utils/create-project-folder";
+import {
   createTestCase as createTestCaseAPI,
   TestCaseCreateRequest,
   sanitizeArgs,
 } from "./testmanagement-utils/create-testcase";
+
+/**
+ * Wrapper to call createProjectOrFolder util.
+ */
+export async function createProjectOrFolderTool(
+  args: z.infer<typeof CreateProjFoldSchema>,
+): Promise<CallToolResult> {
+  try {
+    return await createProjectOrFolder(args);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to create project/folder: ${msg}`,
+          isError: true,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
 
 /**
  * Creates a test case in BrowserStack Test Management.
@@ -47,7 +74,17 @@ export async function createTestCaseTool(
   }
 }
 
+/**
+ * Registers both project/folder and test-case tools.
+ */
 export default function addTestManagementTools(server: McpServer) {
+  server.tool(
+    "createProjectOrFolder",
+    "Create a project and/or folder in BrowserStack Test Management.",
+    CreateProjFoldSchema.shape,
+    createProjectOrFolderTool,
+  );
+
   server.tool(
     "createTestCase",
     "Use this tool to create a test case in BrowserStack Test Management.",
@@ -55,12 +92,12 @@ export default function addTestManagementTools(server: McpServer) {
       project_identifier: z
         .string()
         .describe(
-          "The ID of the BrowserStack project in which to create the test case.",
+          "The ID of the BrowserStack project in which to create the test case. Ask User if he want to create a new project if no project ID is provided using createProjectOrFolder tool.",
         ),
       folder_id: z
         .string()
         .describe(
-          "The ID of the folder under the project to create the test case in.",
+          "The ID of the folder under the project to create the test case in. If omitted, Ask user if he wants to create a new folder createProjectOrFolder tool.",
         ),
       name: z.string().describe("Name of the test case."),
       description: z
@@ -91,14 +128,16 @@ export default function addTestManagementTools(server: McpServer) {
         .array(z.string())
         .optional()
         .nullish()
-        .describe("List of the linked Jira, Asana or Azure issues ID's."),
+        .describe(
+          "List of the linked Jira, Asana or Azure issues ID's. This should be strictly in array format not the string of json.",
+        ),
       issue_tracker: z
         .object({
           name: z
             .string()
             .nullish()
             .describe(
-              "Issue tracker name,  For example, use jira for Jira, azure for Azure DevOps, or asana for Asana.​",
+              "Issue tracker name,  For example, use jira for Jira, azure for Azure DevOps, or asana for Asana ​",
             ),
           host: z
             .string()
@@ -111,7 +150,9 @@ export default function addTestManagementTools(server: McpServer) {
         .array(z.string())
         .optional()
         .nullish()
-        .describe("Tags to attach to the test case."),
+        .describe(
+          "Tags to attach to the test case. This should be strictly in array format not the string of json",
+        ),
       custom_fields: z
         .record(z.string(), z.string())
         .optional()

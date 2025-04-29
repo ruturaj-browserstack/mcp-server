@@ -6,6 +6,13 @@ jest.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
   createTestCase: jest.fn(),
   sanitizeArgs: jest.fn((args) => args),
 }));
+jest.mock('../../src/config', () => ({
+  __esModule: true,
+  default: {
+    browserstackUsername: 'fake-user',
+    browserstackAccessKey: 'fake-key',
+  },
+}));
 
 describe('createTestCaseTool', () => {
   beforeEach(() => {

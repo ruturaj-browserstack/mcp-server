@@ -1,0 +1,138 @@
+import axios, { AxiosError } from "axios";
+import config from "../../config";
+import { z } from "zod";
+import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+
+// Schema for combined project/folder creation
+export const CreateProjFoldSchema = z.object({
+  project_name: z
+    .string()
+    .optional()
+    .describe("Name of the project to create."),
+  project_description: z
+    .string()
+    .optional()
+    .describe("Description for the new project."),
+  project_identifier: z
+    .string()
+    .optional()
+    .describe("Existing project identifier to use for folder creation."),
+  folder_name: z.string().optional().describe("Name of the folder to create."),
+  folder_description: z
+    .string()
+    .optional()
+    .describe("Description for the new folder."),
+  parent_id: z
+    .number()
+    .optional()
+    .describe("Parent folder ID; if omitted, folder is created at root."),
+});
+
+type CreateProjFoldArgs = z.infer<typeof CreateProjFoldSchema>;
+
+/**
+ * Creates a project and/or folder in BrowserStack Test Management.
+ */
+export async function createProjectOrFolder(
+  args: CreateProjFoldArgs,
+): Promise<CallToolResult> {
+  const {
+    project_name,
+    project_description,
+    project_identifier,
+    folder_name,
+    folder_description,
+    parent_id,
+  } = CreateProjFoldSchema.parse(args);
+
+  if (!project_name && !project_identifier && !folder_name) {
+    throw new Error(
+      "Provide project_name (to create project), or project_identifier and folder_name (to create folder).",
+    );
+  }
+
+  let projId = project_identifier;
+
+  // Step 1: Create project if project_name provided
+  if (project_name) {
+    try {
+      const res = await axios.post(
+        "https://test-management.browserstack.com/api/v2/projects",
+        { project: { name: project_name, description: project_description } },
+        {
+          auth: {
+            username: config.browserstackUsername,
+            password: config.browserstackAccessKey,
+          },
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      projId = res.data.project.identifier;
+    } catch (err) {
+      const msg =
+        err instanceof AxiosError && err.response?.data?.message
+          ? err.response.data.message
+          : err instanceof Error
+            ? err.message
+            : "Unknown error";
+      return {
+        content: [{ type: "text", text: `Failed to create project: ${msg}` }],
+        isError: true,
+      };
+    }
+  }
+
+  // Step 2: Create folder if folder_name provided
+  if (folder_name) {
+    if (!projId)
+      throw new Error("Cannot create folder without project_identifier.");
+    try {
+      const res = await axios.post(
+        `https://test-management.browserstack.com/api/v2/projects/${encodeURIComponent(
+          projId,
+        )}/folders`,
+        {
+          folder: {
+            name: folder_name,
+            description: folder_description,
+            parent_id,
+          },
+        },
+        {
+          auth: {
+            username: config.browserstackUsername,
+            password: config.browserstackAccessKey,
+          },
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      const folder = res.data.folder;
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Folder created: ID=${folder.id}, name="${folder.name}" in project ${projId}`,
+          },
+        ],
+      };
+    } catch (err) {
+      const msg =
+        err instanceof AxiosError && err.response?.data?.message
+          ? err.response.data.message
+          : err instanceof Error
+            ? err.message
+            : "Unknown error";
+      return {
+        content: [{ type: "text", text: `Failed to create folder: ${msg}` }],
+        isError: true,
+      };
+    }
+  }
+
+  // Only project was created
+  return {
+    content: [
+      { type: "text", text: `Project created with identifier=${projId}` },
+    ],
+  };
+}

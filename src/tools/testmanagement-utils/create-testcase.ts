@@ -1,6 +1,5 @@
 import axios, { AxiosError } from "axios";
 import config from "../../config";
-import logger from "./../../logger";
 
 interface TestCaseStep {
   step: string;
@@ -10,24 +9,6 @@ interface TestCaseStep {
 interface IssueTracker {
   name: string;
   host: string;
-}
-export function sanitizeArgs(args: any) {
-  const cleaned = { ...args };
-
-  if (cleaned.description === null) delete cleaned.description;
-  if (cleaned.owner === null) delete cleaned.owner;
-  if (cleaned.preconditions === null) delete cleaned.preconditions;
-
-  if (cleaned.issue_tracker) {
-    if (
-      cleaned.issue_tracker.name === undefined ||
-      cleaned.issue_tracker.host === undefined
-    ) {
-      delete cleaned.issue_tracker;
-    }
-  }
-
-  return cleaned;
 }
 
 export interface TestCaseCreateRequest {
@@ -71,6 +52,25 @@ export interface TestCaseResponse {
       }>;
     };
   };
+}
+
+export function sanitizeArgs(args: any) {
+  const cleaned = { ...args };
+
+  if (cleaned.description === null) delete cleaned.description;
+  if (cleaned.owner === null) delete cleaned.owner;
+  if (cleaned.preconditions === null) delete cleaned.preconditions;
+
+  if (cleaned.issue_tracker) {
+    if (
+      cleaned.issue_tracker.name === undefined ||
+      cleaned.issue_tracker.host === undefined
+    ) {
+      delete cleaned.issue_tracker;
+    }
+  }
+
+  return cleaned;
 }
 
 export async function createTestCase(
