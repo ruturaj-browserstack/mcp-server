@@ -68,7 +68,7 @@ export async function createProjectOrFolder(
         },
       );
 
-      if (!res.data.data.success) {
+      if (!res.data.success) {
         throw new Error(
           `Failed to create project: ${JSON.stringify(res.data)}`,
         );
@@ -77,19 +77,29 @@ export async function createProjectOrFolder(
 
       projId = res.data.project.identifier;
     } catch (err) {
-      const msg =
-        err instanceof AxiosError && err.response?.data?.message
-          ? err.response.data.message
-          : err instanceof Error
-            ? err.message
-            : "Unknown error";
+      let message = "Unknown error";
+      let text = "Failed to create project.";
+
+      if (err instanceof AxiosError && err.response?.data) {
+        const { error } = err.response.data;
+        const status = err.response.status;
+
+        message = error || "Unknown error";
+
+        if (status >= 400 && status < 500 && error) {
+          // Only for 4xx errors, show API's error text
+          text = error;
+        }
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+
       return {
-        content: [{ type: "text", text: `Failed to create project: ${msg}` }],
+        content: [{ type: "text", text, message }],
         isError: true,
       };
     }
   }
-
   // Step 2: Create folder if folder_name provided
   if (folder_name) {
     if (!projId)
@@ -115,7 +125,7 @@ export async function createProjectOrFolder(
         },
       );
 
-      if (!res.data.data.success) {
+      if (!res.data.success) {
         throw new Error(`Failed to create folder: ${JSON.stringify(res.data)}`);
       }
       // Folder created successfully
@@ -130,14 +140,24 @@ export async function createProjectOrFolder(
         ],
       };
     } catch (err) {
-      const msg =
-        err instanceof AxiosError && err.response?.data?.message
-          ? err.response.data.message
-          : err instanceof Error
-            ? err.message
-            : "Unknown error";
+      let message = "Unknown error";
+      let text = "Failed to create folder.";
+
+      if (err instanceof AxiosError && err.response?.data) {
+        const { message: apiMessage } = err.response.data;
+        const status = err.response.status;
+
+        message = apiMessage || "Unknown error";
+
+        if (status >= 400 && status < 500 && apiMessage) {
+          text = apiMessage;
+        }
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+
       return {
-        content: [{ type: "text", text: `Failed to create folder: ${msg}` }],
+        content: [{ type: "text", text, message }],
         isError: true,
       };
     }
