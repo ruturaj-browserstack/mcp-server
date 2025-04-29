@@ -59,12 +59,12 @@ export const CreateTestCaseSchema = z.object({
   project_identifier: z
     .string()
     .describe(
-      "The ID of the BrowserStack project in which to create the test case. Ask User if he want to create a new project if no project ID is provided using createProjectOrFolder tool.",
+      "The ID of the BrowserStack project where the test case should be created. If no project ID is provided, ask the user if they would like to create a new project using the createProjectOrFolder tool.",
     ),
   folder_id: z
     .string()
     .describe(
-      "The ID of the folder under the project to create the test case in. If omitted, Ask user if he wants to create a new folder createProjectOrFolder tool.",
+      "The ID of the folder within the project where the test case should be created. If not provided, ask the user if they would like to create a new folder using the createProjectOrFolder tool.",
     ),
   name: z.string().describe("Name of the test case."),
   description: z
@@ -189,7 +189,7 @@ export async function createTestCase(
         },
       },
     );
-    
+
     // Check if the response indicates success
     if (!response.data.data.success) {
       throw new Error(`Failed to create test case: ${JSON.stringify(response.data)}`);
