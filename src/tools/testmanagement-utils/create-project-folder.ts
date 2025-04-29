@@ -77,25 +77,21 @@ export async function createProjectOrFolder(
 
       projId = res.data.project.identifier;
     } catch (err) {
-      let message = "Unknown error";
       let text = "Failed to create project.";
-
+    
       if (err instanceof AxiosError && err.response?.data) {
         const { error } = err.response.data;
         const status = err.response.status;
-
-        message = error || "Unknown error";
-
+    
         if (status >= 400 && status < 500 && error) {
-          // Only for 4xx errors, show API's error text
           text = error;
         }
       } else if (err instanceof Error) {
-        message = err.message;
+        text = err.message;
       }
-
+    
       return {
-        content: [{ type: "text", text, message }],
+        content: [{ type: "text", text }],
         isError: true,
       };
     }
@@ -140,24 +136,21 @@ export async function createProjectOrFolder(
         ],
       };
     } catch (err) {
-      let message = "Unknown error";
       let text = "Failed to create folder.";
-
+    
       if (err instanceof AxiosError && err.response?.data) {
         const { message: apiMessage } = err.response.data;
         const status = err.response.status;
-
-        message = apiMessage || "Unknown error";
-
+    
         if (status >= 400 && status < 500 && apiMessage) {
           text = apiMessage;
         }
       } else if (err instanceof Error) {
-        message = err.message;
+        text = err.message;
       }
-
+    
       return {
-        content: [{ type: "text", text, message }],
+        content: [{ type: "text", text }],
         isError: true,
       };
     }
