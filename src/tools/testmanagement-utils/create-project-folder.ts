@@ -78,18 +78,18 @@ export async function createProjectOrFolder(
       projId = res.data.project.identifier;
     } catch (err) {
       let text = "Failed to create project.";
-    
+
       if (err instanceof AxiosError && err.response?.data) {
         const { error } = err.response.data;
         const status = err.response.status;
-    
+
         if (status >= 400 && status < 500 && error) {
           text = error;
         }
       } else if (err instanceof Error) {
         text = err.message;
       }
-    
+
       return {
         content: [{ type: "text", text }],
         isError: true,
@@ -137,18 +137,18 @@ export async function createProjectOrFolder(
       };
     } catch (err) {
       let text = "Failed to create folder.";
-    
+
       if (err instanceof AxiosError && err.response?.data) {
         const { message: apiMessage } = err.response.data;
         const status = err.response.status;
-    
+
         if (status >= 400 && status < 500 && apiMessage) {
           text = apiMessage;
         }
       } else if (err instanceof Error) {
         text = err.message;
       }
-    
+
       return {
         content: [{ type: "text", text }],
         isError: true,
