@@ -1,7 +1,16 @@
+import { createProjectOrFolderTool } from '../../src/tools/testmanagement';
+import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
 import { createTestCaseTool } from '../../src/tools/testmanagement';
 import { createTestCase, sanitizeArgs, TestCaseCreateRequest } from '../../src/tools/testmanagement-utils/create-testcase';
 
-// Mock the dependencies
+// Mock dependencies
+jest.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
+  createProjectOrFolder: jest.fn(),
+  CreateProjFoldSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
 jest.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
   createTestCase: jest.fn(),
   sanitizeArgs: jest.fn((args) => args),
@@ -36,7 +45,7 @@ describe('createTestCaseTool', () => {
     custom_fields: { priority: 'high' },
   };
 
-  const mockResponse = {
+  const mockTestCaseResponse = {
     data: {
       success: true,
       test_case: {
@@ -48,7 +57,7 @@ describe('createTestCaseTool', () => {
   };
 
   it('should successfully create a test case', async () => {
-    (createTestCase as jest.Mock).mockResolvedValue(mockResponse);
+    (createTestCase as jest.Mock).mockResolvedValue(mockTestCaseResponse);
 
     const result = await createTestCaseTool(validArgs);
 
@@ -58,7 +67,7 @@ describe('createTestCaseTool', () => {
     expect(result.content[1].text).toContain('"title": "Sample Test Case"');
   });
 
-  it('should handle API errors gracefully', async () => {
+  it('should handle API errors while creating test case', async () => {
     (createTestCase as jest.Mock).mockRejectedValue(new Error('API Error'));
 
     const result = await createTestCaseTool(validArgs);
@@ -67,12 +76,73 @@ describe('createTestCaseTool', () => {
     expect(result.content[0].text).toContain('Failed to create test case: API Error');
   });
 
-  it('should handle unknown error types', async () => {
+  it('should handle unknown error while creating test case', async () => {
     (createTestCase as jest.Mock).mockRejectedValue('unexpected');
 
     const result = await createTestCaseTool(validArgs);
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Unknown error');
+  });
+});
+
+describe('createProjectOrFolderTool', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const validProjectArgs = {
+    project_name: 'My New Project',
+    project_description: 'This is a test project',
+  };
+
+  const validFolderArgs = {
+    project_identifier: 'proj-123',
+    folder_name: 'My Test Folder',
+    folder_description: 'This is a folder under project',
+  };
+
+  const mockProjectResponse = {
+    content: [{ type: 'text', text: 'Project created with identifier=proj-123' }],
+  };
+
+  const mockFolderResponse = {
+    content: [{ type: 'text', text: 'Folder created: ID=fold-123, name="My Folder" in project proj-123' }],
+  };
+
+  it('should successfully create a project', async () => {
+    (createProjectOrFolder as jest.Mock).mockResolvedValue(mockProjectResponse);
+
+    const result = await createProjectOrFolderTool(validProjectArgs);
+
+    expect(createProjectOrFolder).toHaveBeenCalledWith(validProjectArgs);
+    expect(result.content[0].text).toContain('Project created with identifier=proj-123');
+  });
+
+  it('should successfully create a folder', async () => {
+    (createProjectOrFolder as jest.Mock).mockResolvedValue(mockFolderResponse);
+
+    const result = await createProjectOrFolderTool(validFolderArgs);
+
+    expect(createProjectOrFolder).toHaveBeenCalledWith(validFolderArgs);
+    expect(result.content[0].text).toContain('Folder created: ID=fold-123');
+  });
+
+  it('should handle error while creating project or folder', async () => {
+    (createProjectOrFolder as jest.Mock).mockRejectedValue(new Error('Failed to create project/folder'));
+
+    const result = await createProjectOrFolderTool(validProjectArgs);
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Failed to create project/folder: Failed to create project/folder');
+  });
+
+  it('should handle unknown error while creating project or folder', async () => {
+    (createProjectOrFolder as jest.Mock).mockRejectedValue('some unknown error');
+
+    const result = await createProjectOrFolderTool(validProjectArgs);
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Failed to create project/folder: Unknown error');
   });
 });
