@@ -59,7 +59,7 @@ export const CreateTestCaseSchema = z.object({
   project_identifier: z
     .string()
     .describe(
-      "The ID of the BrowserStack project where the test case should be created. If no project ID is provided, ask the user if they would like to create a new project using the createProjectOrFolder tool.",
+      "The ID of the BrowserStack project where the test case should be created. If no project identifier is provided, ask the user if they would like to create a new project using the createProjectOrFolder tool.",
     ),
   folder_id: z
     .string()

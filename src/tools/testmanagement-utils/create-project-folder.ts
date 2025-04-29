@@ -111,7 +111,7 @@ export async function createProjectOrFolder(
         content: [
           {
             type: "text",
-            text: `Folder created: ID=${folder.id}, name="${folder.name}" in project ${projId}`,
+            text: `Folder created: ID=${folder.id}, name="${folder.name}" in project with identifier ${projId}`,
           },
         ],
       };
