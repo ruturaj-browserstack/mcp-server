@@ -143,6 +143,7 @@ export function sanitizeArgs(args: any) {
   return cleaned;
 }
 
+
 export async function createTestCase(
   params: TestCaseCreateRequest,
 ): Promise<TestCaseResponse> {
@@ -188,6 +189,12 @@ export async function createTestCase(
         },
       },
     );
+    
+    // Check if the response indicates success
+    if (!response.data.data.success) {
+      throw new Error(`Failed to create test case: ${JSON.stringify(response.data)}`);
+    }
+
     return response.data;
   } catch (error) {
     if (error instanceof AxiosError) {
@@ -202,3 +209,4 @@ export async function createTestCase(
     throw error;
   }
 }
+
