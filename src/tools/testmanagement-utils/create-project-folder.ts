@@ -116,9 +116,7 @@ export async function createProjectOrFolder(
       );
 
       if (!res.data.data.success) {
-        throw new Error(
-          `Failed to create folder: ${JSON.stringify(res.data)}`,
-        );
+        throw new Error(`Failed to create folder: ${JSON.stringify(res.data)}`);
       }
       // Folder created successfully
 
