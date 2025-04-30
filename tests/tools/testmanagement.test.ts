@@ -2,6 +2,9 @@ import { createProjectOrFolderTool } from '../../src/tools/testmanagement';
 import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
 import { createTestCaseTool } from '../../src/tools/testmanagement';
 import { createTestCase, sanitizeArgs, TestCaseCreateRequest } from '../../src/tools/testmanagement-utils/create-testcase';
+import { updateTestCaseTool, listTestCasesTool } from '../../src/tools/testmanagement';
+import { updateTestCase } from '../../src/tools/testmanagement-utils/update-testcase';
+import { listTestCases } from '../../src/tools/testmanagement-utils/list-testcases';
 
 // Mock dependencies
 jest.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
@@ -22,6 +25,23 @@ jest.mock('../../src/config', () => ({
     browserstackAccessKey: 'fake-key',
   },
 }));
+
+  // Mock dependencies
+  jest.mock('../../src/tools/testmanagement-utils/update-testcase', () => ({
+    updateTestCase: jest.fn(),
+    UpdateTestCaseSchema: {
+      parse: (args: any) => args,
+      shape: {},
+    },
+  }));
+  jest.mock('../../src/tools/testmanagement-utils/list-testcases', () => ({
+    listTestCases: jest.fn(),
+    ListTestCasesSchema: {
+      parse: (args: any) => args,
+      shape: {},
+    },
+  }));
+
 
 describe('createTestCaseTool', () => {
   beforeEach(() => {
@@ -144,5 +164,103 @@ describe('createProjectOrFolderTool', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Failed to create project/folder: Unknown error');
+  });
+
+  describe('updateTestCaseTool', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const validUpdateArgs = {
+      project_identifier: 'proj-123',
+      test_case_id: 'TC-001',
+      name: 'Updated Test Case',
+      description: 'Updated description',
+      owner: 'user@example.com',
+      preconditions: 'Updated precondition',
+      test_case_steps: [
+        { step: 'Updated Step 1', result: 'Updated Result 1' },
+      ],
+      tags: ['regression'],
+      custom_fields: { priority: 'medium' },
+    };
+
+    const mockUpdateResponse = {
+      content: [{ type: 'text', text: 'Test case updated successfully' }],
+    };
+
+    it('should successfully update a test case', async () => {
+      (updateTestCase as jest.Mock).mockResolvedValue(mockUpdateResponse);
+
+      const result = await updateTestCaseTool(validUpdateArgs);
+
+      expect(updateTestCase).toHaveBeenCalledWith(validUpdateArgs);
+      expect(result.content[0].text).toContain('Test case updated successfully');
+    });
+
+    it('should handle error while updating a test case', async () => {
+      (updateTestCase as jest.Mock).mockRejectedValue(new Error('Failed to update test case'));
+
+      const result = await updateTestCaseTool(validUpdateArgs);
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed to update test case: Failed to update test case');
+    });
+
+    it('should handle unknown error while updating a test case', async () => {
+      (updateTestCase as jest.Mock).mockRejectedValue('unexpected error');
+
+      const result = await updateTestCaseTool(validUpdateArgs);
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed to update test case: Unknown error');
+    });
+  });
+
+  describe('listTestCasesTool', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const validListArgs = {
+      project_identifier: 'proj-123',
+      folder_id: ['fold-456'],
+      filters: { tags: ['smoke'] },
+    };
+
+    const mockListResponse = {
+      content: [
+        { type: 'text', text: 'Test cases fetched successfully' },
+        { type: 'text', text: JSON.stringify([{ id: 'TC-001', name: 'Test Case 1' }], null, 2) },
+      ],
+    };
+
+    it('should successfully list test cases', async () => {
+      (listTestCases as jest.Mock).mockResolvedValue(mockListResponse);
+
+      const result = await listTestCasesTool(validListArgs);
+
+      expect(listTestCases).toHaveBeenCalledWith(validListArgs);
+      expect(result.content[0].text).toContain('Test cases fetched successfully');
+      expect(result.content[1].text).toContain('"id": "TC-001"');
+    });
+
+    it('should handle error while listing test cases', async () => {
+      (listTestCases as jest.Mock).mockRejectedValue(new Error('Failed to list test cases'));
+
+      const result = await listTestCasesTool(validListArgs);
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed to list test cases: Failed to list test cases');
+    });
+
+    it('should handle unknown error while listing test cases', async () => {
+      (listTestCases as jest.Mock).mockRejectedValue('unexpected error');
+
+      const result = await listTestCasesTool(validListArgs);
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed to list test cases: Unknown error');
+    });
   });
 });
