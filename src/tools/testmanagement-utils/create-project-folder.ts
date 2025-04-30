@@ -30,6 +30,29 @@ export const CreateProjFoldSchema = z.object({
 
 type CreateProjFoldArgs = z.infer<typeof CreateProjFoldSchema>;
 
+function formatAxiosError(
+  err: unknown,
+  defaultText: string,
+): { content: { type: "text"; text: string }[]; isError: true } {
+  let text = defaultText;
+
+  if (err instanceof AxiosError && err.response?.data) {
+    const { message: apiMessage } = err.response.data;
+    const status = err.response.status;
+
+    if (status >= 400 && status < 500 && apiMessage) {
+      text = apiMessage;
+    }
+  } else if (err instanceof Error) {
+    text = err.message;
+  }
+
+  return {
+    content: [{ type: "text" as const, text }],
+    isError: true,
+  };
+}
+
 /**
  * Creates a project and/or folder in BrowserStack Test Management.
  */
@@ -77,23 +100,7 @@ export async function createProjectOrFolder(
 
       projId = res.data.project.identifier;
     } catch (err) {
-      let text = "Failed to create project.";
-
-      if (err instanceof AxiosError && err.response?.data) {
-        const { error } = err.response.data;
-        const status = err.response.status;
-
-        if (status >= 400 && status < 500 && error) {
-          text = error;
-        }
-      } else if (err instanceof Error) {
-        text = err.message;
-      }
-
-      return {
-        content: [{ type: "text", text }],
-        isError: true,
-      };
+      return formatAxiosError(err, "Failed to create project..");
     }
   }
   // Step 2: Create folder if folder_name provided
@@ -136,23 +143,7 @@ export async function createProjectOrFolder(
         ],
       };
     } catch (err) {
-      let text = "Failed to create folder.";
-
-      if (err instanceof AxiosError && err.response?.data) {
-        const { message: apiMessage } = err.response.data;
-        const status = err.response.status;
-
-        if (status >= 400 && status < 500 && apiMessage) {
-          text = apiMessage;
-        }
-      } else if (err instanceof Error) {
-        text = err.message;
-      }
-
-      return {
-        content: [{ type: "text", text }],
-        isError: true,
-      };
+      return formatAxiosError(err, "Failed to create folder.");
     }
   }
 
