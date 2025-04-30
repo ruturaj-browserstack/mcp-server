@@ -45,26 +45,22 @@ describe('createTestCaseTool', () => {
     custom_fields: { priority: 'high' },
   };
 
-  const mockTestCaseResponse = {
-    data: {
-      success: true,
-      test_case: {
-        identifier: 'TC-001',
-        title: 'Sample Test Case',
-        // additional fields omitted for brevity
-      },
-    },
+  const mockCallToolResult = {
+    content: [
+      { type: 'text', text: 'Successfully created test case TC-001: Sample Test Case' },
+      { type: 'text', text: JSON.stringify({ identifier: 'TC-001', title: 'Sample Test Case' }, null, 2) },
+    ],
+    isError: false,
   };
 
   it('should successfully create a test case', async () => {
-    (createTestCase as jest.Mock).mockResolvedValue(mockTestCaseResponse);
+    (createTestCase as jest.Mock).mockResolvedValue(mockCallToolResult);
 
     const result = await createTestCaseTool(validArgs);
 
     expect(sanitizeArgs).toHaveBeenCalledWith(validArgs);
     expect(createTestCase).toHaveBeenCalledWith(validArgs);
-    expect(result.content[0].text).toContain('Successfully created test case TC-001');
-    expect(result.content[1].text).toContain('"title": "Sample Test Case"');
+    expect(result).toBe(mockCallToolResult);
   });
 
   it('should handle API errors while creating test case', async () => {
@@ -134,7 +130,7 @@ describe('createProjectOrFolderTool', () => {
     const result = await createProjectOrFolderTool(validProjectArgs);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to create project/folder: Failed to create project/folder');
+    expect(result.content[0].text).toContain('Failed to create project/folder: Failed to create project/folder. Please open an issue on GitHub if the problem persists');
   });
 
   it('should handle unknown error while creating project or folder', async () => {
@@ -143,6 +139,6 @@ describe('createProjectOrFolderTool', () => {
     const result = await createProjectOrFolderTool(validProjectArgs);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to create project/folder: Unknown error');
+    expect(result.content[0].text).toContain('Failed to create project/folder: Unknown error. Please open an issue on GitHub if the problem persists');
   });
 });

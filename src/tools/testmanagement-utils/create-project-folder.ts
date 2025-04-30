@@ -1,7 +1,8 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import config from "../../config";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { formatAxiosError } from "../../lib/error"; // or correct path
 
 // Schema for combined project/folder creation
 export const CreateProjFoldSchema = z.object({
@@ -29,29 +30,6 @@ export const CreateProjFoldSchema = z.object({
 });
 
 type CreateProjFoldArgs = z.infer<typeof CreateProjFoldSchema>;
-
-function formatAxiosError(
-  err: unknown,
-  defaultText: string,
-): { content: { type: "text"; text: string }[]; isError: true } {
-  let text = defaultText;
-
-  if (err instanceof AxiosError && err.response?.data) {
-    const { message: apiMessage } = err.response.data;
-    const status = err.response.status;
-
-    if (status >= 400 && status < 500 && apiMessage) {
-      text = apiMessage;
-    }
-  } else if (err instanceof Error) {
-    text = err.message;
-  }
-
-  return {
-    content: [{ type: "text" as const, text }],
-    isError: true,
-  };
-}
 
 /**
  * Creates a project and/or folder in BrowserStack Test Management.
@@ -138,7 +116,7 @@ export async function createProjectOrFolder(
         content: [
           {
             type: "text",
-            text: `Folder created: ID=${folder.id}, name="${folder.name}" in project with identifier ${projId}`,
+            text: `Folder created: ID=${folder.id}, name=${folder.name} in project with identifier ${projId}`,
           },
         ],
       };

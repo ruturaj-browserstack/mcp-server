@@ -20,13 +20,14 @@ export async function createProjectOrFolderTool(
 ): Promise<CallToolResult> {
   try {
     return await createProjectOrFolder(args);
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
+  } catch (err) {
     return {
       content: [
         {
           type: "text",
-          text: `Failed to create project/folder: ${msg}`,
+          text: `Failed to create project/folder: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
           isError: true,
         },
       ],
@@ -44,28 +45,14 @@ export async function createTestCaseTool(
   // Sanitize input arguments
   const cleanedArgs = sanitizeArgs(args);
   try {
-    const response = await createTestCaseAPI(cleanedArgs);
-    const testCase = response.data.test_case;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Successfully created test case ${testCase.identifier}: "${testCase.title}"`,
-        },
-        {
-          type: "text",
-          text: JSON.stringify(testCase, null, 2),
-        },
-      ],
-    };
-  } catch (error) {
+    return await createTestCaseAPI(cleanedArgs);
+  } catch (err) {
     return {
       content: [
         {
           type: "text",
           text: `Failed to create test case: ${
-            error instanceof Error ? error.message : "Unknown error"
+            err instanceof Error ? err.message : "Unknown error"
           }. Please open an issue on GitHub if the problem persists`,
           isError: true,
         },
@@ -90,8 +77,6 @@ export default function addTestManagementTools(server: McpServer) {
     "createTestCase",
     "Use this tool to create a test case in BrowserStack Test Management.",
     CreateTestCaseSchema.shape,
-    async (args) => {
-      return createTestCaseTool(args as TestCaseCreateRequest);
-    },
+    createTestCaseTool,
   );
 }

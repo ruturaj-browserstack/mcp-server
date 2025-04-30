@@ -1,6 +1,8 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import config from "../../config";
 import { z } from "zod";
+import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { formatAxiosError } from "../../lib/error"; // or correct
 
 interface TestCaseStep {
   step: string;
@@ -70,18 +72,15 @@ export const CreateTestCaseSchema = z.object({
   description: z
     .string()
     .optional()
-    .nullish()
     .describe("Brief description of the test case."),
   owner: z
     .string()
     .email()
     .describe("Email of the test case owner.")
-    .optional()
-    .nullish(),
+    .optional(),
   preconditions: z
     .string()
     .optional()
-    .nullish()
     .describe("Any preconditions (HTML allowed)."),
   test_case_steps: z
     .array(
@@ -101,15 +100,10 @@ export const CreateTestCaseSchema = z.object({
     .object({
       name: z
         .string()
-        .nullish()
         .describe(
-          "Issue tracker name,  For example, use jira for Jira, azure for Azure DevOps, or asana for Asana ​",
+          "Issue tracker name,  For example, use jira for Jira, azure for Azure DevOps, or asana for Asana.",
         ),
-      host: z
-        .string()
-        .url()
-        .describe("Base URL of the issue tracker.")
-        .nullish(),
+      host: z.string().url().describe("Base URL of the issue tracker."),
     })
     .optional(),
   tags: z
@@ -145,68 +139,52 @@ export function sanitizeArgs(args: any) {
 
 export async function createTestCase(
   params: TestCaseCreateRequest,
-): Promise<TestCaseResponse> {
-  const {
-    project_identifier,
-    folder_id,
-    name,
-    description,
-    owner,
-    preconditions,
-    test_case_steps,
-    issues,
-    issue_tracker,
-    tags,
-    custom_fields,
-  } = params;
-
-  const body = {
-    test_case: {
-      name,
-      description,
-      owner,
-      preconditions,
-      test_case_steps,
-      issues,
-      issue_tracker,
-      tags,
-      custom_fields,
-    },
-  };
+): Promise<CallToolResult> {
+  const body = { test_case: params };
 
   try {
     const response = await axios.post<TestCaseResponse>(
-      `https://test-management.browserstack.com/api/v2/projects/${project_identifier}/folders/${folder_id}/test-cases`,
+      `https://test-management.browserstack.com/api/v2/projects/${encodeURIComponent(
+        params.project_identifier,
+      )}/folders/${encodeURIComponent(params.folder_id)}/test-cases`,
       body,
       {
         auth: {
           username: config.browserstackUsername,
           password: config.browserstackAccessKey,
         },
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       },
     );
 
-    // Check if the response indicates success
-    if (!response.data.data.success) {
-      throw new Error(
-        `Failed to create test case: ${JSON.stringify(response.data)}`,
-      );
+    const { data } = response.data;
+    if (!data.success) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Failed to create test case: ${JSON.stringify(
+              response.data,
+            )}`,
+            isError: true,
+          },
+        ],
+        isError: true,
+      };
     }
 
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.data?.message) {
-        throw new Error(
-          `Failed to create test case: ${error.response.data.message}`,
-        );
-      } else {
-        throw new Error(`Failed to create test case: ${error.message}`);
-      }
-    }
-    throw error;
+    const tc = data.test_case;
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Successfully created test case ${tc.identifier}: ${tc.title}`,
+        },
+        { type: "text", text: JSON.stringify(tc, null, 2) },
+      ],
+    };
+  } catch (err) {
+    // Delegate to our centralized Axios error formatter
+    return formatAxiosError(err, "Failed to create test case");
   }
 }
