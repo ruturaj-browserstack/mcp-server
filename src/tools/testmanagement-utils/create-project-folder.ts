@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import config from "../../config";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { TEST_MANAGEMENT_BASE_URL } from "./constants";
 
 // Schema for combined project/folder creation
 export const CreateProjFoldSchema = z.object({
@@ -57,7 +58,7 @@ export async function createProjectOrFolder(
   if (project_name) {
     try {
       const res = await axios.post(
-        "https://test-management.browserstack.com/api/v2/projects",
+        TEST_MANAGEMENT_BASE_URL + "/projects",
         { project: { name: project_name, description: project_description } },
         {
           auth: {
@@ -102,7 +103,7 @@ export async function createProjectOrFolder(
       throw new Error("Cannot create folder without project_identifier.");
     try {
       const res = await axios.post(
-        `https://test-management.browserstack.com/api/v2/projects/${encodeURIComponent(
+        `${TEST_MANAGEMENT_BASE_URL}/projects/${encodeURIComponent(
           projId,
         )}/folders`,
         {

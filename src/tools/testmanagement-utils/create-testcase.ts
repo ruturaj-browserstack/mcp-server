@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import config from "../../config";
 import { z } from "zod";
+import { TEST_MANAGEMENT_BASE_URL } from "./constants";
 
 interface TestCaseStep {
   step: string;
@@ -70,18 +71,15 @@ export const CreateTestCaseSchema = z.object({
   description: z
     .string()
     .optional()
-    .nullish()
     .describe("Brief description of the test case."),
   owner: z
     .string()
     .email()
     .describe("Email of the test case owner.")
-    .optional()
-    .nullish(),
+    .optional(),
   preconditions: z
     .string()
     .optional()
-    .nullish()
     .describe("Any preconditions (HTML allowed)."),
   test_case_steps: z
     .array(
@@ -101,15 +99,10 @@ export const CreateTestCaseSchema = z.object({
     .object({
       name: z
         .string()
-        .nullish()
         .describe(
           "Issue tracker name,  For example, use jira for Jira, azure for Azure DevOps, or asana for Asana ​",
         ),
-      host: z
-        .string()
-        .url()
-        .describe("Base URL of the issue tracker.")
-        .nullish(),
+      host: z.string().url().describe("Base URL of the issue tracker."),
     })
     .optional(),
   tags: z
@@ -176,7 +169,7 @@ export async function createTestCase(
 
   try {
     const response = await axios.post<TestCaseResponse>(
-      `https://test-management.browserstack.com/api/v2/projects/${project_identifier}/folders/${folder_id}/test-cases`,
+      `${TEST_MANAGEMENT_BASE_URL}/projects/${project_identifier}/folders/${folder_id}/test-cases`,
       body,
       {
         auth: {
