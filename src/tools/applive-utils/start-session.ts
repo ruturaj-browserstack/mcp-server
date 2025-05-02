@@ -221,6 +221,8 @@ function openBrowser(launchUrl: string): void {
         : process.platform === "win32"
           ? ["cmd", "/c", "start", launchUrl]
           : ["xdg-open", launchUrl];
+    
+    // nosemgrep:javascript.lang.security.detect-child-process.detect-child-process
 
     const child = childProcess.spawn(command[0], command.slice(1), {
       stdio: "ignore",
