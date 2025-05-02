@@ -22,6 +22,9 @@ interface StartSessionArgs {
 
 /**
  * Starts an App Live session after filtering, fuzzy matching, and launching.
+ * @param args - The arguments for starting the session.
+ * @returns The launch URL for the session.
+ * @throws Will throw an error if no devices are found or if the app URL is invalid.
  */
 export async function startSession(args: StartSessionArgs): Promise<string> {
   const { appPath, desiredPlatform, desiredPhone } = args;
@@ -32,52 +35,126 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
     group.devices.map((dev: any) => ({ ...dev, os: group.os })),
   );
 
-  // Exact filter by platform and version
+  desiredPlatformVersion = resolvePlatformVersion(
+    allDevices,
+    desiredPlatform,
+    desiredPlatformVersion,
+  );
+
+  const filteredDevices = filterDevicesByPlatformAndVersion(
+    allDevices,
+    desiredPlatform,
+    desiredPlatformVersion,
+  );
+
+  const matches = await fuzzySearchDevices(filteredDevices, desiredPhone);
+
+  const selectedDevice = validateAndSelectDevice(
+    matches,
+    desiredPhone,
+    desiredPlatform,
+    desiredPlatformVersion,
+  );
+
+  const { app_url } = await uploadApp(appPath);
+
+  validateAppUrl(app_url);
+
+  const launchUrl = constructLaunchUrl(
+    app_url,
+    selectedDevice,
+    desiredPlatform,
+    desiredPlatformVersion,
+  );
+
+  openBrowser(launchUrl);
+
+  return launchUrl;
+}
+
+/**
+ * Resolves the platform version based on the desired platform and version.
+ * @param allDevices - The list of all devices.
+ * @param desiredPlatform - The desired platform (android or ios).
+ * @param desiredPlatformVersion - The desired platform version.
+ * @returns The resolved platform version.
+ * @throws Will throw an error if the platform version is not valid.
+ */
+function resolvePlatformVersion(
+  allDevices: DeviceEntry[],
+  desiredPlatform: string,
+  desiredPlatformVersion: string,
+): string {
   if (
-    desiredPlatformVersion == "latest" ||
-    desiredPlatformVersion == "oldest"
+    desiredPlatformVersion === "latest" ||
+    desiredPlatformVersion === "oldest"
   ) {
     const filtered = allDevices.filter((d) => d.os === desiredPlatform);
     filtered.sort((a, b) => {
       const versionA = parseFloat(a.os_version);
       const versionB = parseFloat(b.os_version);
       return desiredPlatformVersion === "latest"
-        ? versionB - versionA // descending for "latest"
-        : versionA - versionB; // ascending for specific version
+        ? versionB - versionA
+        : versionA - versionB;
     });
 
-    const requiredVersion = filtered[0].os_version;
-
-    desiredPlatformVersion = requiredVersion;
+    return filtered[0].os_version;
   }
-  const filtered = allDevices.filter((d) => {
+  return desiredPlatformVersion;
+}
+
+/**
+ * Filters devices based on the desired platform and version.
+ * @param allDevices - The list of all devices.
+ * @param desiredPlatform - The desired platform (android or ios).
+ * @param desiredPlatformVersion - The desired platform version.
+ * @returns The filtered list of devices.
+ * @throws Will throw an error if the platform version is not valid.
+ */
+function filterDevicesByPlatformAndVersion(
+  allDevices: DeviceEntry[],
+  desiredPlatform: string,
+  desiredPlatformVersion: string,
+): DeviceEntry[] {
+  return allDevices.filter((d) => {
     if (d.os !== desiredPlatform) return false;
 
-    // Attempt to compare as floats
     try {
       const versionA = parseFloat(d.os_version);
       const versionB = parseFloat(desiredPlatformVersion);
       return versionA === versionB;
     } catch {
-      // Fallback to exact string match if parsing fails
       return d.os_version === desiredPlatformVersion;
     }
   });
+}
 
-  // Fuzzy match
-  const matches = await fuzzySearchDevices(filtered, desiredPhone);
-
+/**
+ * Validates the selected device and handles multiple matches.
+ * @param matches - The list of device matches.
+ * @param desiredPhone - The desired phone name.
+ * @param desiredPlatform - The desired platform (android or ios).
+ * @param desiredPlatformVersion - The desired platform version.
+ * @returns The selected device entry.
+ */
+function validateAndSelectDevice(
+  matches: DeviceEntry[],
+  desiredPhone: string,
+  desiredPlatform: string,
+  desiredPlatformVersion: string,
+): DeviceEntry {
   if (matches.length === 0) {
     throw new Error(
       `No devices found matching "${desiredPhone}" for ${desiredPlatform} ${desiredPlatformVersion}`,
     );
   }
+
   const exactMatch = matches.find(
     (d) => d.display_name.toLowerCase() === desiredPhone.toLowerCase(),
   );
 
   if (exactMatch) {
-    matches.splice(0, matches.length, exactMatch); // Replace matches with the exact match
+    return exactMatch;
   } else if (matches.length >= 1) {
     const names = matches.map((d) => d.display_name).join(", ");
     const error_message =
@@ -87,13 +164,34 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
     throw new Error(`${error_message}`);
   }
 
-  const { app_url } = await uploadApp(appPath);
+  return matches[0];
+}
 
-  if (!app_url.match("bs://")) {
+/**
+ * Validates the app URL.
+ * @param appUrl - The app URL to validate.
+ * @throws Will throw an error if the app URL is not valid.
+ */
+function validateAppUrl(appUrl: string): void {
+  if (!appUrl.match("bs://")) {
     throw new Error("The app path is not a valid BrowserStack app URL.");
   }
+}
 
-  const device = matches[0];
+/**
+ * Constructs the launch URL for the App Live session.
+ * @param appUrl - The app URL.
+ * @param device - The selected device entry.
+ * @param desiredPlatform - The desired platform (android or ios).
+ * @param desiredPlatformVersion - The desired platform version.
+ * @returns The constructed launch URL.
+ */
+function constructLaunchUrl(
+  appUrl: string,
+  device: DeviceEntry,
+  desiredPlatform: string,
+  desiredPlatformVersion: string,
+): string {
   const deviceParam = sanitizeUrlParam(
     device.display_name.replace(/\s+/g, "+"),
   );
@@ -101,15 +199,22 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
   const params = new URLSearchParams({
     os: desiredPlatform,
     os_version: desiredPlatformVersion,
-    app_hashed_id: app_url.split("bs://").pop() || "",
+    app_hashed_id: appUrl.split("bs://").pop() || "",
     scale_to_fit: "true",
     speed: "1",
     start: "true",
   });
-  const launchUrl = `https://app-live.browserstack.com/dashboard#${params.toString()}&device=${deviceParam}`;
 
+  return `https://app-live.browserstack.com/dashboard#${params.toString()}&device=${deviceParam}`;
+}
+
+/**
+ * Opens the launch URL in the default browser.
+ * @param launchUrl - The URL to open.
+ * @throws Will throw an error if the browser fails to open.
+ */
+function openBrowser(launchUrl: string): void {
   try {
-    // Use platform-specific commands with proper escaping
     const command =
       process.platform === "darwin"
         ? ["open", launchUrl]
@@ -117,27 +222,21 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
           ? ["cmd", "/c", "start", launchUrl]
           : ["xdg-open", launchUrl];
 
-    // nosemgrep:javascript.lang.security.detect-child-process.detect-child-process
     const child = childProcess.spawn(command[0], command.slice(1), {
       stdio: "ignore",
       detached: true,
     });
 
-    // Handle process errors
     child.on("error", (error) => {
       logger.error(
         `Failed to open browser automatically: ${error}. Please open this URL manually: ${launchUrl}`,
       );
     });
 
-    // Unref the child process to allow the parent to exit
     child.unref();
-
-    return launchUrl;
   } catch (error) {
     logger.error(
       `Failed to open browser automatically: ${error}. Please open this URL manually: ${launchUrl}`,
     );
-    return launchUrl;
   }
 }
