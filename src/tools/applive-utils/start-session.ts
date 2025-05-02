@@ -50,9 +50,19 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
 
     desiredPlatformVersion = requiredVersion;
   }
-  const filtered = allDevices.filter(
-    (d) => d.os === desiredPlatform && d.os_version === desiredPlatformVersion,
-  );
+  const filtered = allDevices.filter((d) => {
+    if (d.os !== desiredPlatform) return false;
+
+    // Attempt to compare as floats
+    try {
+      const versionA = parseFloat(d.os_version);
+      const versionB = parseFloat(desiredPlatformVersion);
+      return versionA === versionB;
+    } catch {
+      // Fallback to exact string match if parsing fails
+      return d.os_version === desiredPlatformVersion;
+    }
+  });
 
   // Fuzzy match
   const matches = await fuzzySearchDevices(filtered, desiredPhone);
@@ -70,9 +80,11 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
     matches.splice(0, matches.length, exactMatch); // Replace matches with the exact match
   } else if (matches.length >= 1) {
     const names = matches.map((d) => d.display_name).join(", ");
-    throw new Error(
-      `Multiple/Alternative devices found: [${names}]. Select one out of them.`,
-    );
+    const error_message =
+      matches.length === 1
+        ? `Alternative device found: ${names}. Would you like to use it?`
+        : `Multiple devices found: ${names}. Please select one.`;
+    throw new Error(`${error_message}`);
   }
 
   const { app_url } = await uploadApp(appPath);

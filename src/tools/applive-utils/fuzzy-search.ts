@@ -1,4 +1,4 @@
-import { fuzzySearch } from "../../lib/fuzzy";
+import { customFuzzySearch } from "../../lib/fuzzy";
 import { DeviceEntry } from "./start-session";
 
 /**
@@ -9,12 +9,11 @@ export async function fuzzySearchDevices(
   query: string,
   limit: number = 5,
 ): Promise<DeviceEntry[]> {
-  const top_match = await fuzzySearch(
+  const top_match = customFuzzySearch(
     devices,
     ["device", "display_name"],
     query,
     limit,
   );
-  console.error("[fuzzySearchDevices] Top match:", top_match);
   return top_match;
 }
