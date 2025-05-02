@@ -59,7 +59,7 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
 
   if (matches.length === 0) {
     throw new Error(
-      `No devices found matching "${desiredPhone}" for ${desiredPlatform} ${desiredPlatformVersion} ${JSON.stringify(matches, null, 2)}`,
+      `No devices found matching "${desiredPhone}" for ${desiredPlatform} ${desiredPlatformVersion}`,
     );
   }
   const exactMatch = matches.find(
