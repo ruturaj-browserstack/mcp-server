@@ -68,10 +68,10 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
 
   if (exactMatch) {
     matches.splice(0, matches.length, exactMatch); // Replace matches with the exact match
-  } else if (matches.length > 1) {
+  } else if (matches.length >= 1) {
     const names = matches.map((d) => d.display_name).join(", ");
     throw new Error(
-      `Multiple devices found: [${names}]. Select one out of them.`,
+      `Multiple/Alternative devices found: [${names}]. Select one out of them.`,
     );
   }
 
