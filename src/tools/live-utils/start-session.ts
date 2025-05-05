@@ -1,47 +1,204 @@
+// File: src/tools/live-utils/start-session.ts
 import { sanitizeUrlParam } from "../../lib/utils";
 import logger from "../../logger";
 import childProcess from "child_process";
+import { getLiveData } from "./device-cache";
+import { resolveVersion } from "./version-resolver";
+import { customFuzzySearch } from "../../lib/fuzzy";
 
-interface StartSessionArgs {
-  browser: string;
+export interface DesktopArgs {
+  platformType: "desktop";
+  url: string;
   os: string;
   osVersion: string;
-  url: string;
+  browser: string;
   browserVersion: string;
   isLocal: boolean;
 }
+export interface MobileArgs {
+  platformType: "mobile";
+  url: string;
+  os: string;
+  osVersion: string;
+  device: string;
+  browser: string;
+  isLocal: boolean;
+}
 
+/**
+ * Entrypoint: detects platformType & delegates.
+ */
 export async function startBrowserSession(
-  args: StartSessionArgs,
+  args: DesktopArgs | MobileArgs,
 ): Promise<string> {
-  // Sanitize all input parameters
-  const sanitizedArgs = {
-    browser: sanitizeUrlParam(args.browser),
-    os: sanitizeUrlParam(args.os),
-    osVersion: sanitizeUrlParam(args.osVersion),
-    url: sanitizeUrlParam(args.url),
-    browserVersion: sanitizeUrlParam(args.browserVersion),
-    isLocal: args.isLocal,
-  };
+  if (args.platformType === "desktop") {
+    const entry = await filterDesktop(args);
+    const url = buildDesktopUrl(args, entry);
+    openBrowser(url);
+    return url;
+  } else {
+    const entry = await filterMobile(args);
+    const url = buildMobileUrl(args, entry);
+    openBrowser(url);
+    return url;
+  }
+}
 
-  // Construct URL with encoded parameters
+// ——— Desktop ———
+
+interface DesktopEntry {
+  os: string;
+  os_version: string;
+  browser: string;
+  browser_version: string;
+}
+
+async function filterDesktop(args: DesktopArgs): Promise<DesktopEntry> {
+  const data = await getLiveData();
+  const all: DesktopEntry[] = data.desktop.flatMap((plat: any) =>
+    plat.browsers.map((b: any) => ({
+      os: plat.os,
+      os_version: plat.os_version,
+      browser: b.browser,
+      browser_version: b.browser_version,
+    })),
+  );
+
+  let entries = all.filter((e) => e.os === args.os);
+  if (!entries.length) throw new Error(`No OS entries for "${args.os}".`);
+
+  entries = entries.filter((e) => e.browser === args.browser);
+  if (!entries.length)
+    throw new Error(`No browser "${args.browser}" on ${args.os}.`);
+
+  const uniqueVers = Array.from(new Set(entries.map((e) => e.os_version)));
+
+  let chosenOS: string;
+  if (args.os === "OS X") {
+    // macOS named versions: fuzzy match or pick first/last in JSON order
+    if (args.osVersion === "latest") {
+      chosenOS = uniqueVers[uniqueVers.length - 1];
+    } else if (args.osVersion === "oldest") {
+      chosenOS = uniqueVers[0];
+    } else {
+      // try fuzzy
+      const fuzzy = customFuzzySearch(
+        uniqueVers.map((v) => ({ os_version: v })),
+        ["os_version"],
+        args.osVersion,
+        1,
+      );
+      chosenOS = fuzzy.length ? fuzzy[0].os_version : args.osVersion;
+    }
+    // fallback if still not valid
+    if (!uniqueVers.includes(chosenOS)) {
+      chosenOS = uniqueVers[0];
+    }
+  } else {
+    // numeric/semantic resolve for Windows
+    chosenOS = resolveVersion(args.osVersion, uniqueVers);
+  }
+  entries = entries.filter((e) => e.os_version === chosenOS);
+  // resolve browser version
+  const browVers = entries.map((e) => e.browser_version);
+  const chosenBrow = resolveVersion(args.browserVersion, browVers);
+  const final = entries.find((e) => e.browser_version === chosenBrow);
+  if (!final)
+    throw new Error(`No entry for browser version "${args.browserVersion}".`);
+
+  return final;
+}
+
+function buildDesktopUrl(args: DesktopArgs, e: DesktopEntry): string {
   const params = new URLSearchParams({
-    os: sanitizedArgs.os,
-    os_version: sanitizedArgs.osVersion,
-    browser: sanitizedArgs.browser,
-    browser_version: sanitizedArgs.browserVersion,
+    os: sanitizeUrlParam(e.os),
+    os_version: sanitizeUrlParam(e.os_version),
+    browser: sanitizeUrlParam(e.browser),
+    browser_version: sanitizeUrlParam(e.browser_version),
+    url: sanitizeUrlParam(args.url),
     scale_to_fit: "true",
-    url: sanitizedArgs.url,
     resolution: "responsive-mode",
     speed: "1",
-    local: sanitizedArgs.isLocal ? "true" : "false",
+    local: args.isLocal ? "true" : "false",
     start: "true",
   });
+  return `https://live.browserstack.com/dashboard#${params.toString()}`;
+}
 
-  const launchUrl = `https://live.browserstack.com/dashboard#${params.toString()}`;
+// ——— Mobile ———
 
+interface MobileEntry {
+  os: string;
+  os_version: string;
+  display_name: string;
+}
+
+async function filterMobile(args: MobileArgs): Promise<MobileEntry> {
+  const data = await getLiveData();
+  const all: MobileEntry[] = data.mobile.flatMap((grp: any) =>
+    grp.devices.map((d: any) => ({
+      os: grp.os,
+      os_version: d.os_version,
+      display_name: d.display_name,
+    })),
+  );
+
+  let candidates = all.filter((d) => d.os === args.os);
+  if (!candidates.length)
+    throw new Error(`No mobile OS entries for "${args.os}".`);
+
+  // resolve OS version
+  const vers = candidates.map((d) => d.os_version);
+  const chosen = resolveVersion(args.osVersion, vers);
+  candidates = candidates.filter((d) => d.os_version === chosen);
+
+  // fuzzy‐match device name
+  const matches = customFuzzySearch(
+    candidates,
+    ["display_name"],
+    args.device,
+    5,
+  );
+  if (!matches.length)
+    throw new Error(
+      `No devices matching "${args.device}" on ${args.os} ${chosen}.`,
+    );
+
+  const exact = matches.find(
+    (m) => m.display_name.toLowerCase() === args.device.toLowerCase(),
+  );
+  if (!exact) {
+    const names = matches.map((m) => m.display_name).join(", ");
+    throw new Error(`Did you mean: ${names}?`);
+  }
+  return exact;
+}
+
+function buildMobileUrl(args: MobileArgs, d: MobileEntry): string {
+  const os_map = {
+    android: "Android",
+    ios: "iOS",
+    winphone: "Winphone",
+  };
+  const os = os_map[d.os as keyof typeof os_map] || d.os;
+
+  const params = new URLSearchParams({
+    os: sanitizeUrlParam(os),
+    os_version: sanitizeUrlParam(d.os_version),
+    device: d.display_name,
+    device_browser: sanitizeUrlParam(args.browser),
+    url: sanitizeUrlParam(args.url),
+    scale_to_fit: "true",
+    speed: "1",
+    start: "true",
+  });
+  return `https://live.browserstack.com/dashboard#${params.toString()}`;
+}
+
+// ——— Open a browser window ———
+
+function openBrowser(launchUrl: string): void {
   try {
-    // Use platform-specific commands with proper escaping
     const command =
       process.platform === "darwin"
         ? ["open", launchUrl]
@@ -54,22 +211,11 @@ export async function startBrowserSession(
       stdio: "ignore",
       detached: true,
     });
-
-    // Handle process errors
-    child.on("error", (error) => {
-      logger.error(
-        `Failed to open browser automatically: ${error}. Please open this URL manually: ${launchUrl}`,
-      );
-    });
-
-    // Unref the child process to allow the parent to exit
-    child.unref();
-
-    return launchUrl;
-  } catch (error) {
-    logger.error(
-      `Failed to open browser automatically: ${error}. Please open this URL manually: ${launchUrl}`,
+    child.on("error", (err) =>
+      logger.error(`Failed to open browser: ${err}. URL: ${launchUrl}`),
     );
-    return launchUrl;
+    child.unref();
+  } catch (err) {
+    logger.error(`Failed to launch browser: ${err}. URL: ${launchUrl}`);
   }
 }
