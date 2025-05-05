@@ -35,11 +35,17 @@ export async function startBrowserSession(
     const entry = await filterDesktop(args);
     const url = buildDesktopUrl(args, entry);
     openBrowser(url);
+    if (entry.notes) {
+      return `${url}, ${entry.notes}`;
+    }
     return url;
   } else {
     const entry = await filterMobile(args);
     const url = buildMobileUrl(args, entry);
     openBrowser(url);
+    if (entry.notes) {
+      return `${url}, ${entry.notes}`;
+    }
     return url;
   }
 }
@@ -51,6 +57,7 @@ interface DesktopEntry {
   os_version: string;
   browser: string;
   browser_version: string;
+  notes?: string;
 }
 
 async function filterDesktop(args: DesktopArgs): Promise<DesktopEntry> {
@@ -106,6 +113,24 @@ async function filterDesktop(args: DesktopArgs): Promise<DesktopEntry> {
   if (!final)
     throw new Error(`No entry for browser version "${args.browserVersion}".`);
 
+  if (
+    args.osVersion !== chosenOS &&
+    args.osVersion !== "latest" &&
+    args.osVersion !== "oldest"
+  ) {
+    final.notes = `Note: Os version ${args.osVersion} was not found. Using "${chosenOS}" instead.`;
+  }
+  if (
+    args.browserVersion !== chosenBrow &&
+    args.browserVersion !== "latest" &&
+    args.browserVersion !== "oldest"
+  ) {
+    if (!final.notes) {
+      final.notes = `Note: `;
+    }
+    final.notes += `Browser version ${args.browserVersion} was not found. Using "${chosenBrow}" instead.`;
+  }
+
   return final;
 }
 
@@ -131,6 +156,7 @@ interface MobileEntry {
   os: string;
   os_version: string;
   display_name: string;
+  notes?: string;
 }
 
 async function filterMobile(args: MobileArgs): Promise<MobileEntry> {
@@ -140,17 +166,13 @@ async function filterMobile(args: MobileArgs): Promise<MobileEntry> {
       os: grp.os,
       os_version: d.os_version,
       display_name: d.display_name,
+      notes: "",
     })),
   );
 
   let candidates = all.filter((d) => d.os === args.os);
   if (!candidates.length)
     throw new Error(`No mobile OS entries for "${args.os}".`);
-
-  // resolve OS version
-  const vers = candidates.map((d) => d.os_version);
-  const chosen = resolveVersion(args.osVersion, vers);
-  candidates = candidates.filter((d) => d.os_version === chosen);
 
   // fuzzy‐match device name
   const matches = customFuzzySearch(
@@ -160,18 +182,43 @@ async function filterMobile(args: MobileArgs): Promise<MobileEntry> {
     5,
   );
   if (!matches.length)
-    throw new Error(
-      `No devices matching "${args.device}" on ${args.os} ${chosen}.`,
-    );
+    throw new Error(`No devices matching "${args.device}" on ${args.os}.`);
 
   const exact = matches.find(
     (m) => m.display_name.toLowerCase() === args.device.toLowerCase(),
   );
   if (!exact) {
     const names = matches.map((m) => m.display_name).join(", ");
-    throw new Error(`Did you mean: ${names}?`);
+    throw new Error(
+      `Alternative Device/Device's found : ${names}. Please Select one.`,
+    );
   }
-  return exact;
+  candidates = candidates.filter((d) => d.display_name === exact.display_name);
+  if (!candidates.length)
+    throw new Error(`No device "${exact.display_name}" on ${args.os}.`);
+  // resolve browser versio
+
+  // resolve OS version
+  const vers = candidates.map((d) => d.os_version);
+  const chosen = resolveVersion(args.osVersion, vers);
+  candidates = candidates.filter((d) => d.os_version === chosen);
+
+  if (!candidates.length)
+    throw new Error(`No entry for OS version "${args.osVersion}".`);
+
+  let notes = "";
+  if (
+    chosen !== args.osVersion &&
+    args.osVersion !== "latest" &&
+    args.osVersion !== "oldest"
+  ) {
+    notes = `Note: Os version ${args.osVersion} was not found. Using ${chosen} instead.`;
+  }
+
+  const final = candidates[0];
+  if (!final) throw new Error(`No entry for OS version "${args.osVersion}".`);
+  final.notes = notes;
+  return final;
 }
 
 function buildMobileUrl(args: MobileArgs, d: MobileEntry): string {
