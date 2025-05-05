@@ -3,16 +3,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import logger from "../logger";
 import { startBrowserSession } from "./live-utils/start-session";
-import {
-  isLocalURL,
-  ensureLocalBinarySetup,
-  killExistingBrowserStackLocalProcesses,
-} from "../lib/local";
+import { PlatformType } from "./live-utils/types";
 
 // Define the schema shape
 const LiveArgsShape = {
   platformType: z
-    .enum(["desktop", "mobile"])
+    .nativeEnum(PlatformType)
     .describe("Must be 'desktop' or 'mobile'"),
   desiredURL: z.string().url().describe("The URL to test"),
   desiredOS: z
@@ -40,24 +36,10 @@ const LiveArgsShape = {
 const LiveArgsSchema = z.object(LiveArgsShape);
 
 /**
- * Prepares local tunnel setup based on URL type
- */
-async function prepareLocalTunnel(url: string): Promise<boolean> {
-  const isLocal = isLocalURL(url);
-  if (isLocal) {
-    await ensureLocalBinarySetup();
-  } else {
-    await killExistingBrowserStackLocalProcesses();
-  }
-  return isLocal;
-}
-
-/**
  * Launches a desktop browser session
  */
 async function launchDesktopSession(
   args: z.infer<typeof LiveArgsSchema>,
-  isLocal: boolean,
 ): Promise<string> {
   if (!args.desiredBrowser)
     throw new Error("You must provide a desiredBrowser");
@@ -65,13 +47,12 @@ async function launchDesktopSession(
     throw new Error("You must provide a desiredBrowserVersion");
 
   return startBrowserSession({
-    platformType: "desktop",
+    platformType: PlatformType.DESKTOP,
     url: args.desiredURL,
     os: args.desiredOS,
     osVersion: args.desiredOSVersion,
     browser: args.desiredBrowser,
     browserVersion: args.desiredBrowserVersion,
-    isLocal,
   });
 }
 
@@ -80,18 +61,16 @@ async function launchDesktopSession(
  */
 async function launchMobileSession(
   args: z.infer<typeof LiveArgsSchema>,
-  isLocal: boolean,
 ): Promise<string> {
   if (!args.desiredDevice) throw new Error("You must provide a desiredDevice");
 
   return startBrowserSession({
-    platformType: "mobile",
+    platformType: PlatformType.MOBILE,
     browser: args.desiredBrowser,
     url: args.desiredURL,
     os: args.desiredOS,
     osVersion: args.desiredOSVersion,
     device: args.desiredDevice,
-    isLocal,
   });
 }
 
@@ -102,15 +81,12 @@ async function runBrowserSession(rawArgs: any) {
   // Validate and narrow
   const args = LiveArgsSchema.parse(rawArgs);
 
-  // Setup local tunnel
-  const isLocal = await prepareLocalTunnel(args.desiredURL);
-
   try {
     // Branch desktop vs mobile and delegate
     const launchUrl =
-      args.platformType === "desktop"
-        ? await launchDesktopSession(args, isLocal)
-        : await launchMobileSession(args, isLocal);
+      args.platformType === PlatformType.DESKTOP
+        ? await launchDesktopSession(args)
+        : await launchMobileSession(args);
 
     return {
       content: [

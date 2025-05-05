@@ -8,7 +8,6 @@ jest.mock('../../src/tools/live-utils/start-session', () => ({
 }));
 jest.mock('../../src/lib/local', () => ({
   isLocalURL: jest.fn(),
-  ensureLocalBinarySetup: jest.fn(),
   killExistingBrowserStackLocalProcesses: jest.fn(),
 }));
 jest.mock('../../src/logger', () => ({
@@ -30,7 +29,6 @@ describe('startBrowserLiveSession', () => {
 
     (startBrowserSession as jest.Mock).mockResolvedValue('https://live.browserstack.com/123456');
     (local.isLocalURL as jest.Mock).mockReturnValue(false);
-    (local.ensureLocalBinarySetup as jest.Mock).mockResolvedValue(undefined);
     (local.killExistingBrowserStackLocalProcesses as jest.Mock).mockResolvedValue(undefined);
   });
 
@@ -63,13 +61,6 @@ describe('startBrowserLiveSession', () => {
     const result = await serverMock.handler(validMobileArgs);
     expect(result.content[0].text).toContain('✅ Session started');
     expect(startBrowserSession).toHaveBeenCalled();
-  });
-
-  it('should handle local URLs correctly', async () => {
-    (local.isLocalURL as jest.Mock).mockReturnValue(true);
-    const result = await serverMock.handler(validDesktopArgs);
-    expect(local.ensureLocalBinarySetup).toHaveBeenCalled();
-    expect(result.content[0].text).toContain('✅ Session started');
   });
 
   it('should handle session start failure', async () => {
