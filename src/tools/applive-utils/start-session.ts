@@ -1,6 +1,6 @@
 import childProcess from "child_process";
 import logger from "../../logger";
-import { getAppLiveData } from "./device-cache";
+import { getBrowserStackData } from "../../lib/device-cache";
 import { fuzzySearchDevices } from "./fuzzy-search";
 import { sanitizeUrlParam } from "../../lib/utils";
 import { uploadApp } from "./upload-app";
@@ -30,7 +30,8 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
   const { appPath, desiredPlatform, desiredPhone } = args;
   let { desiredPlatformVersion } = args;
 
-  const data = await getAppLiveData();
+  const data = await getBrowserStackData("app_live");
+
   const allDevices: DeviceEntry[] = data.mobile.flatMap((group: any) =>
     group.devices.map((dev: any) => ({ ...dev, os: group.os })),
   );

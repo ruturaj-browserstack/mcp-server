@@ -1,10 +1,10 @@
-import { getLiveData } from "./device-cache";
+import { getBrowserStackData } from "../../lib/device-cache";
 import { resolveVersion } from "./version-resolver";
 import { customFuzzySearch } from "../../lib/fuzzy";
 import { DesktopArgs, DesktopEntry } from "./types";
 
 export async function filterDesktop(args: DesktopArgs): Promise<DesktopEntry> {
-  const data = await getLiveData();
+  const data = await getBrowserStackData("live");
   const allEntries = getAllDesktopEntries(data);
 
   // Filter OS

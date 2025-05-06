@@ -1,4 +1,4 @@
-import { getLiveData } from "./device-cache";
+import { getBrowserStackData } from "../../lib/device-cache";
 import { resolveVersion } from "./version-resolver";
 import { customFuzzySearch } from "../../lib/fuzzy";
 import { MobileArgs, MobileEntry } from "./types";
@@ -80,7 +80,7 @@ function createVersionNote(
 }
 
 export async function filterMobile(args: MobileArgs): Promise<MobileEntry> {
-  const data = await getLiveData();
+  const data = await getBrowserStackData("live");
   const allEntries = getAllMobileEntries(data);
 
   const osCandidates = filterByOS(allEntries, args.os);
