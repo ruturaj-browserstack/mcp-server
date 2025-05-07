@@ -44,7 +44,7 @@ export async function getDevicesAndBrowsers(
 
   if (!liveRes.ok || !appLiveRes.ok) {
     throw new Error(
-      `Failed to fetch configuration from BrowserStack for try catch around JSON parse.: live=${liveRes.statusText}, app_live=${appLiveRes.statusText}`,
+      `Failed to fetch configuration from BrowserStack : live=${liveRes.statusText}, app_live=${appLiveRes.statusText}`,
     );
   }
 
