@@ -1,11 +1,10 @@
-import { sanitizeUrlParam } from "../../lib/utils";
 import logger from "../../logger";
 import childProcess from "child_process";
 import { filterDesktop } from "./desktop-filter";
 import { filterMobile } from "./mobile-filter";
 import {
-  DesktopArgs,
-  MobileArgs,
+  DesktopSearchArgs,
+  MobileSearchArgs,
   DesktopEntry,
   MobileEntry,
   PlatformType,
@@ -33,35 +32,39 @@ async function prepareLocalTunnel(url: string): Promise<boolean> {
  * Entrypoint: detects platformType & delegates.
  */
 export async function startBrowserSession(
-  args: DesktopArgs | MobileArgs,
+  args: DesktopSearchArgs | MobileSearchArgs,
 ): Promise<string> {
   const entry =
     args.platformType === PlatformType.DESKTOP
-      ? await filterDesktop(args as DesktopArgs)
-      : await filterMobile(args as MobileArgs);
+      ? await filterDesktop(args as DesktopSearchArgs)
+      : await filterMobile(args as MobileSearchArgs);
 
   const isLocal = await prepareLocalTunnel(args.url);
 
   const url =
     args.platformType === PlatformType.DESKTOP
-      ? buildDesktopUrl(args as DesktopArgs, entry as DesktopEntry, isLocal)
-      : buildMobileUrl(args as MobileArgs, entry as MobileEntry, isLocal);
+      ? buildDesktopUrl(
+          args as DesktopSearchArgs,
+          entry as DesktopEntry,
+          isLocal,
+        )
+      : buildMobileUrl(args as MobileSearchArgs, entry as MobileEntry, isLocal);
 
   openBrowser(url);
   return entry.notes ? `${url}, ${entry.notes}` : url;
 }
 
 function buildDesktopUrl(
-  args: DesktopArgs,
+  args: DesktopSearchArgs,
   e: DesktopEntry,
   isLocal: boolean,
 ): string {
   const params = new URLSearchParams({
-    os: sanitizeUrlParam(e.os),
-    os_version: sanitizeUrlParam(e.os_version),
-    browser: sanitizeUrlParam(e.browser),
-    browser_version: sanitizeUrlParam(e.browser_version),
-    url: sanitizeUrlParam(args.url),
+    os: e.os,
+    os_version: e.os_version,
+    browser: e.browser,
+    browser_version: e.browser_version,
+    url: args.url,
     scale_to_fit: "true",
     resolution: "responsive-mode",
     speed: "1",
@@ -72,7 +75,7 @@ function buildDesktopUrl(
 }
 
 function buildMobileUrl(
-  args: MobileArgs,
+  args: MobileSearchArgs,
   d: MobileEntry,
   isLocal: boolean,
 ): string {
@@ -84,11 +87,11 @@ function buildMobileUrl(
   const os = os_map[d.os as keyof typeof os_map] || d.os;
 
   const params = new URLSearchParams({
-    os: sanitizeUrlParam(os),
-    os_version: sanitizeUrlParam(d.os_version),
+    os: os,
+    os_version: d.os_version,
     device: d.display_name,
-    device_browser: sanitizeUrlParam(args.browser),
-    url: sanitizeUrlParam(args.url),
+    device_browser: args.browser,
+    url: args.url,
     scale_to_fit: "true",
     speed: "1",
     local: isLocal ? "true" : "false",

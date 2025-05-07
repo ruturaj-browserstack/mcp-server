@@ -15,7 +15,7 @@ const URLS = {
 /**
  * Fetches and caches both BrowserStack datasets (live + app_live) with a shared TTL.
  */
-export async function getBrowserStackData(
+export async function getDevicesAndBrowsers(
   type: "live" | "app_live",
 ): Promise<any> {
   if (!fs.existsSync(CACHE_DIR)) {
@@ -23,36 +23,38 @@ export async function getBrowserStackData(
   }
 
   let cache: any = {};
-  let shouldRefresh = true;
 
   if (fs.existsSync(CACHE_FILE)) {
     const stats = fs.statSync(CACHE_FILE);
     if (Date.now() - stats.mtimeMs < TTL_MS) {
-      cache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
-      shouldRefresh = false;
+      try {
+        cache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
+        return cache[type];
+      } catch (error) {
+        console.error("Error parsing cache file:", error);
+        // Continue with fetching fresh data
+      }
     }
   }
 
-  if (shouldRefresh) {
-    const [liveRes, appLiveRes] = await Promise.all([
-      fetch(URLS.live),
-      fetch(URLS.app_live),
-    ]);
+  const [liveRes, appLiveRes] = await Promise.all([
+    fetch(URLS.live),
+    fetch(URLS.app_live),
+  ]);
 
-    if (!liveRes.ok || !appLiveRes.ok) {
-      throw new Error(
-        `Failed to fetch data: live=${liveRes.statusText}, app_live=${appLiveRes.statusText}`,
-      );
-    }
-
-    const [liveData, appLiveData] = await Promise.all([
-      liveRes.json(),
-      appLiveRes.json(),
-    ]);
-
-    cache = { live: liveData, app_live: appLiveData };
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(cache), "utf8");
+  if (!liveRes.ok || !appLiveRes.ok) {
+    throw new Error(
+      `Failed to fetch configuration from BrowserStack for try catch around JSON parse.: live=${liveRes.statusText}, app_live=${appLiveRes.statusText}`,
+    );
   }
+
+  const [liveData, appLiveData] = await Promise.all([
+    liveRes.json(),
+    appLiveRes.json(),
+  ]);
+
+  cache = { live: liveData, app_live: appLiveData };
+  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache), "utf8");
 
   return cache[type];
 }

@@ -1,4 +1,4 @@
-export interface DesktopArgs {
+export interface DesktopSearchArgs {
   platformType: "desktop";
   url: string;
   os: string;
@@ -15,7 +15,7 @@ export interface DesktopEntry {
   notes?: string;
 }
 
-export interface MobileArgs {
+export interface MobileSearchArgs {
   platformType: "mobile";
   url: string;
   os: string;
