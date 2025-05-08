@@ -10,7 +10,9 @@ import { formatAxiosError } from "../../lib/error";
 export const ListTestCasesSchema = z.object({
   project_identifier: z
     .string()
-    .describe("Identifier of the project to fetch test cases from."),
+    .describe(
+      "Identifier of the project to fetch test cases from.  Example: PR-12345",
+    ),
   folder_id: z
     .string()
     .optional()
@@ -25,19 +27,8 @@ export const ListTestCasesSchema = z.object({
     .string()
     .optional()
     .describe("Comma-separated list of priorities (e.g. critical,medium,low)."),
-  status: z
-    .string()
-    .optional()
-    .describe("Comma-separated list of statuses (e.g. draft,active)."),
-  tags: z.string().optional().describe("Comma-separated list of tags."),
-  owner: z.string().optional().describe("Owner email to filter by."),
+
   p: z.number().optional().describe("Page number."),
-  custom_fields: z
-    .record(z.array(z.string()))
-    .optional()
-    .describe(
-      "Map of custom field names to arrays of values, e.g. { estimate: ['10','20'], 'automation type': ['automated'] }",
-    ),
 });
 
 export type ListTestCasesArgs = z.infer<typeof ListTestCasesSchema>;
@@ -54,15 +45,7 @@ export async function listTestCases(
     if (args.folder_id) params.append("folder_id", args.folder_id);
     if (args.case_type) params.append("case_type", args.case_type);
     if (args.priority) params.append("priority", args.priority);
-    if (args.status) params.append("status", args.status);
-    if (args.tags) params.append("tags", args.tags);
-    if (args.owner) params.append("owner", args.owner);
     if (args.p !== undefined) params.append("p", args.p.toString());
-    if (args.custom_fields) {
-      for (const [field, values] of Object.entries(args.custom_fields)) {
-        params.append(`custom_fields[${field}]`, values.join(","));
-      }
-    }
 
     const url = `https://test-management.browserstack.com/api/v2/projects/${encodeURIComponent(
       args.project_identifier,
@@ -96,7 +79,7 @@ export async function listTestCases(
     const summary = test_cases
       .map(
         (tc: any) =>
-          `• ${tc.identifier}: ${tc.title} [${tc.case_type} | ${tc.status} | ${tc.priority}]`,
+          `• ${tc.identifier}: ${tc.title} [${tc.case_type} | ${tc.priority}]`,
       )
       .join("\n");
 

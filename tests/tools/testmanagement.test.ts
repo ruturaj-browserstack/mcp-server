@@ -183,7 +183,7 @@ describe('listTestCases util', () => {
       expect.objectContaining({ auth: expect.any(Object) })
     );
     expect(result.content[0].text).toContain('Found 2 test case(s):');
-    expect(result.content[0].text).toContain('TC-1: Test One [functional | active | high]');
+    expect(result.content[0].text).toContain('TC-1: Test One [functional | high]');
     expect(result.content[1].text).toBe(JSON.stringify(mockCases, null, 2));
   });
 
