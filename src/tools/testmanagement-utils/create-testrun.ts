@@ -30,27 +30,11 @@ export const CreateTestRunSchema = z.object({
       .describe(
         "State of the test run. One of new_run, in_progress, under_review, rejected, done, closed",
       ),
-    assignee: z
-      .string()
-      .email()
-      .optional()
-      .describe("Email of the test run assignee"),
-    test_case_assignee: z
-      .string()
-      .email()
-      .optional()
-      .describe("Email of the test case assignee"),
-    tags: z.array(z.string()).optional().describe("Labels for the test run"),
     issues: z.array(z.string()).optional().describe("Linked issue IDs"),
     issue_tracker: z
       .object({ name: z.string(), host: z.string().url() })
       .optional()
       .describe("Issue tracker configuration"),
-    configurations: z
-      .array(z.number())
-      .optional()
-      .describe("List of configuration IDs"),
-    test_plan_id: z.string().optional().describe("Identifier of the test plan"),
     test_cases: z
       .array(z.string())
       .optional()
@@ -59,27 +43,6 @@ export const CreateTestRunSchema = z.object({
       .array(z.number())
       .optional()
       .describe("Folder IDs to include"),
-    include_all: z
-      .boolean()
-      .optional()
-      .describe("If true, include all test cases in the project"),
-    is_automation: z
-      .boolean()
-      .optional()
-      .describe("Mark as automated if true, otherwise manual"),
-    filter_test_cases: z
-      .object({
-        status: z.array(z.string()).optional(),
-        priority: z.array(z.string()).optional(),
-        case_type: z.array(z.string()).optional(),
-        owner: z.array(z.string()).optional(),
-        tags: z.array(z.string()).optional(),
-        custom_fields: z
-          .record(z.array(z.union([z.string(), z.number()])))
-          .optional(),
-      })
-      .optional()
-      .describe("Filters to apply before adding test cases"),
   }),
 });
 
@@ -92,8 +55,14 @@ export async function createTestRun(
   rawArgs: CreateTestRunArgs,
 ): Promise<CallToolResult> {
   try {
-    // Validate and narrow
-    const args = CreateTestRunSchema.parse(rawArgs);
+    const inputArgs = {
+      ...rawArgs,
+      test_run: {
+        ...rawArgs.test_run,
+        include_all: false,
+      },
+    };
+    const args = CreateTestRunSchema.parse(inputArgs);
 
     const url = `https://test-management.browserstack.com/api/v2/projects/${encodeURIComponent(
       args.project_identifier,
