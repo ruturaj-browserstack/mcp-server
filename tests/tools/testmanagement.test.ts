@@ -173,7 +173,7 @@ describe('listTestCases util', () => {
   ];
 
   it('should return formatted summary and raw JSON on success', async () => {
-    mockedAxios.get.mockResolvedValue({ data: { test_cases: mockCases, info: { count: 2 } } });
+    mockedAxios.get.mockResolvedValue({ data: { success: true, test_cases: mockCases, info: { count: 2 } } });
 
     const args = { project_identifier: 'PR-1', status: 'active', p: 1 };
     const result = await listTestCases(args as any);

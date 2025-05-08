@@ -75,7 +75,21 @@ export async function listTestCases(
       },
     });
 
-    const { test_cases, info } = resp.data;
+    const resp_data = resp.data;
+    if (!resp_data.success) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Failed to list test cases: ${JSON.stringify(resp_data)}`,
+            isError: true,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    const { test_cases, info } = resp_data;
     const count = info?.count ?? test_cases.length;
 
     // Summary for more focused output
