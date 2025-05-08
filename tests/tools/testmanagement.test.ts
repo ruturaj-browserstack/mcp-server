@@ -1,6 +1,6 @@
 import { createProjectOrFolderTool } from '../../src/tools/testmanagement';
 import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
-import { createTestCaseTool , createTestRunTool} from '../../src/tools/testmanagement';
+import { createTestCaseTool , createTestRunTool } from '../../src/tools/testmanagement';
 import { createTestCase, sanitizeArgs, TestCaseCreateRequest } from '../../src/tools/testmanagement-utils/create-testcase';
 import axios from 'axios';
 import { listTestCases } from '../../src/tools/testmanagement-utils/list-testcases';
@@ -28,7 +28,6 @@ jest.mock('../../src/config', () => ({
 }));
 jest.mock('../../src/tools/testmanagement-utils/create-testrun', () => ({
   createTestRun: jest.fn(),
-  // if you’re parsing args the same way as in the others, you can include the schema mock too:
   CreateTestRunSchema: {
     parse: (args: any) => args,
     shape: {},
@@ -197,7 +196,7 @@ describe('listTestCases util', () => {
   });
 });
 
-describe('createTestRunTool', () => {                                             
+describe('createTestRunTool', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -240,5 +239,99 @@ describe('createTestRunTool', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Unknown error');
+  });
+});
+
+//
+// New tests for listTestRunsTool & updateTestRunTool
+//
+
+import { listTestRunsTool, updateTestRunTool } from '../../src/tools/testmanagement';
+import { listTestRuns } from '../../src/tools/testmanagement-utils/list-testruns';
+import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testrun';
+
+jest.mock('../../src/tools/testmanagement-utils/list-testruns', () => ({
+  listTestRuns: jest.fn(),
+  ListTestRunsSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
+jest.mock('../../src/tools/testmanagement-utils/update-testrun', () => ({
+  updateTestRun: jest.fn(),
+  UpdateTestRunSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
+
+describe('listTestRunsTool', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockRuns = [
+    { identifier: 'TR-1', name: 'Run One', run_state: 'new_run' },
+    { identifier: 'TR-2', name: 'Run Two', run_state: 'done' },
+  ];
+  const projectId = 'PR-123';
+
+  it('should return summary and raw JSON on success', async () => {
+    (listTestRuns as jest.Mock).mockResolvedValue({
+      content: [
+        { type: 'text', text: `Found 2 test run(s):\n\n• TR-1: Run One [new_run]\n• TR-2: Run Two [done]` },
+        { type: 'text', text: JSON.stringify(mockRuns, null, 2) },
+      ],
+      isError: false,
+    });
+
+    const result = await listTestRunsTool({ project_identifier: projectId } as any);
+    expect(listTestRuns).toHaveBeenCalledWith({ project_identifier: projectId });
+    expect(result.isError).toBe(false);
+    expect(result.content[0].text).toContain('Found 2 test run(s):');
+    expect(result.content[1].text).toBe(JSON.stringify(mockRuns, null, 2));
+  });
+
+  it('should handle errors', async () => {
+    (listTestRuns as jest.Mock).mockRejectedValue(new Error('Network Error'));
+    const result = await listTestRunsTool({ project_identifier: projectId } as any);
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Failed to list test runs: Network Error');
+  });
+});
+
+describe('updateTestRunTool', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const args = {
+    project_identifier: 'PR-123',
+    test_run_id: 'TR-1',
+    test_run: { name: 'Updated Name', run_state: 'in_progress' },
+  };
+
+  it('should return success message and updated run JSON on success', async () => {
+    const updated = { name: 'Updated Name', run_state: 'in_progress', tags: [] };
+    (updateTestRun as jest.Mock).mockResolvedValue({
+      content: [
+        { type: 'text', text: `Successfully updated test run ${args.test_run_id}` },
+        { type: 'text', text: JSON.stringify(updated, null, 2) },
+      ],
+      isError: false,
+    });
+
+    const result = await updateTestRunTool(args as any);
+    expect(updateTestRun).toHaveBeenCalledWith(args);
+    expect(result.isError).toBe(false);
+    expect(result.content[0].text).toContain(`Successfully updated test run ${args.test_run_id}`);
+    expect(result.content[1].text).toBe(JSON.stringify(updated, null, 2));
+  });
+
+  it('should handle errors', async () => {
+    (updateTestRun as jest.Mock).mockRejectedValue(new Error('API Error'));
+    const result = await updateTestRunTool(args as any);
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Failed to update test run: API Error');
   });
 });
