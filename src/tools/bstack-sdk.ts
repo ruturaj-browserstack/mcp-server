@@ -10,6 +10,7 @@ import {
   generateBrowserStackYMLInstructions,
   getInstructionsForProjectConfiguration,
 } from "./sdk-utils/instructions";
+import { trackMCP } from "../lib/instrumentation";
 
 /**
  * BrowserStack SDK hooks into your test framework to seamlessly run tests on BrowserStack.
@@ -72,21 +73,23 @@ export default function addSDKTools(server: McpServer) {
         ),
     },
     async (args) => {
-      const detectedBrowserAutomationFramework =
-        args.detectedBrowserAutomationFramework as SDKSupportedBrowserAutomationFramework;
-      const detectedTestingFramework =
-        args.detectedTestingFramework as SDKSupportedTestingFramework;
-      const detectedLanguage = args.detectedLanguage as SDKSupportedLanguage;
-      const desiredPlatforms = args.desiredPlatforms;
-
       try {
-        return bootstrapProjectWithSDK({
-          detectedBrowserAutomationFramework,
-          detectedTestingFramework,
-          detectedLanguage,
-          desiredPlatforms,
+        trackMCP("runTestsOnBrowserStack", server.server.getClientVersion()!);
+
+        return await bootstrapProjectWithSDK({
+          detectedBrowserAutomationFramework:
+            args.detectedBrowserAutomationFramework as SDKSupportedBrowserAutomationFramework,
+          detectedTestingFramework:
+            args.detectedTestingFramework as SDKSupportedTestingFramework,
+          detectedLanguage: args.detectedLanguage as SDKSupportedLanguage,
+          desiredPlatforms: args.desiredPlatforms,
         });
       } catch (error) {
+        trackMCP(
+          "runTestsOnBrowserStack",
+          server.server.getClientVersion()!,
+          error,
+        );
         return {
           content: [
             {

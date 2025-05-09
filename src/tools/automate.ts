@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import logger from "../logger";
 import { retrieveNetworkFailures } from "../lib/api";
+import { trackMCP } from "../lib/instrumentation";
 
 /**
  * Fetches failed network requests from a BrowserStack Automate session.
@@ -33,20 +34,8 @@ export async function getNetworkFailures(args: {
       ],
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    logger.error("Failed to fetch network logs: %s", errorMessage);
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Failed to fetch network logs: ${errorMessage}`,
-          isError: true,
-        },
-      ],
-      isError: true,
-    };
+    logger.error("Failed to fetch network logs: %s", error);
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -57,6 +46,32 @@ export default function addAutomateTools(server: McpServer) {
     {
       sessionId: z.string().describe("The Automate session ID."),
     },
-    getNetworkFailures,
+    async (args) => {
+      try {
+        trackMCP("getNetworkFailures", server.server.getClientVersion()!);
+        return await getNetworkFailures(args);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        logger.error("Failed to fetch network logs: %s", errorMessage);
+
+        trackMCP(
+          "getNetworkFailures",
+          server.server.getClientVersion()!,
+          error,
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to fetch network logs: ${errorMessage}`,
+              isError: true,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
   );
 }

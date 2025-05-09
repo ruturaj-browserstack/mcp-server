@@ -2,6 +2,8 @@ import { createProjectOrFolderTool } from '../../src/tools/testmanagement';
 import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
 import { createTestCaseTool , createTestRunTool } from '../../src/tools/testmanagement';
 import { createTestCase, sanitizeArgs, TestCaseCreateRequest } from '../../src/tools/testmanagement-utils/create-testcase';
+import addTestManagementTools from '../../src/tools/testmanagement';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios from 'axios';
 import { listTestCases } from '../../src/tools/testmanagement-utils/list-testcases';
 import { createTestRun } from '../../src/tools/testmanagement-utils/create-testrun';
@@ -18,6 +20,9 @@ jest.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
 jest.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
   createTestCase: jest.fn(),
   sanitizeArgs: jest.fn((args) => args),
+  CreateTestCaseSchema: {
+    shape: {}, 
+  },
 }));
 jest.mock('../../src/config', () => ({
   __esModule: true,
@@ -26,6 +31,23 @@ jest.mock('../../src/config', () => ({
     browserstackAccessKey: 'fake-key',
   },
 }));
+
+jest.mock('../../src/lib/instrumentation', () => ({
+  trackMCP: jest.fn()
+}));
+
+const mockServer = {
+  tool: jest.fn(),
+  server: {
+    getClientVersion: jest.fn(() => ({
+      name: 'jest-client',
+      version: '1.0.0',
+    })),
+  },
+} as unknown as McpServer;
+
+addTestManagementTools(mockServer);
+
 jest.mock('../../src/tools/testmanagement-utils/create-testrun', () => ({
   createTestRun: jest.fn(),
   CreateTestRunSchema: {

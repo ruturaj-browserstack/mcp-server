@@ -13,6 +13,9 @@ jest.mock('../../src/lib/local', () => ({
 jest.mock('../../src/logger', () => ({
   error: jest.fn()
 }));
+jest.mock('../../src/lib/instrumentation', () => ({
+  trackMCP: jest.fn()
+}));
 
 describe('startBrowserLiveSession', () => {
   let serverMock: any;
@@ -23,6 +26,9 @@ describe('startBrowserLiveSession', () => {
       tool: jest.fn((name, desc, schema, handler) => {
         serverMock.handler = handler;
       }),
+      server: {
+        getClientVersion: jest.fn().mockReturnValue({ version: '1.0.0' })
+      }
     };
 
     addBrowserLiveTools(serverMock);
@@ -67,7 +73,7 @@ describe('startBrowserLiveSession', () => {
     (startBrowserSession as jest.Mock).mockRejectedValue(new Error('Session start failed'));
     const result = await serverMock.handler(validDesktopArgs);
     expect(logger.error).toHaveBeenCalled();
-    expect(result.content[0].text).toContain('❌ Failed to start session');
+    expect(result.content[0].text).toContain('Failed to start a browser live session');
   });
 
   it('should fail on schema validation error (missing desiredBrowser)', async () => {

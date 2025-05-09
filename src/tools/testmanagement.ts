@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { trackMCP } from "../lib/instrumentation";
+import logger from "../logger";
 import {
   createProjectOrFolder,
   CreateProjFoldSchema,
@@ -11,6 +13,9 @@ import {
   sanitizeArgs,
   CreateTestCaseSchema,
 } from "./testmanagement-utils/create-testcase";
+
+
+let serverInstance: McpServer;
 
 import {
   listTestCases,
@@ -32,6 +37,9 @@ import {
   updateTestRun,
 } from "./testmanagement-utils/update-testrun";
 
+
+//TODO: Moving the traceMCP and catch block to the parent(server) function
+
 /**
  * Wrapper to call createProjectOrFolder util.
  */
@@ -39,8 +47,18 @@ export async function createProjectOrFolderTool(
   args: z.infer<typeof CreateProjFoldSchema>,
 ): Promise<CallToolResult> {
   try {
+    trackMCP(
+      "createProjectOrFolder",
+      serverInstance.server.getClientVersion()!,
+    );
     return await createProjectOrFolder(args);
   } catch (err) {
+    logger.error("Failed to create project/folder: %s", err);
+    trackMCP(
+      "createProjectOrFolder",
+      serverInstance.server.getClientVersion()!,
+      err,
+    );
     return {
       content: [
         {
@@ -65,8 +83,11 @@ export async function createTestCaseTool(
   // Sanitize input arguments
   const cleanedArgs = sanitizeArgs(args);
   try {
+    trackMCP("createTestCase", serverInstance.server.getClientVersion()!);
     return await createTestCaseAPI(cleanedArgs);
   } catch (err) {
+    logger.error("Failed to create test case: %s", err);
+    trackMCP("createTestCase", serverInstance.server.getClientVersion()!, err);
     return {
       content: [
         {
@@ -185,6 +206,7 @@ export async function updateTestRunTool(
  * Registers both project/folder and test-case tools.
  */
 export default function addTestManagementTools(server: McpServer) {
+  serverInstance = server;
   server.tool(
     "createProjectOrFolder",
     "Create a project and/or folder in BrowserStack Test Management.",
