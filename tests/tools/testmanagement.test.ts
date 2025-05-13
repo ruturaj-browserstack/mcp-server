@@ -1,13 +1,21 @@
-import { createProjectOrFolderTool } from '../../src/tools/testmanagement';
-import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
-import { createTestCaseTool , createTestRunTool } from '../../src/tools/testmanagement';
-import { createTestCase, sanitizeArgs, TestCaseCreateRequest } from '../../src/tools/testmanagement-utils/create-testcase';
+import { 
+  createProjectOrFolderTool, 
+  createTestCaseTool, 
+  createTestRunTool,
+  addTestResultTool,
+  listTestRunsTool, 
+  updateTestRunTool
+} from '../../src/tools/testmanagement';
 import addTestManagementTools from '../../src/tools/testmanagement';
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import axios from 'axios';
+import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
+import { createTestCase, sanitizeArgs, TestCaseCreateRequest } from '../../src/tools/testmanagement-utils/create-testcase';
 import { listTestCases } from '../../src/tools/testmanagement-utils/list-testcases';
 import { createTestRun } from '../../src/tools/testmanagement-utils/create-testrun';
-
+import { addTestResult } from '../../src/tools/testmanagement-utils/add-test-result';
+import { listTestRuns } from '../../src/tools/testmanagement-utils/list-testruns';
+import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testrun';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import axios from 'axios';
 
 // Mock dependencies
 jest.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
@@ -21,7 +29,7 @@ jest.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
   createTestCase: jest.fn(),
   sanitizeArgs: jest.fn((args) => args),
   CreateTestCaseSchema: {
-    shape: {}, 
+    shape: {},
   },
 }));
 jest.mock('../../src/config', () => ({
@@ -31,9 +39,16 @@ jest.mock('../../src/config', () => ({
     browserstackAccessKey: 'fake-key',
   },
 }));
-
 jest.mock('../../src/lib/instrumentation', () => ({
   trackMCP: jest.fn()
+}));
+
+jest.mock('../../src/tools/testmanagement-utils/add-test-result', () => ({
+  addTestResult: jest.fn(),
+  AddTestResultSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
 }));
 
 const mockServer = {
@@ -56,6 +71,23 @@ jest.mock('../../src/tools/testmanagement-utils/create-testrun', () => ({
   },
 }));
 jest.mock('axios');
+
+
+jest.mock('../../src/tools/testmanagement-utils/list-testruns', () => ({
+  listTestRuns: jest.fn(),
+  ListTestRunsSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
+jest.mock('../../src/tools/testmanagement-utils/update-testrun', () => ({
+  updateTestRun: jest.fn(),
+  UpdateTestRunSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
+
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -264,28 +296,6 @@ describe('createTestRunTool', () => {
   });
 });
 
-//
-// New tests for listTestRunsTool & updateTestRunTool
-//
-
-import { listTestRunsTool, updateTestRunTool } from '../../src/tools/testmanagement';
-import { listTestRuns } from '../../src/tools/testmanagement-utils/list-testruns';
-import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testrun';
-
-jest.mock('../../src/tools/testmanagement-utils/list-testruns', () => ({
-  listTestRuns: jest.fn(),
-  ListTestRunsSchema: {
-    parse: (args: any) => args,
-    shape: {},
-  },
-}));
-jest.mock('../../src/tools/testmanagement-utils/update-testrun', () => ({
-  updateTestRun: jest.fn(),
-  UpdateTestRunSchema: {
-    parse: (args: any) => args,
-    shape: {},
-  },
-}));
 
 describe('listTestRunsTool', () => {
   beforeEach(() => {
@@ -355,5 +365,58 @@ describe('updateTestRunTool', () => {
     const result = await updateTestRunTool(args as any);
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Failed to update test run: API Error');
+  });
+});
+
+
+
+describe('addTestResultTool', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const validArgs = {
+    project_identifier: 'proj-123',
+    test_run_id: 'run-456',
+    test_result: {
+      status: 'passed',
+      description: 'All good',
+      issues: ['ISSUE-1'],
+      issue_tracker: { name: 'jira', host: 'https://jira.example.com' },
+      custom_fields: { priority: 'high' },
+    },
+    test_case_id: 'TC-1',
+  };
+
+  const successAddResult = {
+    content: [{ type: 'text', text: 'Successfully added test result to test run run-456' }],
+    isError: false,
+  };
+
+  it('should successfully add a test result', async () => {
+    (addTestResult as jest.Mock).mockResolvedValue(successAddResult);
+
+    const result = await addTestResultTool(validArgs as any);
+
+    expect(addTestResult).toHaveBeenCalledWith(validArgs);
+    expect(result).toBe(successAddResult);
+  });
+
+  it('should handle API errors gracefully', async () => {
+    (addTestResult as jest.Mock).mockRejectedValue(new Error('Network Error'));
+
+    const result = await addTestResultTool(validArgs as any);
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Failed to add test result: Network Error');
+  });
+
+  it('should handle unknown errors gracefully', async () => {
+    (addTestResult as jest.Mock).mockRejectedValue('unexpected');
+
+    const result = await addTestResultTool(validArgs as any);
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Unknown error');
   });
 });

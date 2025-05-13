@@ -14,7 +14,6 @@ import {
   CreateTestCaseSchema,
 } from "./testmanagement-utils/create-testcase";
 
-
 let serverInstance: McpServer;
 
 import {
@@ -37,8 +36,10 @@ import {
   updateTestRun,
 } from "./testmanagement-utils/update-testrun";
 
-
-//TODO: Moving the traceMCP and catch block to the parent(server) function
+import {
+  addTestResult,
+  AddTestResultSchema,
+} from "./testmanagement-utils/add-test-result";
 
 /**
  * Wrapper to call createProjectOrFolder util.
@@ -111,8 +112,10 @@ export async function listTestCasesTool(
   args: z.infer<typeof ListTestCasesSchema>,
 ): Promise<CallToolResult> {
   try {
+    trackMCP("listTestCases", serverInstance.server.getClientVersion()!);
     return await listTestCases(args);
   } catch (err) {
+    trackMCP("listTestCases", serverInstance.server.getClientVersion()!, err);
     return {
       content: [
         {
@@ -135,8 +138,10 @@ export async function createTestRunTool(
   args: z.infer<typeof CreateTestRunSchema>,
 ): Promise<CallToolResult> {
   try {
+    trackMCP("createTestRun", serverInstance.server.getClientVersion()!);
     return await createTestRun(args);
   } catch (err) {
+    trackMCP("createTestRun", serverInstance.server.getClientVersion()!, err);
     return {
       content: [
         {
@@ -159,8 +164,10 @@ export async function listTestRunsTool(
   args: z.infer<typeof ListTestRunsSchema>,
 ): Promise<CallToolResult> {
   try {
+    trackMCP("listTestRuns", serverInstance.server.getClientVersion()!);
     return await listTestRuns(args);
   } catch (err) {
+    trackMCP("listTestRuns", serverInstance.server.getClientVersion()!, err);
     return {
       content: [
         {
@@ -185,13 +192,41 @@ export async function updateTestRunTool(
   args: z.infer<typeof UpdateTestRunSchema>,
 ): Promise<CallToolResult> {
   try {
+    trackMCP("updateTestRun", serverInstance.server.getClientVersion()!);
     return await updateTestRun(args);
   } catch (err) {
+    trackMCP("updateTestRun", serverInstance.server.getClientVersion()!, err);
     return {
       content: [
         {
           type: "text",
           text: `Failed to update test run: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
+          isError: true,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
+ * Adds a test result to a specific test run via BrowserStack Test Management API.
+ */
+export async function addTestResultTool(
+  args: z.infer<typeof AddTestResultSchema>,
+): Promise<CallToolResult> {
+  try {
+    trackMCP("addTestResult", serverInstance.server.getClientVersion()!);
+    return await addTestResult(args);
+  } catch (err) {
+    trackMCP("addTestResult", serverInstance.server.getClientVersion()!, err);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to add test result: ${
             err instanceof Error ? err.message : "Unknown error"
           }. Please open an issue on GitHub if the problem persists`,
           isError: true,
@@ -246,5 +281,11 @@ export default function addTestManagementTools(server: McpServer) {
     "Update a test run in BrowserStack Test Management.",
     UpdateTestRunSchema.shape,
     updateTestRunTool,
+  );
+  server.tool(
+    "addTestResult",
+    "Add a test result to a specific test run via BrowserStack Test Management API.",
+    AddTestResultSchema.shape,
+    addTestResultTool,
   );
 }
