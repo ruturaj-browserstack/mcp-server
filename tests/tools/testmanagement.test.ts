@@ -1,10 +1,12 @@
-import { 
-  createProjectOrFolderTool, 
-  createTestCaseTool, 
+import {
+  createProjectOrFolderTool,
+  createTestCaseTool,
   createTestRunTool,
   addTestResultTool,
-  listTestRunsTool, 
-  updateTestRunTool
+  listTestRunsTool,
+  updateTestRunTool,
+  uploadFileTestManagementTool,
+  createTestCasesFromFileTool
 } from '../../src/tools/testmanagement';
 import addTestManagementTools from '../../src/tools/testmanagement';
 import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
@@ -14,8 +16,11 @@ import { createTestRun } from '../../src/tools/testmanagement-utils/create-testr
 import { addTestResult } from '../../src/tools/testmanagement-utils/add-test-result';
 import { listTestRuns } from '../../src/tools/testmanagement-utils/list-testruns';
 import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testrun';
+import { createTestCasesFromFile } from '../../src/tools/testmanagement-utils/testcase-from-file';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios from 'axios';
+import fs from 'fs';
+import { signedUrlMap } from '../../src/lib/inmemory-store';
 
 // Mock dependencies
 jest.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
@@ -31,6 +36,9 @@ jest.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
   CreateTestCaseSchema: {
     shape: {},
   },
+}));
+jest.mock('../../src/tools/testmanagement-utils/testcase-from-file', () => ({
+  createTestCasesFromFile: jest.fn(),
 }));
 jest.mock('../../src/config', () => ({
   __esModule: true,
@@ -50,6 +58,9 @@ jest.mock('../../src/tools/testmanagement-utils/add-test-result', () => ({
     shape: {},
   },
 }));
+
+jest.mock('fs');
+jest.mock('../../src/lib/inmemory-store', () => ({ signedUrlMap: new Map() }));
 
 const mockServer = {
   tool: jest.fn(),
@@ -418,5 +429,104 @@ describe('addTestResultTool', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Unknown error');
+  });
+});
+
+const testFilePath = "/tmp/sample.pdf";
+const testProjectId = "PR-DEMO";
+const testDocumentId = "mock-doc-id";
+const testFolderId = "mock-folder-id";
+const mockFileId = 12345;
+const mockDownloadUrl = "https://cdn.browserstack.com/mock.pdf";
+const mockContext = { sendNotification: jest.fn(), _meta: { progressToken: "test-progress-token" } };
+
+describe("uploadFileTestManagementTool", () => {
+  beforeEach(() => jest.resetAllMocks());
+
+  it("returns error when file does not exist", async () => {
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain("does not exist");
+  });
+
+  it("uploads file and returns metadata", async () => {
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
+    (fs.createReadStream as jest.Mock).mockReturnValue("STREAM");
+    const mockUpload = {
+      status: 200,
+      data: {
+        generic_attachment: [
+          {
+            id: mockFileId,
+            name: "sample.pdf",
+            download_url: mockDownloadUrl,
+            content_type: "application/pdf",
+            size: 1024
+          }
+        ]
+      }
+    };
+    mockedAxios.get.mockResolvedValue({ data: { success: true, projects: [{ identifier: testProjectId, id: "999" }] } });
+    mockedAxios.post.mockResolvedValue(mockUpload);
+    const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
+    expect(res.isError ?? false).toBe(false);
+    expect(res.content[1].text).toContain("documentID");
+  });
+});
+
+// Tests for createTestCasesFromFileTool
+describe("createTestCasesFromFileTool", () => {
+  beforeEach(() => jest.resetAllMocks());
+
+  it("returns error when document is not in signedUrlMap", async () => {
+    signedUrlMap.clear();
+    // Mock createTestCasesFromFile to throw an error message about re-uploading the file
+    (createTestCasesFromFile as jest.Mock).mockRejectedValue(new Error("Re-Upload the file"));
+    
+    const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
+    const res = await createTestCasesFromFileTool(args as any, mockContext);
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain("Re-Upload the file");
+  });
+
+  it("creates test cases from a file successfully", async () => {
+    signedUrlMap.set(testDocumentId, { fileId: mockFileId, downloadUrl: mockDownloadUrl });
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        default_fields: {
+          priority: { values: [{ name: "Medium", value: 2 }] },
+          status: { values: [{ internal_name: "active", value: 1 }] },
+          case_type: { values: [{ internal_name: "functional", value: 3 }] }
+        },
+        custom_fields: []
+      }
+    });
+    // Mock the necessary API calls for success
+    
+    mockedAxios.post.mockImplementation((url: string) => {
+      if (url.includes("suggest-test-cases")) {
+        return Promise.resolve({ status: 200, data: { "x-bstack-traceRequestId": "trace" } });
+      }
+      if (url.includes("test-cases-polling")) {
+        return Promise.resolve({ status: 200, data: { data: { success: true, message: [{ type: "termination" }] } } });
+      }
+      if (url.includes("bulk-test-cases")) {
+        return Promise.resolve({ status: 200, data: {} });
+      }
+      return Promise.resolve({ status: 404, data: {} });
+    });
+    const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
+    
+    // Mock the createTestCasesFromFile to return a specific result
+    // Use the mocked implementation directly instead of require
+    (createTestCasesFromFile as jest.Mock).mockReturnValue({
+      content: [{ type: "text", text: "Total of 5 test cases created in 2 scenarios." }],
+      isError: false
+    });
+    
+    const res = await createTestCasesFromFileTool(args as any, mockContext);
+    expect(res.isError ?? false).toBe(false);
+    expect(res.content[0].text).toContain("test cases created");
   });
 });

@@ -11,7 +11,7 @@ export const ListTestRunsSchema = z.object({
   project_identifier: z
     .string()
     .describe(
-      "Identifier of the project to fetch test runs from (e.g., PR-12345)",
+      "Identifier of the project to fetch test runs from (usually starts with PR-).",
     ),
   run_state: z
     .string()

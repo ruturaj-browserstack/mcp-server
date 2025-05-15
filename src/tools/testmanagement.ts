@@ -41,6 +41,16 @@ import {
   AddTestResultSchema,
 } from "./testmanagement-utils/add-test-result";
 
+import {
+  UploadFileSchema,
+  uploadFile,
+} from "./testmanagement-utils/upload-file";
+
+import { createTestCasesFromFile } from "./testmanagement-utils/testcase-from-file";
+import { CreateTestCasesFromFileSchema } from "./testmanagement-utils/TCG-utils/types";
+
+//TODO: Moving the traceMCP and catch block to the parent(server) function
+
 /**
  * Wrapper to call createProjectOrFolder util.
  */
@@ -238,6 +248,73 @@ export async function addTestResultTool(
 }
 
 /**
+ * Uploads files such as PDRs or screenshots to BrowserStack Test Management and get file mapping ID back.
+ */
+export async function uploadFileTestManagementTool(
+  args: z.infer<typeof UploadFileSchema>,
+): Promise<CallToolResult> {
+  try {
+    trackMCP(
+      "uploadFileTestManagement",
+      serverInstance.server.getClientVersion()!,
+    );
+    return await uploadFile(args);
+  } catch (err) {
+    trackMCP(
+      "uploadFileTestManagement",
+      serverInstance.server.getClientVersion()!,
+      err,
+    );
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to upload file: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
+          isError: true,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
+ * Creates test cases from a file in BrowserStack Test Management.
+ */
+export async function createTestCasesFromFileTool(
+  args: z.infer<typeof CreateTestCasesFromFileSchema>,
+  context: any,
+): Promise<CallToolResult> {
+  try {
+    trackMCP(
+      "createTestCasesFromFile",
+      serverInstance.server.getClientVersion()!,
+    );
+    return await createTestCasesFromFile(args, context);
+  } catch (err) {
+    trackMCP(
+      "createTestCasesFromFile",
+      serverInstance.server.getClientVersion()!,
+      err,
+    );
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to create test cases from file: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
+          isError: true,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
  * Registers both project/folder and test-case tools.
  */
 export default function addTestManagementTools(server: McpServer) {
@@ -287,5 +364,18 @@ export default function addTestManagementTools(server: McpServer) {
     "Add a test result to a specific test run via BrowserStack Test Management API.",
     AddTestResultSchema.shape,
     addTestResultTool,
+  );
+
+  server.tool(
+    "uploadFileTestManagement",
+    "Upload files such as PDRs or PDFs to BrowserStack Test Management and get file mapping ID back. Its Used for generating test cases from file.",
+    UploadFileSchema.shape,
+    uploadFileTestManagementTool,
+  );
+  server.tool(
+    "createTestCasesFromFile",
+    "Create test cases from a file in BrowserStack Test Management.",
+    CreateTestCasesFromFileSchema.shape,
+    createTestCasesFromFileTool,
   );
 }

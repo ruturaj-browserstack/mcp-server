@@ -11,7 +11,7 @@ export const ListTestCasesSchema = z.object({
   project_identifier: z
     .string()
     .describe(
-      "Identifier of the project to fetch test cases from.  Example: PR-12345",
+      "Identifier of the project to fetch test cases from. This id starts with a PR- and is followed by a number.",
     ),
   folder_id: z
     .string()
