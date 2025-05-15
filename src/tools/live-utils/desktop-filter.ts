@@ -1,12 +1,15 @@
-import { getDevicesAndBrowsers } from "../../lib/device-cache";
-import { resolveVersion } from "./version-resolver";
-import { customFuzzySearch } from "../../lib/fuzzy";
-import { DesktopSearchArgs, DesktopEntry } from "./types";
+import {
+  getDevicesAndBrowsers,
+  BrowserStackProducts,
+} from "../../lib/device-cache.js";
+import { resolveVersion } from "./version-resolver.js";
+import { customFuzzySearch } from "../../lib/fuzzy.js";
+import { DesktopSearchArgs, DesktopEntry } from "./types.js";
 
 export async function filterDesktop(
   args: DesktopSearchArgs,
 ): Promise<DesktopEntry> {
-  const data = await getDevicesAndBrowsers("live");
+  const data = await getDevicesAndBrowsers(BrowserStackProducts.LIVE);
   const allEntries = getAllDesktopEntries(data);
 
   // Filter OS

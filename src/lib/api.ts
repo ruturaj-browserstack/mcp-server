@@ -1,5 +1,5 @@
-import config from "../config";
-import { HarEntry, HarFile } from "./utils";
+import config from "../config.js";
+import { HarEntry, HarFile } from "./utils.js";
 
 export async function getLatestO11YBuildInfo(
   buildName: string,

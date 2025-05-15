@@ -1,9 +1,12 @@
 import childProcess from "child_process";
-import logger from "../../logger";
-import { getDevicesAndBrowsers } from "../../lib/device-cache";
-import { fuzzySearchDevices } from "./fuzzy-search";
-import { sanitizeUrlParam } from "../../lib/utils";
-import { uploadApp } from "./upload-app";
+import logger from "../../logger.js";
+import {
+  BrowserStackProducts,
+  getDevicesAndBrowsers,
+} from "../../lib/device-cache.js";
+import { fuzzySearchDevices } from "./fuzzy-search.js";
+import { sanitizeUrlParam } from "../../lib/utils.js";
+import { uploadApp } from "./upload-app.js";
 
 export interface DeviceEntry {
   device: string;
@@ -30,7 +33,7 @@ export async function startSession(args: StartSessionArgs): Promise<string> {
   const { appPath, desiredPlatform, desiredPhone } = args;
   let { desiredPlatformVersion } = args;
 
-  const data = await getDevicesAndBrowsers("app_live");
+  const data = await getDevicesAndBrowsers(BrowserStackProducts.APP_LIVE);
 
   const allDevices: DeviceEntry[] = data.mobile.flatMap((group: any) =>
     group.devices.map((dev: any) => ({ ...dev, os: group.os })),
