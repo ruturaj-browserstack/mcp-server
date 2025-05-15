@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import logger from "../logger";
-import { retrieveNetworkFailures } from "../lib/api";
-import { trackMCP } from "../lib/instrumentation";
+import logger from "../logger.js";
+import { retrieveNetworkFailures } from "../lib/api.js";
+import { trackMCP } from "../lib/instrumentation.js";
 
 /**
  * Fetches failed network requests from a BrowserStack Automate session.

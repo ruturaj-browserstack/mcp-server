@@ -1,15 +1,18 @@
-import { CreateTestCasesFromFileArgs } from "./TCG-utils/types";
+import { CreateTestCasesFromFileArgs } from "./TCG-utils/types.js";
 import {
   fetchFormFields,
   triggerTestCaseGeneration,
   pollScenariosTestDetails,
   bulkCreateTestCases,
-} from "./TCG-utils/api";
-import { buildDefaultFieldMaps, findBooleanFieldId } from "./TCG-utils/helpers";
+} from "./TCG-utils/api.js";
+import {
+  buildDefaultFieldMaps,
+  findBooleanFieldId,
+} from "./TCG-utils/helpers.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { signedUrlMap } from "../../lib/inmemory-store";
-import logger from "../../logger";
-import { projectIdentifierToId } from "./TCG-utils/api";
+import { signedUrlMap } from "../../lib/inmemory-store.js";
+import logger from "../../logger.js";
+import { projectIdentifierToId } from "./TCG-utils/api.js";
 
 export async function createTestCasesFromFile(
   args: CreateTestCasesFromFileArgs,

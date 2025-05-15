@@ -19,54 +19,57 @@ import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testr
 import { createTestCasesFromFile } from '../../src/tools/testmanagement-utils/testcase-from-file';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios from 'axios';
+import { beforeEach, it, expect, describe, Mocked} from 'vitest';
+import { vi, Mock } from 'vitest';
 import fs from 'fs';
 import { signedUrlMap } from '../../src/lib/inmemory-store';
 
 // Mock dependencies
-jest.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
-  createProjectOrFolder: jest.fn(),
+vi.mock('../../src/tools/testmanagement-utils/create-project-folder', () => ({
+  createProjectOrFolder: vi.fn(),
   CreateProjFoldSchema: {
     parse: (args: any) => args,
     shape: {},
   },
 }));
-jest.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
-  createTestCase: jest.fn(),
-  sanitizeArgs: jest.fn((args) => args),
+vi.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
+  createTestCase: vi.fn(),
+  sanitizeArgs: vi.fn((args) => args),
   CreateTestCaseSchema: {
     shape: {},
   },
 }));
-jest.mock('../../src/tools/testmanagement-utils/testcase-from-file', () => ({
-  createTestCasesFromFile: jest.fn(),
+
+vi.mock('../../src/tools/testmanagement-utils/testcase-from-file', () => ({
+  createTestCasesFromFile: vi.fn(),
 }));
-jest.mock('../../src/config', () => ({
+vi.mock('../../src/config', () => ({
   __esModule: true,
   default: {
     browserstackUsername: 'fake-user',
     browserstackAccessKey: 'fake-key',
   },
 }));
-jest.mock('../../src/lib/instrumentation', () => ({
-  trackMCP: jest.fn()
+vi.mock('../../src/lib/instrumentation', () => ({
+  trackMCP: vi.fn()
 }));
 
-jest.mock('../../src/tools/testmanagement-utils/add-test-result', () => ({
-  addTestResult: jest.fn(),
+vi.mock('../../src/tools/testmanagement-utils/add-test-result', () => ({
+  addTestResult: vi.fn(),
   AddTestResultSchema: {
     parse: (args: any) => args,
     shape: {},
   },
 }));
 
-jest.mock('fs');
-jest.mock('../../src/lib/inmemory-store', () => ({ signedUrlMap: new Map() }));
+vi.mock('fs');
+vi.mock('../../src/lib/inmemory-store', () => ({ signedUrlMap: new Map() }));
 
 const mockServer = {
-  tool: jest.fn(),
+  tool: vi.fn(),
   server: {
-    getClientVersion: jest.fn(() => ({
-      name: 'jest-client',
+    getClientVersion: vi.fn(() => ({
+      name: 'vi-client',
       version: '1.0.0',
     })),
   },
@@ -74,25 +77,25 @@ const mockServer = {
 
 addTestManagementTools(mockServer);
 
-jest.mock('../../src/tools/testmanagement-utils/create-testrun', () => ({
-  createTestRun: jest.fn(),
+vi.mock('../../src/tools/testmanagement-utils/create-testrun', () => ({
+  createTestRun: vi.fn(),
   CreateTestRunSchema: {
     parse: (args: any) => args,
     shape: {},
   },
 }));
-jest.mock('axios');
+vi.mock('axios');
 
 
-jest.mock('../../src/tools/testmanagement-utils/list-testruns', () => ({
-  listTestRuns: jest.fn(),
+vi.mock('../../src/tools/testmanagement-utils/list-testruns', () => ({
+  listTestRuns: vi.fn(),
   ListTestRunsSchema: {
     parse: (args: any) => args,
     shape: {},
   },
 }));
-jest.mock('../../src/tools/testmanagement-utils/update-testrun', () => ({
-  updateTestRun: jest.fn(),
+vi.mock('../../src/tools/testmanagement-utils/update-testrun', () => ({
+  updateTestRun: vi.fn(),
   UpdateTestRunSchema: {
     parse: (args: any) => args,
     shape: {},
@@ -100,11 +103,11 @@ jest.mock('../../src/tools/testmanagement-utils/update-testrun', () => ({
 }));
 
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedAxios = axios as Mocked<typeof axios>;
 
 describe('createTestCaseTool', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const validArgs: TestCaseCreateRequest = {
@@ -133,7 +136,7 @@ describe('createTestCaseTool', () => {
   };
 
   it('should successfully create a test case', async () => {
-    (createTestCase as jest.Mock).mockResolvedValue(mockCallToolResult);
+    (createTestCase as Mock).mockResolvedValue(mockCallToolResult);
 
     const result = await createTestCaseTool(validArgs);
 
@@ -143,7 +146,7 @@ describe('createTestCaseTool', () => {
   });
 
   it('should handle API errors while creating test case', async () => {
-    (createTestCase as jest.Mock).mockRejectedValue(new Error('API Error'));
+    (createTestCase as Mock).mockRejectedValue(new Error('API Error'));
 
     const result = await createTestCaseTool(validArgs);
 
@@ -152,7 +155,7 @@ describe('createTestCaseTool', () => {
   });
 
   it('should handle unknown error while creating test case', async () => {
-    (createTestCase as jest.Mock).mockRejectedValue('unexpected');
+    (createTestCase as Mock).mockRejectedValue('unexpected');
 
     const result = await createTestCaseTool(validArgs);
 
@@ -163,7 +166,7 @@ describe('createTestCaseTool', () => {
 
 describe('createProjectOrFolderTool', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const validProjectArgs = {
@@ -186,7 +189,7 @@ describe('createProjectOrFolderTool', () => {
   };
 
   it('should successfully create a project', async () => {
-    (createProjectOrFolder as jest.Mock).mockResolvedValue(mockProjectResponse);
+    (createProjectOrFolder as Mock).mockResolvedValue(mockProjectResponse);
 
     const result = await createProjectOrFolderTool(validProjectArgs);
 
@@ -195,7 +198,7 @@ describe('createProjectOrFolderTool', () => {
   });
 
   it('should successfully create a folder', async () => {
-    (createProjectOrFolder as jest.Mock).mockResolvedValue(mockFolderResponse);
+    (createProjectOrFolder as Mock).mockResolvedValue(mockFolderResponse);
 
     const result = await createProjectOrFolderTool(validFolderArgs);
 
@@ -204,7 +207,7 @@ describe('createProjectOrFolderTool', () => {
   });
 
   it('should handle error while creating project or folder', async () => {
-    (createProjectOrFolder as jest.Mock).mockRejectedValue(new Error('Failed to create project/folder'));
+    (createProjectOrFolder as Mock).mockRejectedValue(new Error('Failed to create project/folder'));
 
     const result = await createProjectOrFolderTool(validProjectArgs);
 
@@ -215,7 +218,7 @@ describe('createProjectOrFolderTool', () => {
   });
 
   it('should handle unknown error while creating project or folder', async () => {
-    (createProjectOrFolder as jest.Mock).mockRejectedValue('some unknown error');
+    (createProjectOrFolder as Mock).mockRejectedValue('some unknown error');
 
     const result = await createProjectOrFolderTool(validProjectArgs);
 
@@ -228,7 +231,7 @@ describe('createProjectOrFolderTool', () => {
 
 describe('listTestCases util', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const mockCases = [
@@ -263,7 +266,7 @@ describe('listTestCases util', () => {
 
 describe('createTestRunTool', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const validRunArgs = {
@@ -280,7 +283,7 @@ describe('createTestRunTool', () => {
   };
 
   it('should successfully create a test run', async () => {
-    (createTestRun as jest.Mock).mockResolvedValue(successRunResult);
+    (createTestRun as Mock).mockResolvedValue(successRunResult);
 
     const result = await createTestRunTool(validRunArgs as any);
 
@@ -289,7 +292,7 @@ describe('createTestRunTool', () => {
   });
 
   it('should handle API errors while creating test run', async () => {
-    (createTestRun as jest.Mock).mockRejectedValue(new Error('API Error'));
+    (createTestRun as Mock).mockRejectedValue(new Error('API Error'));
 
     const result = await createTestRunTool(validRunArgs as any);
 
@@ -298,7 +301,7 @@ describe('createTestRunTool', () => {
   });
 
   it('should handle unknown error while creating test run', async () => {
-    (createTestRun as jest.Mock).mockRejectedValue('unexpected');
+    (createTestRun as Mock).mockRejectedValue('unexpected');
 
     const result = await createTestRunTool(validRunArgs as any);
 
@@ -310,7 +313,7 @@ describe('createTestRunTool', () => {
 
 describe('listTestRunsTool', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const mockRuns = [
@@ -320,7 +323,7 @@ describe('listTestRunsTool', () => {
   const projectId = 'PR-123';
 
   it('should return summary and raw JSON on success', async () => {
-    (listTestRuns as jest.Mock).mockResolvedValue({
+    (listTestRuns as Mock).mockResolvedValue({
       content: [
         { type: 'text', text: `Found 2 test run(s):\n\n• TR-1: Run One [new_run]\n• TR-2: Run Two [done]` },
         { type: 'text', text: JSON.stringify(mockRuns, null, 2) },
@@ -336,7 +339,7 @@ describe('listTestRunsTool', () => {
   });
 
   it('should handle errors', async () => {
-    (listTestRuns as jest.Mock).mockRejectedValue(new Error('Network Error'));
+    (listTestRuns as Mock).mockRejectedValue(new Error('Network Error'));
     const result = await listTestRunsTool({ project_identifier: projectId } as any);
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Failed to list test runs: Network Error');
@@ -345,7 +348,7 @@ describe('listTestRunsTool', () => {
 
 describe('updateTestRunTool', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const args = {
@@ -356,7 +359,7 @@ describe('updateTestRunTool', () => {
 
   it('should return success message and updated run JSON on success', async () => {
     const updated = { name: 'Updated Name', run_state: 'in_progress', tags: [] };
-    (updateTestRun as jest.Mock).mockResolvedValue({
+    (updateTestRun as Mock).mockResolvedValue({
       content: [
         { type: 'text', text: `Successfully updated test run ${args.test_run_id}` },
         { type: 'text', text: JSON.stringify(updated, null, 2) },
@@ -372,7 +375,7 @@ describe('updateTestRunTool', () => {
   });
 
   it('should handle errors', async () => {
-    (updateTestRun as jest.Mock).mockRejectedValue(new Error('API Error'));
+    (updateTestRun as Mock).mockRejectedValue(new Error('API Error'));
     const result = await updateTestRunTool(args as any);
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Failed to update test run: API Error');
@@ -383,7 +386,7 @@ describe('updateTestRunTool', () => {
 
 describe('addTestResultTool', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const validArgs = {
@@ -405,7 +408,7 @@ describe('addTestResultTool', () => {
   };
 
   it('should successfully add a test result', async () => {
-    (addTestResult as jest.Mock).mockResolvedValue(successAddResult);
+    (addTestResult as Mock).mockResolvedValue(successAddResult);
 
     const result = await addTestResultTool(validArgs as any);
 
@@ -414,7 +417,7 @@ describe('addTestResultTool', () => {
   });
 
   it('should handle API errors gracefully', async () => {
-    (addTestResult as jest.Mock).mockRejectedValue(new Error('Network Error'));
+    (addTestResult as Mock).mockRejectedValue(new Error('Network Error'));
 
     const result = await addTestResultTool(validArgs as any);
 
@@ -423,7 +426,7 @@ describe('addTestResultTool', () => {
   });
 
   it('should handle unknown errors gracefully', async () => {
-    (addTestResult as jest.Mock).mockRejectedValue('unexpected');
+    (addTestResult as Mock).mockRejectedValue('unexpected');
 
     const result = await addTestResultTool(validArgs as any);
 
@@ -438,21 +441,21 @@ const testDocumentId = "mock-doc-id";
 const testFolderId = "mock-folder-id";
 const mockFileId = 12345;
 const mockDownloadUrl = "https://cdn.browserstack.com/mock.pdf";
-const mockContext = { sendNotification: jest.fn(), _meta: { progressToken: "test-progress-token" } };
+const mockContext = { sendNotification: vi.fn(), _meta: { progressToken: "test-progress-token" } };
 
 describe("uploadFileTestManagementTool", () => {
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => vi.resetAllMocks());
 
   it("returns error when file does not exist", async () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    (fs.existsSync as Mock).mockReturnValue(false);
     const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
     expect(res.isError).toBe(true);
     expect(res.content[0].text).toContain("does not exist");
   });
 
   it("uploads file and returns metadata", async () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.createReadStream as jest.Mock).mockReturnValue("STREAM");
+    (fs.existsSync as Mock).mockReturnValue(true);
+    (fs.createReadStream as Mock).mockReturnValue("STREAM");
     const mockUpload = {
       status: 200,
       data: {
@@ -477,12 +480,11 @@ describe("uploadFileTestManagementTool", () => {
 
 // Tests for createTestCasesFromFileTool
 describe("createTestCasesFromFileTool", () => {
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => vi.resetAllMocks());
 
   it("returns error when document is not in signedUrlMap", async () => {
     signedUrlMap.clear();
-    // Mock createTestCasesFromFile to throw an error message about re-uploading the file
-    (createTestCasesFromFile as jest.Mock).mockRejectedValue(new Error("Re-Upload the file"));
+    (createTestCasesFromFile as Mock).mockRejectedValue(new Error("Re-Upload the file"));
     
     const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
     const res = await createTestCasesFromFileTool(args as any, mockContext);
@@ -502,8 +504,6 @@ describe("createTestCasesFromFileTool", () => {
         custom_fields: []
       }
     });
-    // Mock the necessary API calls for success
-    
     mockedAxios.post.mockImplementation((url: string) => {
       if (url.includes("suggest-test-cases")) {
         return Promise.resolve({ status: 200, data: { "x-bstack-traceRequestId": "trace" } });
@@ -517,10 +517,7 @@ describe("createTestCasesFromFileTool", () => {
       return Promise.resolve({ status: 404, data: {} });
     });
     const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
-    
-    // Mock the createTestCasesFromFile to return a specific result
-    // Use the mocked implementation directly instead of require
-    (createTestCasesFromFile as jest.Mock).mockReturnValue({
+    (createTestCasesFromFile as Mock).mockReturnValue({
       content: [{ type: "text", text: "Total of 5 test cases created in 2 scenarios." }],
       isError: false
     });

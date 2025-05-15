@@ -5,14 +5,14 @@ import {
   FETCH_DETAILS_URL,
   FORM_FIELDS_URL,
   BULK_CREATE_URL,
-} from "./config";
+} from "./config.js";
 import {
   DefaultFieldMaps,
   Scenario,
   CreateTestCasesFromFileArgs,
-} from "./types";
-import { createTestCasePayload } from "./helpers";
-import config from "../../../config";
+} from "./types.js";
+import { createTestCasePayload } from "./helpers.js";
+import config from "../../../config.js";
 
 /**
  * Fetch default and custom form fields for a project.

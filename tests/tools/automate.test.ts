@@ -1,18 +1,24 @@
 import { getNetworkFailures } from '../../src/tools/automate';
 import { retrieveNetworkFailures } from '../../src/lib/api';
 import addAutomateTools from '../../src/tools/automate';
+import { beforeEach, it, expect, describe, vi, Mock } from 'vitest'
 
-jest.mock('../../src/lib/api', () => ({
-  retrieveNetworkFailures: jest.fn()
+vi.mock('../../src/lib/api', () => ({
+  retrieveNetworkFailures: vi.fn()
 }));
-jest.mock('../../src/lib/instrumentation', () => ({
-  trackMCP: jest.fn()
-}));
-jest.mock('../../src/logger', () => ({
-  error: jest.fn(),
-  info: jest.fn()
+vi.mock('../../src/lib/instrumentation', () => ({
+  trackMCP: vi.fn()
 }));
 
+vi.mock('../../src/logger', () => {
+  return {
+    default: {
+      error: vi.fn(),
+      info: vi.fn(),
+      debug: vi.fn()
+    }
+  }
+});
 describe('getNetworkFailures', () => {
   const validSessionId = 'valid-session-123';
   const mockFailures = {
@@ -31,15 +37,15 @@ describe('getNetworkFailures', () => {
   let serverMock: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (retrieveNetworkFailures as jest.Mock).mockResolvedValue(mockFailures);
+    vi.clearAllMocks();
+    (retrieveNetworkFailures as Mock).mockResolvedValue(mockFailures);
     
     serverMock = {
-      tool: jest.fn((name, desc, schema, handler) => {
-        serverMock.handler = handler;
+      tool: vi.fn((name, desc, schema, handler) => {
+      serverMock.handler = handler;
       }),
       server: {
-        getClientVersion: jest.fn().mockReturnValue({ name: 'test-client', version: '1.0.0' })
+      getClientVersion: vi.fn().mockReturnValue({ name: 'test-client', version: '1.0.0' })
       }
     };
     
@@ -55,7 +61,7 @@ describe('getNetworkFailures', () => {
   });
 
   it('should return message when no failure logs are found', async () => {
-    (retrieveNetworkFailures as jest.Mock).mockResolvedValue({ failures: [], totalFailures: 0 });
+    (retrieveNetworkFailures as Mock).mockResolvedValue({ failures: [], totalFailures: 0 });
     const result = await getNetworkFailures({ sessionId: validSessionId });
     expect(retrieveNetworkFailures).toHaveBeenCalledWith(validSessionId);
     expect(result.content[0].text).toContain('No network failures found for session');
@@ -63,7 +69,7 @@ describe('getNetworkFailures', () => {
   });
 
   it('should handle errors from the API', async () => {
-    (retrieveNetworkFailures as jest.Mock).mockRejectedValue(new Error('Invalid session ID'));
+    (retrieveNetworkFailures as Mock).mockRejectedValue(new Error('Invalid session ID'));
     const result = await serverMock.handler({ sessionId: 'invalid-id' });
     expect(retrieveNetworkFailures).toHaveBeenCalledWith('invalid-id');
     expect(result.content[0].text).toBe('Failed to fetch network logs: Invalid session ID');
@@ -72,7 +78,7 @@ describe('getNetworkFailures', () => {
   });
 
   it('should handle empty session ID', async () => {
-    (retrieveNetworkFailures as jest.Mock).mockRejectedValue(new Error('Session ID is required'));
+    (retrieveNetworkFailures as Mock).mockRejectedValue(new Error('Session ID is required'));
     const result = await serverMock.handler({ sessionId: '' });
     expect(retrieveNetworkFailures).toHaveBeenCalledWith('');
     expect(result.content[0].text).toBe('Failed to fetch network logs: Session ID is required');
