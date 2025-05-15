@@ -19,7 +19,8 @@ import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testr
 import { createTestCasesFromFile } from '../../src/tools/testmanagement-utils/testcase-from-file';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import axios from 'axios';
-import { beforeEach, it, expect, describe, vi, Mock, Mocked } from 'vitest'
+import { beforeEach, it, expect, describe, Mocked} from 'vitest';
+import { vi, Mock } from 'vitest';
 import fs from 'fs';
 import { signedUrlMap } from '../../src/lib/inmemory-store';
 
@@ -39,10 +40,10 @@ vi.mock('../../src/tools/testmanagement-utils/create-testcase', () => ({
   },
 }));
 
-jest.mock('../../src/tools/testmanagement-utils/testcase-from-file', () => ({
-  createTestCasesFromFile: jest.fn(),
+vi.mock('../../src/tools/testmanagement-utils/testcase-from-file', () => ({
+  createTestCasesFromFile: vi.fn(),
 }));
-jest.mock('../../src/config', () => ({
+vi.mock('../../src/config', () => ({
   __esModule: true,
   default: {
     browserstackUsername: 'fake-user',
@@ -61,14 +62,14 @@ vi.mock('../../src/tools/testmanagement-utils/add-test-result', () => ({
   },
 }));
 
-jest.mock('fs');
-jest.mock('../../src/lib/inmemory-store', () => ({ signedUrlMap: new Map() }));
+vi.mock('fs');
+vi.mock('../../src/lib/inmemory-store', () => ({ signedUrlMap: new Map() }));
 
 const mockServer = {
   tool: vi.fn(),
   server: {
     getClientVersion: vi.fn(() => ({
-      name: 'jest-client',
+      name: 'vi-client',
       version: '1.0.0',
     })),
   },
@@ -440,21 +441,21 @@ const testDocumentId = "mock-doc-id";
 const testFolderId = "mock-folder-id";
 const mockFileId = 12345;
 const mockDownloadUrl = "https://cdn.browserstack.com/mock.pdf";
-const mockContext = { sendNotification: jest.fn(), _meta: { progressToken: "test-progress-token" } };
+const mockContext = { sendNotification: vi.fn(), _meta: { progressToken: "test-progress-token" } };
 
 describe("uploadFileTestManagementTool", () => {
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => vi.resetAllMocks());
 
   it("returns error when file does not exist", async () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(false);
+    (fs.existsSync as Mock).mockReturnValue(false);
     const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
     expect(res.isError).toBe(true);
     expect(res.content[0].text).toContain("does not exist");
   });
 
   it("uploads file and returns metadata", async () => {
-    (fs.existsSync as jest.Mock).mockReturnValue(true);
-    (fs.createReadStream as jest.Mock).mockReturnValue("STREAM");
+    (fs.existsSync as Mock).mockReturnValue(true);
+    (fs.createReadStream as Mock).mockReturnValue("STREAM");
     const mockUpload = {
       status: 200,
       data: {
@@ -479,12 +480,11 @@ describe("uploadFileTestManagementTool", () => {
 
 // Tests for createTestCasesFromFileTool
 describe("createTestCasesFromFileTool", () => {
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => vi.resetAllMocks());
 
   it("returns error when document is not in signedUrlMap", async () => {
     signedUrlMap.clear();
-    // Mock createTestCasesFromFile to throw an error message about re-uploading the file
-    (createTestCasesFromFile as jest.Mock).mockRejectedValue(new Error("Re-Upload the file"));
+    (createTestCasesFromFile as Mock).mockRejectedValue(new Error("Re-Upload the file"));
     
     const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
     const res = await createTestCasesFromFileTool(args as any, mockContext);
@@ -504,8 +504,6 @@ describe("createTestCasesFromFileTool", () => {
         custom_fields: []
       }
     });
-    // Mock the necessary API calls for success
-    
     mockedAxios.post.mockImplementation((url: string) => {
       if (url.includes("suggest-test-cases")) {
         return Promise.resolve({ status: 200, data: { "x-bstack-traceRequestId": "trace" } });
@@ -519,10 +517,7 @@ describe("createTestCasesFromFileTool", () => {
       return Promise.resolve({ status: 404, data: {} });
     });
     const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
-    
-    // Mock the createTestCasesFromFile to return a specific result
-    // Use the mocked implementation directly instead of require
-    (createTestCasesFromFile as jest.Mock).mockReturnValue({
+    (createTestCasesFromFile as Mock).mockReturnValue({
       content: [{ type: "text", text: "Total of 5 test cases created in 2 scenarios." }],
       isError: false
     });

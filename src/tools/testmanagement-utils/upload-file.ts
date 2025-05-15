@@ -5,9 +5,9 @@ import FormData from "form-data";
 import fs from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import config from "../../config";
-import { signedUrlMap } from "../../lib/inmemory-store";
-import { projectIdentifierToId } from "./TCG-utils/api";
+import config from "../../config.js";
+import { signedUrlMap } from "../../lib/inmemory-store.js";
+import { projectIdentifierToId } from "./TCG-utils/api.js";
 
 /**
  * Schema for the upload file tool

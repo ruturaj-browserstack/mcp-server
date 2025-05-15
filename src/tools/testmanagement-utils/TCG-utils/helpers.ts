@@ -1,4 +1,4 @@
-import { DefaultFieldMaps } from "./types";
+import { DefaultFieldMaps } from "./types.js";
 
 /**
  * Build mappings for default fields for priority, status, and case type.

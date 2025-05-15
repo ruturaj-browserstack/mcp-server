@@ -44,10 +44,10 @@ import {
 import {
   UploadFileSchema,
   uploadFile,
-} from "./testmanagement-utils/upload-file";
+} from "./testmanagement-utils/upload-file.js";
 
-import { createTestCasesFromFile } from "./testmanagement-utils/testcase-from-file";
-import { CreateTestCasesFromFileSchema } from "./testmanagement-utils/TCG-utils/types";
+import { createTestCasesFromFile } from "./testmanagement-utils/testcase-from-file.js";
+import { CreateTestCasesFromFileSchema } from "./testmanagement-utils/TCG-utils/types.js";
 
 //TODO: Moving the traceMCP and catch block to the parent(server) function
 
