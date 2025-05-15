@@ -83,7 +83,7 @@ export class AccessibilityScanner {
           context.sendNotification({
             method: "notifications/progress",
             params: {
-              progressToken: scanId,
+              progressToken: context._meta?.progressToken,
               message: message,
               progress: progress,
               total: 100,

@@ -54,7 +54,7 @@ async function runAccessibilityScan(
   await context.sendNotification({
     method: "notifications/progress",
     params: {
-      progressToken: scanId,
+      progressToken: context._meta?.progressToken,
       message: `Accessibility scan "${name}" started`,
       progress: 0,
       total: 100,
