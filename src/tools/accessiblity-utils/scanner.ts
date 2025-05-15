@@ -80,10 +80,10 @@ export class AccessibilityScanner {
             status === "completed" || status === "failed"
               ? `Scan completed with status : ${status}`
               : `Scan in progress ...`;
-          context.sendNotification({
+          await context.sendNotification({
             method: "notifications/progress",
             params: {
-              progressToken: context._meta?.progressToken,
+              progressToken: context._meta?.progressToken ?? "NOT_FOUND",
               message: message,
               progress: progress,
               total: 100,
