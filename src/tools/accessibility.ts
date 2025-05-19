@@ -11,11 +11,11 @@ const reportFetcher = new AccessibilityReportFetcher();
 
 async function runAccessibilityScan(
   name: string,
-  pageURL: string,
+  pageURL: Array<string>,
   context: any,
 ): Promise<CallToolResult> {
   // Start scan
-  const startResp = await scanner.startScan(name, [pageURL]);
+  const startResp = await scanner.startScan(name, pageURL);
   const scanId = startResp.data!.id;
   const scanRunId = startResp.data!.scanRunId;
 
@@ -48,7 +48,8 @@ async function runAccessibilityScan(
   // Fetch CSV report link
   const reportLink = await reportFetcher.getReportLink(scanId, scanRunId);
 
-  const { records, next_page } = await parseAccessibilityReportFromCSV(reportLink);
+  const { records, next_page } =
+    await parseAccessibilityReportFromCSV(reportLink);
 
   return {
     content: [
@@ -70,7 +71,9 @@ export default function addAccessibilityTools(server: McpServer) {
     "Start an accessibility scan via BrowserStack and retrieve a local CSV report path.",
     {
       name: z.string().describe("Name of the accessibility scan"),
-      pageURL: z.string().describe("The URL to scan for accessibility issues"),
+      pageURL: z
+        .array(z.string())
+        .describe("The URL to scan for accessibility issues"),
     },
     async (args, context) => {
       try {
