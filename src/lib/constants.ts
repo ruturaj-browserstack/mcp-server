@@ -15,6 +15,8 @@ export const AppAutomateLogType = {
   CrashLogs: "crashLogs",
 } as const;
 
-export type SessionType = typeof SessionType[keyof typeof SessionType]; 
-export type AutomateLogType = typeof AutomateLogType[keyof typeof AutomateLogType];
-export type AppAutomateLogType = typeof AppAutomateLogType[keyof typeof AppAutomateLogType];
+export type SessionType = (typeof SessionType)[keyof typeof SessionType];
+export type AutomateLogType =
+  (typeof AutomateLogType)[keyof typeof AutomateLogType];
+export type AppAutomateLogType =
+  (typeof AppAutomateLogType)[keyof typeof AppAutomateLogType];

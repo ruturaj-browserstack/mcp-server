@@ -3,12 +3,14 @@ import { assertOkResponse, maybeCompressBase64 } from "../../lib/utils.js";
 import { SessionType } from "../../lib/constants.js";
 
 //Extracts screenshot URLs from BrowserStack session logs
-async function extractScreenshotUrls(sessionId: string, sessionType: SessionType): Promise<string[]> {
-  
+async function extractScreenshotUrls(
+  sessionId: string,
+  sessionType: SessionType,
+): Promise<string[]> {
   const credentials = `${config.browserstackUsername}:${config.browserstackAccessKey}`;
   const auth = Buffer.from(credentials).toString("base64");
 
-  const baseUrl = `https://api.browserstack.com/${sessionType === SessionType.Automate ? 'automate' : 'app-automate'}`;
+  const baseUrl = `https://api.browserstack.com/${sessionType === SessionType.Automate ? "automate" : "app-automate"}`;
 
   const url = `${baseUrl}/sessions/${sessionId}/logs`;
   const response = await fetch(url, {
@@ -21,7 +23,7 @@ async function extractScreenshotUrls(sessionId: string, sessionType: SessionType
   await assertOkResponse(response, "Session");
 
   const text = await response.text();
-    
+
   const urls: string[] = [];
   const SCREENSHOT_PATTERN = /REQUEST.*GET.*\/screenshot/;
   const RESPONSE_VALUE_PATTERN = /"value"\s*:\s*"([^"]+)"/;
@@ -68,7 +70,10 @@ async function convertUrlsToBase64(
 }
 
 //Fetches and converts screenshot URLs to base64 encoded images
-export async function fetchAutomationScreenshots(sessionId: string, sessionType: SessionType = SessionType.Automate) {
+export async function fetchAutomationScreenshots(
+  sessionId: string,
+  sessionType: SessionType = SessionType.Automate,
+) {
   const urls = await extractScreenshotUrls(sessionId, sessionType);
   if (urls.length === 0) {
     return [];

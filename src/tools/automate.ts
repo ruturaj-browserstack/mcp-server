@@ -12,7 +12,10 @@ export async function fetchAutomationScreenshotsTool(args: {
   sessionType: SessionType;
 }): Promise<CallToolResult> {
   try {
-    const screenshots = await fetchAutomationScreenshots(args.sessionId, args.sessionType);
+    const screenshots = await fetchAutomationScreenshots(
+      args.sessionId,
+      args.sessionType,
+    );
 
     if (screenshots.length === 0) {
       return {
@@ -60,14 +63,21 @@ export default function addAutomationTools(server: McpServer) {
         .describe("The BrowserStack session ID to fetch screenshots from"),
       sessionType: z
         .enum([SessionType.Automate, SessionType.AppAutomate])
-        .describe("Type of BrowserStack session")
+        .describe("Type of BrowserStack session"),
     },
     async (args) => {
       try {
-        trackMCP("fetchAutomationScreenshots", server.server.getClientVersion()!);
+        trackMCP(
+          "fetchAutomationScreenshots",
+          server.server.getClientVersion()!,
+        );
         return await fetchAutomationScreenshotsTool(args);
       } catch (error) {
-        trackMCP("fetchAutomationScreenshots", server.server.getClientVersion()!,error);
+        trackMCP(
+          "fetchAutomationScreenshots",
+          server.server.getClientVersion()!,
+          error,
+        );
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
         return {

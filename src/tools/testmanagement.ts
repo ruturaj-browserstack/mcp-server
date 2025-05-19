@@ -250,18 +250,18 @@ export async function addTestResultTool(
 /**
  * Uploads files such as PDRs or screenshots to BrowserStack Test Management and get file mapping ID back.
  */
-export async function uploadFileTestManagementTool(
+export async function uploadProductRequirementFileTool(
   args: z.infer<typeof UploadFileSchema>,
 ): Promise<CallToolResult> {
   try {
     trackMCP(
-      "uploadFileTestManagement",
+      "uploadProductRequirementFile",
       serverInstance.server.getClientVersion()!,
     );
     return await uploadFile(args);
   } catch (err) {
     trackMCP(
-      "uploadFileTestManagement",
+      "uploadProductRequirementFile",
       serverInstance.server.getClientVersion()!,
       err,
     );
@@ -367,10 +367,10 @@ export default function addTestManagementTools(server: McpServer) {
   );
 
   server.tool(
-    "uploadFileTestManagement",
+    "uploadProductRequirementFile",
     "Upload files such as PDRs or PDFs to BrowserStack Test Management and get file mapping ID back. Its Used for generating test cases from file.",
     UploadFileSchema.shape,
-    uploadFileTestManagementTool,
+    uploadProductRequirementFileTool,
   );
   server.tool(
     "createTestCasesFromFile",

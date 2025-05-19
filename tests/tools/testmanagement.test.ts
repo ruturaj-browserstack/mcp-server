@@ -5,7 +5,7 @@ import {
   addTestResultTool,
   listTestRunsTool,
   updateTestRunTool,
-  uploadFileTestManagementTool,
+  uploadProductRequirementFileTool,
   createTestCasesFromFileTool
 } from '../../src/tools/testmanagement';
 import addTestManagementTools from '../../src/tools/testmanagement';
@@ -443,12 +443,12 @@ const mockFileId = 12345;
 const mockDownloadUrl = "https://cdn.browserstack.com/mock.pdf";
 const mockContext = { sendNotification: vi.fn(), _meta: { progressToken: "test-progress-token" } };
 
-describe("uploadFileTestManagementTool", () => {
+describe("uploadProductRequirementFileTool", () => {
   beforeEach(() => vi.resetAllMocks());
 
   it("returns error when file does not exist", async () => {
     (fs.existsSync as Mock).mockReturnValue(false);
-    const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
+    const res = await uploadProductRequirementFileTool({ project_identifier: testProjectId, file_path: testFilePath });
     expect(res.isError).toBe(true);
     expect(res.content[0].text).toContain("does not exist");
   });
@@ -472,7 +472,7 @@ describe("uploadFileTestManagementTool", () => {
     };
     mockedAxios.get.mockResolvedValue({ data: { success: true, projects: [{ identifier: testProjectId, id: "999" }] } });
     mockedAxios.post.mockResolvedValue(mockUpload);
-    const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
+    const res = await uploadProductRequirementFileTool({ project_identifier: testProjectId, file_path: testFilePath });
     expect(res.isError ?? false).toBe(false);
     expect(res.content[1].text).toContain("documentID");
   });
