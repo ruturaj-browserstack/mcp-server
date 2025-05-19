@@ -15,7 +15,11 @@ import {
   retrieveCrashLogs,
 } from "./failurelogs-utils/app-automate.js";
 import { trackMCP } from "../lib/instrumentation.js";
-import { AppAutomateLogType, AutomateLogType, SessionType } from "../lib/constants.js";
+import {
+  AppAutomateLogType,
+  AutomateLogType,
+  SessionType,
+} from "../lib/constants.js";
 
 type LogType = AutomateLogType | AppAutomateLogType;
 type SessionTypeValues = SessionType;

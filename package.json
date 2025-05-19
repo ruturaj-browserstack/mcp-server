@@ -38,6 +38,7 @@
     "@types/form-data": "^2.5.2",
     "axios": "^1.8.4",
     "browserstack-local": "^1.5.6",
+    "csv-parse": "^5.6.0",
     "dotenv": "^16.5.0",
     "form-data": "^4.0.2",
     "pino": "^9.6.0",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@types/csv-parse": "^1.1.12",
     "@types/node": "^22.14.1",
     "@types/uuid": "^10.0.0",
     "eslint": "^9.25.0",
