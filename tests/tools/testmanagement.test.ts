@@ -151,7 +151,7 @@ describe('createTestCaseTool', () => {
     const result = await createTestCaseTool(validArgs);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to create test case: API Error');
+    expect(result.content?.[0]?.text).toContain('Failed to create test case: API Error');
   });
 
   it('should handle unknown error while creating test case', async () => {
@@ -160,7 +160,7 @@ describe('createTestCaseTool', () => {
     const result = await createTestCaseTool(validArgs);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Unknown error');
+    expect(result.content?.[0]?.text).toContain('Unknown error');
   });
 });
 
@@ -194,7 +194,7 @@ describe('createProjectOrFolderTool', () => {
     const result = await createProjectOrFolderTool(validProjectArgs);
 
     expect(createProjectOrFolder).toHaveBeenCalledWith(validProjectArgs);
-    expect(result.content[0].text).toContain('Project created with identifier=proj-123');
+    expect(result.content?.[0]?.text).toContain('Project created with identifier=proj-123');
   });
 
   it('should successfully create a folder', async () => {
@@ -203,7 +203,7 @@ describe('createProjectOrFolderTool', () => {
     const result = await createProjectOrFolderTool(validFolderArgs);
 
     expect(createProjectOrFolder).toHaveBeenCalledWith(validFolderArgs);
-    expect(result.content[0].text).toContain('Folder created: ID=fold-123');
+    expect(result.content?.[0]?.text).toContain('Folder created: ID=fold-123');
   });
 
   it('should handle error while creating project or folder', async () => {
@@ -212,7 +212,7 @@ describe('createProjectOrFolderTool', () => {
     const result = await createProjectOrFolderTool(validProjectArgs);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain(
+    expect(result.content?.[0]?.text).toContain(
       'Failed to create project/folder: Failed to create project/folder. Please open an issue on GitHub if the problem persists'
     );
   });
@@ -223,7 +223,7 @@ describe('createProjectOrFolderTool', () => {
     const result = await createProjectOrFolderTool(validProjectArgs);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain(
+    expect(result.content?.[0]?.text).toContain(
       'Failed to create project/folder: Unknown error. Please open an issue on GitHub if the problem persists'
     );
   });
@@ -249,9 +249,9 @@ describe('listTestCases util', () => {
       expect.stringContaining('/projects/PR-1/test-cases?'),
       expect.objectContaining({ auth: expect.any(Object) })
     );
-    expect(result.content[0].text).toContain('Found 2 test case(s):');
-    expect(result.content[0].text).toContain('TC-1: Test One [functional | high]');
-    expect(result.content[1].text).toBe(JSON.stringify(mockCases, null, 2));
+    expect(result.content?.[0]?.text).toContain('Found 2 test case(s):');
+    expect(result.content?.[0]?.text).toContain('TC-1: Test One [functional | high]');
+    expect(result.content?.[1]?.text).toBe(JSON.stringify(mockCases, null, 2));
   });
 
   it('should handle API errors gracefully', async () => {
@@ -260,7 +260,7 @@ describe('listTestCases util', () => {
     const result = await listTestCases({ project_identifier: 'PR-1' } as any);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to list test cases: Network Error');
+    expect(result.content?.[0]?.text).toContain('Failed to list test cases: Network Error');
   });
 });
 
@@ -297,7 +297,7 @@ describe('createTestRunTool', () => {
     const result = await createTestRunTool(validRunArgs as any);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to create test run: API Error');
+    expect(result.content?.[0]?.text).toContain('Failed to create test run: API Error');
   });
 
   it('should handle unknown error while creating test run', async () => {
@@ -306,7 +306,7 @@ describe('createTestRunTool', () => {
     const result = await createTestRunTool(validRunArgs as any);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Unknown error');
+    expect(result.content?.[0]?.text).toContain('Unknown error');
   });
 });
 
@@ -334,15 +334,15 @@ describe('listTestRunsTool', () => {
     const result = await listTestRunsTool({ project_identifier: projectId } as any);
     expect(listTestRuns).toHaveBeenCalledWith({ project_identifier: projectId });
     expect(result.isError).toBe(false);
-    expect(result.content[0].text).toContain('Found 2 test run(s):');
-    expect(result.content[1].text).toBe(JSON.stringify(mockRuns, null, 2));
+    expect(result.content?.[0]?.text).toContain('Found 2 test run(s):');
+    expect(result.content?.[1]?.text).toBe(JSON.stringify(mockRuns, null, 2));
   });
 
   it('should handle errors', async () => {
     (listTestRuns as Mock).mockRejectedValue(new Error('Network Error'));
     const result = await listTestRunsTool({ project_identifier: projectId } as any);
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to list test runs: Network Error');
+    expect(result.content?.[0]?.text).toContain('Failed to list test runs: Network Error');
   });
 });
 
@@ -370,15 +370,15 @@ describe('updateTestRunTool', () => {
     const result = await updateTestRunTool(args as any);
     expect(updateTestRun).toHaveBeenCalledWith(args);
     expect(result.isError).toBe(false);
-    expect(result.content[0].text).toContain(`Successfully updated test run ${args.test_run_id}`);
-    expect(result.content[1].text).toBe(JSON.stringify(updated, null, 2));
+    expect(result.content?.[0]?.text).toContain(`Successfully updated test run ${args.test_run_id}`);
+    expect(result.content?.[1]?.text).toBe(JSON.stringify(updated, null, 2));
   });
 
   it('should handle errors', async () => {
     (updateTestRun as Mock).mockRejectedValue(new Error('API Error'));
     const result = await updateTestRunTool(args as any);
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to update test run: API Error');
+    expect(result.content?.[0]?.text).toContain('Failed to update test run: API Error');
   });
 });
 
@@ -422,7 +422,7 @@ describe('addTestResultTool', () => {
     const result = await addTestResultTool(validArgs as any);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Failed to add test result: Network Error');
+    expect(result.content?.[0]?.text).toContain('Failed to add test result: Network Error');
   });
 
   it('should handle unknown errors gracefully', async () => {
@@ -431,7 +431,7 @@ describe('addTestResultTool', () => {
     const result = await addTestResultTool(validArgs as any);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Unknown error');
+    expect(result.content?.[0]?.text).toContain('Unknown error');
   });
 });
 
@@ -450,7 +450,7 @@ describe("uploadFileTestManagementTool", () => {
     (fs.existsSync as Mock).mockReturnValue(false);
     const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
     expect(res.isError).toBe(true);
-    expect(res.content[0].text).toContain("does not exist");
+    expect(res.content?.[0]?.text).toContain("does not exist");
   });
 
   it("uploads file and returns metadata", async () => {
@@ -474,7 +474,7 @@ describe("uploadFileTestManagementTool", () => {
     mockedAxios.post.mockResolvedValue(mockUpload);
     const res = await uploadFileTestManagementTool({ project_identifier: testProjectId, file_path: testFilePath });
     expect(res.isError ?? false).toBe(false);
-    expect(res.content[1].text).toContain("documentID");
+    expect(res.content?.[1]?.text).toContain("documentID");
   });
 });
 
@@ -489,7 +489,7 @@ describe("createTestCasesFromFileTool", () => {
     const args = { documentId: testDocumentId, folderId: testFolderId, projectReferenceId: testProjectId };
     const res = await createTestCasesFromFileTool(args as any, mockContext);
     expect(res.isError).toBe(true);
-    expect(res.content[0].text).toContain("Re-Upload the file");
+    expect(res.content?.[0]?.text).toContain("Re-Upload the file");
   });
 
   it("creates test cases from a file successfully", async () => {
@@ -524,6 +524,6 @@ describe("createTestCasesFromFileTool", () => {
     
     const res = await createTestCasesFromFileTool(args as any, mockContext);
     expect(res.isError ?? false).toBe(false);
-    expect(res.content[0].text).toContain("test cases created");
+    expect(res.content?.[0]?.text).toContain("test cases created");
   });
 });
