@@ -27,13 +27,13 @@ export interface HarEntry {
   time?: number;
 }
 
-/**
- * Compresses a base64 image intelligently to keep it under 1 MB if needed.
- */
+const ONE_MB = 1048576;
+
+//Compresses a base64 image intelligently to keep it under 1 MB if needed.
 export async function maybeCompressBase64(base64: string): Promise<string> {
   const buffer = Buffer.from(base64, "base64");
 
-  if (buffer.length <= 1048576) {
+  if (buffer.length <= ONE_MB) {
     return base64;
   }
 

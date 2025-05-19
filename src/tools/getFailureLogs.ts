@@ -15,31 +15,10 @@ import {
   retrieveCrashLogs,
 } from "./failurelogs-utils/app-automate.js";
 import { trackMCP } from "../lib/instrumentation.js";
+import { AppAutomateLogType, AutomateLogType, SessionType } from "../lib/constants.js";
 
-const AutomateLogType = {
-  NetworkLogs: "networkLogs",
-  SessionLogs: "sessionLogs",
-  ConsoleLogs: "consoleLogs",
-} as const;
-
-const AppAutomateLogType = {
-  DeviceLogs: "deviceLogs",
-  AppiumLogs: "appiumLogs",
-  CrashLogs: "crashLogs",
-} as const;
-
-const SessionType = {
-  Automate: "automate",
-  AppAutomate: "app-automate",
-} as const;
-
-// Type aliases
-type AutomateLogTypeValues =
-  (typeof AutomateLogType)[keyof typeof AutomateLogType];
-type AppAutomateLogTypeValues =
-  (typeof AppAutomateLogType)[keyof typeof AppAutomateLogType];
-type LogType = AutomateLogTypeValues | AppAutomateLogTypeValues;
-type SessionTypeValues = (typeof SessionType)[keyof typeof SessionType];
+type LogType = AutomateLogType | AppAutomateLogType;
+type SessionTypeValues = SessionType;
 
 // Main log fetcher function
 export async function getFailureLogs(args: {
@@ -63,10 +42,10 @@ export async function getFailureLogs(args: {
   // Validate log types and collect errors
   validLogTypes = args.logTypes.filter((logType) => {
     const isAutomate = Object.values(AutomateLogType).includes(
-      logType as AutomateLogTypeValues,
+      logType as AutomateLogType,
     );
     const isAppAutomate = Object.values(AppAutomateLogType).includes(
-      logType as AppAutomateLogTypeValues,
+      logType as AppAutomateLogType,
     );
 
     if (!isAutomate && !isAppAutomate) {

@@ -10,7 +10,7 @@ import { formatAxiosError } from "../../lib/error.js";
 export const AddTestResultSchema = z.object({
   project_identifier: z
     .string()
-    .describe("Identifier of the project (e.g., PR-12345)"),
+    .describe("Identifier of the project (Starts with 'PR-')"),
   test_run_id: z.string().describe("Identifier of the test run (e.g., TR-678)"),
   test_result: z.object({
     status: z
