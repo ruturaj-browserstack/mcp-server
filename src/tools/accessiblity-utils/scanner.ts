@@ -71,15 +71,20 @@ export class AccessibilityScanner {
     context: any,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
+      let timepercent = 0;
+      let dotCount = 1;
       const interval = setInterval(async () => {
         try {
           const statusResp = await this.pollStatus(scanId, scanRunId);
           const status = statusResp.data!.status;
-          const progress = status === "completed" ? 100 : 0;
+          timepercent += 1.67;
+          const progress = status === "completed" ? 100 : timepercent;
+          const dots = ".".repeat(dotCount);
+          dotCount = (dotCount % 4) + 1;
           const message =
             status === "completed" || status === "failed"
-              ? `Scan completed with status : ${status}`
-              : `Scan in progress ...`;
+              ? `Scan completed with status: ${status}`
+              : `Scan in progress${dots}`;
           await context.sendNotification({
             method: "notifications/progress",
             params: {
