@@ -59,7 +59,7 @@ async function runAccessibilityScan(
       },
       {
         type: "text",
-        text: `Scan results: ${JSON.stringify(records, null, 2)} \n\n Total issues: ${records.length} \n\n Next page: ${next_page}`,
+        text: `Scan results: ${JSON.stringify(records, null, 2)}`,
       },
     ],
   };
