@@ -7,7 +7,6 @@ import "dotenv/config";
 import logger from "./logger.js";
 import addSDKTools from "./tools/bstack-sdk.js";
 import addAppLiveTools from "./tools/applive.js";
-import addObservabilityTools from "./tools/observability.js";
 import addBrowserLiveTools from "./tools/live.js";
 import addAccessibilityTools from "./tools/accessibility.js";
 import addTestManagementTools from "./tools/testmanagement.js";
@@ -20,7 +19,6 @@ function registerTools(server: McpServer) {
   addSDKTools(server);
   addAppLiveTools(server);
   addBrowserLiveTools(server);
-  addObservabilityTools(server);
   addAccessibilityTools(server);
   addTestManagementTools(server);
   addAppAutomationTools(server);
