@@ -70,9 +70,7 @@ export default function addAccessibilityTools(server: McpServer) {
     "Start an accessibility scan via BrowserStack and retrieve a local CSV report path.",
     {
       name: z.string().describe("Name of the accessibility scan"),
-      pageURL: z
-        .string()
-        .describe("The URL to scan for accessibility issues"),
+      pageURL: z.string().describe("The URL to scan for accessibility issues"),
     },
     async (args, context) => {
       try {
