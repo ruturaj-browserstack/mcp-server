@@ -8,7 +8,7 @@ export function setupOnInitialized(server: McpServer) {
   // Check for Node.js version
   if (nodeVersion < "18.0.0") {
     throw new Error(
-      "Node version is outdated. Please upgrade to 18.0.0 or later.",
+      "Node version is not supported. Please upgrade to 18.0.0 or later.",
     );
   }
 
