@@ -13,7 +13,7 @@ import addTestManagementTools from "./tools/testmanagement.js";
 import addAppAutomationTools from "./tools/appautomate.js";
 import addFailureLogsTools from "./tools/getFailureLogs.js";
 import addAutomateTools from "./tools/automate.js";
-import { trackMCP } from "./lib/instrumentation.js";
+import { setupOnInitialized } from "./oninitialized.js";
 
 function registerTools(server: McpServer) {
   addSDKTools(server);
@@ -32,6 +32,8 @@ const server: McpServer = new McpServer({
   version: packageJson.version,
 });
 
+setupOnInitialized(server);
+
 registerTools(server);
 
 async function main() {
@@ -43,9 +45,6 @@ async function main() {
   // Start receiving messages on stdin and sending messages on stdout
   const transport = new StdioServerTransport();
   await server.connect(transport);
-
-  logger.info("MCP server started successfully");
-  trackMCP("started", server.server.getClientVersion()!);
 }
 
 main().catch(console.error);
