@@ -20,6 +20,8 @@ type PaginationOptions = {
 type PaginatedResult = {
   records: SimplifiedAccessibilityIssue[];
   /** Character offset for the next page, or null if done */
+  page_length: number;
+  total_issues: number;
   next_page: number | null;
 };
 
@@ -42,6 +44,8 @@ export async function parseAccessibilityReportFromCSV(
     how_to_fix: row["How to fix this issue"],
     severity: (row["Severity"] || "unknown").trim(),
   }));
+
+  const totalIssues = all.length;
 
   // 2) Sort by severity
   const order: Record<string, number> = {
@@ -70,9 +74,13 @@ export async function parseAccessibilityReportFromCSV(
     charCursor += recStr.length;
   }
 
-  const hasMore = idx + page.length < all.length;
+  const pageLength = page.length;
+
+  const hasMore = idx + pageLength < totalIssues;
   return {
     records: page,
     next_page: hasMore ? charCursor : null,
+    page_length: pageLength,
+    total_issues: totalIssues,
   };
 }

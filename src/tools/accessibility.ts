@@ -48,13 +48,18 @@ async function runAccessibilityScan(
   // Fetch CSV report link
   const reportLink = await reportFetcher.getReportLink(scanId, scanRunId);
 
-  const { records } = await parseAccessibilityReportFromCSV(reportLink);
+  const { records, page_length, total_issues } =
+    await parseAccessibilityReportFromCSV(reportLink);
 
   return {
     content: [
       {
         type: "text",
         text: `✅ Accessibility scan "${name}" completed. check the BrowserStack dashboard for more details [https://scanner.browserstack.com/site-scanner/scan-details/${name}].`,
+      },
+      {
+        type: "text",
+        text: `We found ${total_issues} issues. Below are the details of the ${page_length} most critical issues.`,
       },
       {
         type: "text",
