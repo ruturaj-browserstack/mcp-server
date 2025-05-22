@@ -29,7 +29,6 @@ export class AccessibilityScanner {
     name: string,
     urlList: string[],
   ): Promise<AccessibilityScanResponse> {
-
     // Check if any URL is local
     const hasLocal = urlList.some(isLocalURL);
     const localIdentifier = crypto.randomUUID();
@@ -51,7 +50,7 @@ export class AccessibilityScanner {
         }
         return url;
       } catch (e) {
-        logger.warn(`[AccessibilityScan] Invalid URL skipped: ${url}`);
+        logger.warn(`[AccessibilityScan] Invalid URL skipped: ${e}`);
         return url;
       }
     });
@@ -68,7 +67,7 @@ export class AccessibilityScanner {
         localTestingInfo: {
           localIdentifier,
           localEnabled: true,
-        }
+        },
       };
       requestBody = { ...baseRequestBody, ...localConfig };
     }
