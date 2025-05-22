@@ -1,5 +1,11 @@
 import axios from "axios";
 import config from "../../config.js";
+import logger from "../../logger.js";
+import {
+  isLocalURL,
+  ensureLocalBinarySetup,
+  killExistingBrowserStackLocalProcesses,
+} from "../../lib/local.js";
 
 export interface AccessibilityScanResponse {
   success: boolean;
@@ -23,10 +29,54 @@ export class AccessibilityScanner {
     name: string,
     urlList: string[],
   ): Promise<AccessibilityScanResponse> {
+
+    // Check if any URL is local
+    const hasLocal = urlList.some(isLocalURL);
+    const localIdentifier = crypto.randomUUID();
+    const LOCAL_IP = "127.0.0.1";
+    const BS_LOCAL_DOMAIN = "bs-local.com";
+
+    if (hasLocal) {
+      await ensureLocalBinarySetup(localIdentifier);
+    } else {
+      await killExistingBrowserStackLocalProcesses();
+    }
+
+    const transformedUrlList = urlList.map((url) => {
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname === LOCAL_IP) {
+          parsed.hostname = BS_LOCAL_DOMAIN;
+          return parsed.toString();
+        }
+        return url;
+      } catch (e) {
+        logger.warn(`[AccessibilityScan] Invalid URL skipped: ${url}`);
+        return url;
+      }
+    });
+
+    const baseRequestBody = {
+      name,
+      urlList: transformedUrlList,
+      recurring: false,
+    };
+
+    let requestBody = baseRequestBody;
+    if (hasLocal) {
+      const localConfig = {
+        localTestingInfo: {
+          localIdentifier,
+          localEnabled: true,
+        }
+      };
+      requestBody = { ...baseRequestBody, ...localConfig };
+    }
+
     try {
       const { data } = await axios.post<AccessibilityScanResponse>(
         "https://api-accessibility.browserstack.com/api/website-scanner/v1/scans",
-        { name, urlList, recurring: false },
+        requestBody,
         { auth: this.auth },
       );
       if (!data.success)

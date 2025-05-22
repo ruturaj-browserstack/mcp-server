@@ -73,7 +73,7 @@ export async function killExistingBrowserStackLocalProcesses() {
   }
 }
 
-export async function ensureLocalBinarySetup(): Promise<void> {
+export async function ensureLocalBinarySetup(localIdentifier?: string): Promise<void> {
   logger.info(
     "Ensuring local binary setup as it is required for private URLs...",
   );
@@ -81,12 +81,22 @@ export async function ensureLocalBinarySetup(): Promise<void> {
   const localBinary = new Local();
   await killExistingBrowserStackLocalProcesses();
 
+  const requestBody: {
+    key: string;
+    username: string;
+    localIdentifier?: string;
+  } = {
+    key: config.browserstackAccessKey,
+    username: config.browserstackUsername
+  };
+
+  if (localIdentifier) {
+    requestBody.localIdentifier = localIdentifier;
+  }
+
   return await new Promise((resolve, reject) => {
     localBinary.start(
-      {
-        key: config.browserstackAccessKey,
-        username: config.browserstackUsername,
-      },
+      requestBody,
       (error?: Error) => {
         if (error) {
           logger.error(
