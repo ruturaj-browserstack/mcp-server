@@ -32,7 +32,7 @@ export class AccessibilityScanner {
     // Check if any URL is local
     const hasLocal = urlList.some(isLocalURL);
     const localIdentifier = crypto.randomUUID();
-    const LOCAL_IP = "127.0.0.1";
+    const localHosts = new Set(["127.0.0.1", "localhost"]);
     const BS_LOCAL_DOMAIN = "bs-local.com";
 
     if (hasLocal) {
@@ -44,7 +44,7 @@ export class AccessibilityScanner {
     const transformedUrlList = urlList.map((url) => {
       try {
         const parsed = new URL(url);
-        if (parsed.hostname === LOCAL_IP) {
+        if (localHosts.has(parsed.hostname)) {
           parsed.hostname = BS_LOCAL_DOMAIN;
           return parsed.toString();
         }
