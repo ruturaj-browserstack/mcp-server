@@ -1,5 +1,5 @@
 import config from "../../config.js";
-import { assertOkResponse, filterLinesByKeywords } from "../../lib/utils.js";
+import { filterLinesByKeywords, validateLogResponse } from "./utils.js";
 
 const auth = Buffer.from(
   `${config.browserstackUsername}:${config.browserstackAccessKey}`,
@@ -9,7 +9,7 @@ const auth = Buffer.from(
 export async function retrieveDeviceLogs(
   sessionId: string,
   buildId: string,
-): Promise<string[]> {
+): Promise<string> {
   const url = `https://api.browserstack.com/app-automate/builds/${buildId}/sessions/${sessionId}/deviceLogs`;
 
   const response = await fetch(url, {
@@ -19,17 +19,21 @@ export async function retrieveDeviceLogs(
     },
   });
 
-  await assertOkResponse(response, "device logs");
+  const validationError = validateLogResponse(response, "device logs");
+  if (validationError) return validationError.message!;
 
   const logText = await response.text();
-  return filterDeviceFailures(logText);
+  const logs = filterDeviceFailures(logText);
+  return logs.length > 0
+    ? `Device Failures (${logs.length} found):\n${JSON.stringify(logs, null, 2)}`
+    : "No device failures found";
 }
 
 // APPIUM LOGS
 export async function retrieveAppiumLogs(
   sessionId: string,
   buildId: string,
-): Promise<string[]> {
+): Promise<string> {
   const url = `https://api.browserstack.com/app-automate/builds/${buildId}/sessions/${sessionId}/appiumlogs`;
 
   const response = await fetch(url, {
@@ -39,17 +43,21 @@ export async function retrieveAppiumLogs(
     },
   });
 
-  await assertOkResponse(response, "Appium logs");
+  const validationError = validateLogResponse(response, "Appium logs");
+  if (validationError) return validationError.message!;
 
   const logText = await response.text();
-  return filterAppiumFailures(logText);
+  const logs = filterAppiumFailures(logText);
+  return logs.length > 0
+    ? `Appium Failures (${logs.length} found):\n${JSON.stringify(logs, null, 2)}`
+    : "No Appium failures found";
 }
 
 // CRASH LOGS
 export async function retrieveCrashLogs(
   sessionId: string,
   buildId: string,
-): Promise<string[]> {
+): Promise<string> {
   const url = `https://api.browserstack.com/app-automate/builds/${buildId}/sessions/${sessionId}/crashlogs`;
 
   const response = await fetch(url, {
@@ -59,14 +67,17 @@ export async function retrieveCrashLogs(
     },
   });
 
-  await assertOkResponse(response, "crash logs");
+  const validationError = validateLogResponse(response, "crash logs");
+  if (validationError) return validationError.message!;
 
   const logText = await response.text();
-  return filterCrashFailures(logText);
+  const logs = filterCrashFailures(logText);
+  return logs.length > 0
+    ? `Crash Failures (${logs.length} found):\n${JSON.stringify(logs, null, 2)}`
+    : "No crash failures found";
 }
 
 // FILTER HELPERS
-
 export function filterDeviceFailures(logText: string): string[] {
   const keywords = [
     "error",

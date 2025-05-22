@@ -1,6 +1,8 @@
 import logger from "../logger.js";
 import config from "../config.js";
-import packageJson from "../../package.json" with { type: "json" };
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const packageJson = require("../../package.json");
 import axios from "axios";
 
 interface MCPEventPayload {

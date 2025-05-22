@@ -5,28 +5,6 @@ export function sanitizeUrlParam(param: string): string {
   return param.replace(/[;&|`$(){}[\]<>]/g, "");
 }
 
-export interface HarFile {
-  log: {
-    entries: HarEntry[];
-  };
-}
-
-export interface HarEntry {
-  startedDateTime: string;
-  request: {
-    method: string;
-    url: string;
-    queryString?: { name: string; value: string }[];
-  };
-  response: {
-    status: number;
-    statusText?: string;
-    _error?: string;
-  };
-  serverIPAddress?: string;
-  time?: number;
-}
-
 const ONE_MB = 1048576;
 
 //Compresses a base64 image intelligently to keep it under 1 MB if needed.
@@ -55,16 +33,4 @@ export async function assertOkResponse(response: Response, action: string) {
       `Failed to fetch logs for ${action}: ${response.statusText}`,
     );
   }
-}
-
-export function filterLinesByKeywords(
-  logText: string,
-  keywords: string[],
-): string[] {
-  return logText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) =>
-      keywords.some((keyword) => line.toLowerCase().includes(keyword)),
-    );
 }
