@@ -73,7 +73,9 @@ export async function killExistingBrowserStackLocalProcesses() {
   }
 }
 
-export async function ensureLocalBinarySetup(localIdentifier?: string): Promise<void> {
+export async function ensureLocalBinarySetup(
+  localIdentifier?: string,
+): Promise<void> {
   logger.info(
     "Ensuring local binary setup as it is required for private URLs...",
   );
@@ -87,7 +89,7 @@ export async function ensureLocalBinarySetup(localIdentifier?: string): Promise<
     localIdentifier?: string;
   } = {
     key: config.browserstackAccessKey,
-    username: config.browserstackUsername
+    username: config.browserstackUsername,
   };
 
   if (localIdentifier) {
@@ -95,25 +97,22 @@ export async function ensureLocalBinarySetup(localIdentifier?: string): Promise<
   }
 
   return await new Promise((resolve, reject) => {
-    localBinary.start(
-      requestBody,
-      (error?: Error) => {
-        if (error) {
-          logger.error(
-            `Unable to start BrowserStack Local... please check your credentials and try again. Error: ${error}`,
-          );
+    localBinary.start(requestBody, (error?: Error) => {
+      if (error) {
+        logger.error(
+          `Unable to start BrowserStack Local... please check your credentials and try again. Error: ${error}`,
+        );
 
-          reject(
-            new Error(
-              `Unable to configure local tunnel binary, please check your credentials and try again. Error: ${error}`,
-            ),
-          );
-        } else {
-          logger.info("Successfully started BrowserStack Local");
-          resolve();
-        }
-      },
-    );
+        reject(
+          new Error(
+            `Unable to configure local tunnel binary, please check your credentials and try again. Error: ${error}`,
+          ),
+        );
+      } else {
+        logger.info("Successfully started BrowserStack Local");
+        resolve();
+      }
+    });
   });
 }
 

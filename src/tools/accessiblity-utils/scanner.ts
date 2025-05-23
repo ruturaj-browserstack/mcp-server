@@ -29,11 +29,10 @@ export class AccessibilityScanner {
     name: string,
     urlList: string[],
   ): Promise<AccessibilityScanResponse> {
-
     // Check if any URL is local
     const hasLocal = urlList.some(isLocalURL);
     const localIdentifier = crypto.randomUUID();
-    const LOCAL_IP = "127.0.0.1";
+    const localHosts = new Set(["127.0.0.1", "localhost", "0.0.0.0"]);
     const BS_LOCAL_DOMAIN = "bs-local.com";
 
     if (hasLocal) {
@@ -45,13 +44,13 @@ export class AccessibilityScanner {
     const transformedUrlList = urlList.map((url) => {
       try {
         const parsed = new URL(url);
-        if (parsed.hostname === LOCAL_IP) {
+        if (localHosts.has(parsed.hostname)) {
           parsed.hostname = BS_LOCAL_DOMAIN;
           return parsed.toString();
         }
         return url;
       } catch (e) {
-        logger.warn(`[AccessibilityScan] Invalid URL skipped: ${url}`);
+        logger.warn(`[AccessibilityScan] Invalid URL skipped: ${e}`);
         return url;
       }
     });
@@ -68,7 +67,7 @@ export class AccessibilityScanner {
         localTestingInfo: {
           localIdentifier,
           localEnabled: true,
-        }
+        },
       };
       requestBody = { ...baseRequestBody, ...localConfig };
     }
