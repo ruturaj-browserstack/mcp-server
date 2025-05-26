@@ -27,7 +27,7 @@ type PaginatedResult = {
 
 export async function parseAccessibilityReportFromCSV(
   reportLink: string,
-  { maxCharacterLength = 10_000, nextPage = 0 }: PaginationOptions = {},
+  { maxCharacterLength = 5000, nextPage = 0 }: PaginationOptions = {},
 ): Promise<PaginatedResult> {
   // 1) Download & parse
   const res = await fetch(reportLink);
