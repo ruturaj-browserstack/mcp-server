@@ -133,12 +133,13 @@ export async function pollLCAStatus(
               Math.floor((elapsedTime / maxWaitTimeMs) * 90) + 10,
             );
 
+           
             await context.sendNotification({
               method: "notifications/progress",
               params: {
                 progressToken:
                   context._meta?.progressToken ?? `lca-${testCaseId}`,
-                message: `LCA build status: ${lcncBuildMap.status}, continuing to poll...`,
+                message: `Low Code Automation build is still in progress...`,
                 progress: progressPercentage,
                 total: 100,
               },
