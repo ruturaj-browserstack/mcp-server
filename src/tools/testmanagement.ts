@@ -49,6 +49,11 @@ import {
 import { createTestCasesFromFile } from "./testmanagement-utils/testcase-from-file.js";
 import { CreateTestCasesFromFileSchema } from "./testmanagement-utils/TCG-utils/types.js";
 
+import {
+  createLCASteps,
+  CreateLCAStepsSchema,
+} from "./testmanagement-utils/create-lca-steps.js";
+
 //TODO: Moving the traceMCP and catch block to the parent(server) function
 
 /**
@@ -315,6 +320,33 @@ export async function createTestCasesFromFileTool(
 }
 
 /**
+ * Creates LCA (Low Code Automation) steps for a test case in BrowserStack Test Management.
+ */
+export async function createLCAStepsTool(
+  args: z.infer<typeof CreateLCAStepsSchema>,
+  context: any,
+): Promise<CallToolResult> {
+  try {
+    trackMCP("createLCASteps", serverInstance.server.getClientVersion()!);
+    return await createLCASteps(args, context);
+  } catch (err) {
+    trackMCP("createLCASteps", serverInstance.server.getClientVersion()!, err);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to create LCA steps: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
+          isError: true,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
  * Registers both project/folder and test-case tools.
  */
 export default function addTestManagementTools(server: McpServer) {
@@ -377,5 +409,11 @@ export default function addTestManagementTools(server: McpServer) {
     "Create test cases from a file in BrowserStack Test Management.",
     CreateTestCasesFromFileSchema.shape,
     createTestCasesFromFileTool,
+  );
+  server.tool(
+    "createLCAStepsForTestCase",
+    "Create LCA (Low Code Automation) steps for a test case in BrowserStack Test Management.",
+    CreateLCAStepsSchema.shape,
+    createLCAStepsTool,
   );
 }
