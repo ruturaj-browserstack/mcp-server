@@ -26,7 +26,9 @@ export const CreateLCAStepsSchema = z.object({
       password: z.string().describe("Password for authentication"),
     })
     .optional()
-    .describe("Optional credentials for authentication"),
+    .describe(
+      "Optional credentials for authentication. Extract from the test case details if provided in it. This is required for the test cases which require authentication."
+    ),
   local_enabled: z
     .boolean()
     .optional()
