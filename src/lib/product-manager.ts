@@ -57,7 +57,9 @@ export const PRODUCT_CONFIGS: Record<BrowserStackProduct, ProductConfig> = {
   [BrowserStackProduct.TEST_MANAGEMENT]: {
     name: "Test Management",
     description:
-      "Comprehensive test case and test run management with project organization",
+      "Comprehensive test case and test run management with project organization. " +
+      "Involve creating test cases, organizing them into projects or folders, " +
+      "and managing test runs.",
     category: "Test Management",
     tools: [
       "createProjectOrFolder",
@@ -125,6 +127,12 @@ export class ProductManager {
     this.toolRegistrationFunctions.set(product, registrationFn);
   }
 
+  /**
+   * send notification to the server when a product is enabled
+   */
+  notifyProductEnabled(): void {
+    this.server.sendToolListChanged();
+  }
   /**
    * Enable a product (adds to queue, removes oldest if queue is full)
    */

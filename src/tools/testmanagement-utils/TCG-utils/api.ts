@@ -365,7 +365,7 @@ export async function projectIdentifierToId(
 export async function testCaseIdentifierToId(
   projectId: string,
   testCaseIdentifier: string,
-): Promise<> {
+): Promise<any> {
   const url = `https://test-management.browserstack.com/api/v1/projects/${projectId}/test-cases/search?q[query]=${testCaseIdentifier}`;
 
   const response = await axios.get(url, {

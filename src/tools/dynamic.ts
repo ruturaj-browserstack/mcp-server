@@ -78,6 +78,8 @@ export async function enableProductsTool(args: {
     }
   }
 
+  productManager.notifyProductEnabled();
+
   // Build response
   let responseText = "";
 
@@ -99,6 +101,12 @@ export async function enableProductsTool(args: {
         type: "text",
         text: responseText,
         isError: hasErrors,
+      },
+      {
+        type: "text",
+        text:
+          "Don't Directly Call the enabled products tools. " +
+          "Ask User for the confirmation and then check for  the enabled products and call the respective tools.",
       },
     ],
     isError: hasErrors,
@@ -131,7 +139,8 @@ export function addDynamicTools(
   // Enable products tool - always available
   server.tool(
     "enable_products",
-    "Enable BrowserStack products to access their tools. You can enable up to 2 products simultaneously. Enabling additional products will disable the oldest enabled product. Use this tool to activate specific BrowserStack capabilities based on user needs.",
+    "Enable BrowserStack products to access their tools. You can enable up to 2 products simultaneously. Enabling additional products will disable the oldest enabled product. Use this tool to activate specific BrowserStack capabilities based on user needs." +
+      "Tools will be dynamically registered based on the enabled products.",
     {
       products: z.array(z.nativeEnum(BrowserStackProduct)).describe(
         `Array of products to enable. Available products:\n` +
