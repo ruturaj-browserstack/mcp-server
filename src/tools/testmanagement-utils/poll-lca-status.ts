@@ -46,7 +46,7 @@ export async function pollLCAStatus(
     method: "notifications/progress",
     params: {
       progressToken: context._meta?.progressToken ?? `lca-${testCaseId}`,
-      message: `Starting LCA build polling for test case ${testCaseId}...`,
+      message: `Generating Low Code Automation...`,
       progress: 0,
       total: 100,
     },
@@ -60,7 +60,7 @@ export async function pollLCAStatus(
     method: "notifications/progress",
     params: {
       progressToken: context._meta?.progressToken ?? `lca-${testCaseId}`,
-      message: `Initial wait completed. Starting active polling for LCA build status...`,
+      message: `Half of the Low Code Automation is done, Wait for some more time...`,
       progress: 10,
       total: 100,
     },
@@ -133,7 +133,6 @@ export async function pollLCAStatus(
               Math.floor((elapsedTime / maxWaitTimeMs) * 90) + 10,
             );
 
-           
             await context.sendNotification({
               method: "notifications/progress",
               params: {

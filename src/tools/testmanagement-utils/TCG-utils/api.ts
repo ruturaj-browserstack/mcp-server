@@ -230,7 +230,7 @@ export async function pollScenariosTestDetails(
                   progressToken: context._meta?.progressToken ?? traceId,
                   progress: iteratorCount,
                   total,
-                  message: `Fetched ${array.length} test cases for scenario ${iteratorCount} out of ${total}`,
+                  message: `Generated ${array.length} test cases for scenario ${iteratorCount} out of ${total}`,
                 },
               });
             }
@@ -315,7 +315,7 @@ export async function bulkCreateTestCases(
         method: "notifications/progress",
         params: {
           progressToken: context._meta?.progressToken ?? "bulk-create",
-          message: `Bulk create done for scenario ${doneCount} of ${total}`,
+          message: `Saving and creating test cases...`,
           total,
           progress: doneCount,
         },
@@ -326,7 +326,7 @@ export async function bulkCreateTestCases(
         method: "notifications/progress",
         params: {
           progressToken: context._meta?.progressToken ?? traceId,
-          message: `Bulk create failed for scenario ${id}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          message: `Creation failed for scenario ${id}: ${error instanceof Error ? error.message : "Unknown error"}`,
           total,
           progress: doneCount,
         },
