@@ -191,7 +191,7 @@ export async function pollScenariosTestDetails(
                 progressToken: context._meta?.progressToken ?? traceId,
                 progress: count,
                 total: count,
-                message: `Fetched ${count} scenarios`,
+                message: `Generated ${count} scenarios`,
               },
             });
           }
