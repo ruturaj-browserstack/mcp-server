@@ -361,3 +361,40 @@ export async function projectIdentifierToId(
   }
   throw new Error(`Project with identifier ${projectId} not found.`);
 }
+
+export async function testCaseIdentifierToId(
+  projectId: string,
+  testCaseIdentifier: string,
+): Promise<> {
+  const url = `https://test-management.browserstack.com/api/v1/projects/${projectId}/test-cases/search?q[query]=${testCaseIdentifier}`;
+
+  const response = await axios.get(url, {
+    headers: {
+      "API-TOKEN": `${config.browserstackUsername}:${config.browserstackAccessKey}`,
+      accept: "application/json, text/plain, */*",
+    },
+  });
+
+  if (response.data.success !== true) {
+    throw new Error(`Failed to fetch test case ID: ${response.statusText}`);
+  }
+
+  // Check if test_cases array exists and has items
+  if (
+    !response.data.test_cases ||
+    !Array.isArray(response.data.test_cases) ||
+    response.data.test_cases.length === 0
+  ) {
+    throw new Error(
+      `No test cases found in response for identifier ${testCaseIdentifier}`,
+    );
+  }
+
+  for (const testCase of response.data.test_cases) {
+    if (testCase.identifier === testCaseIdentifier) {
+      return testCase.id;
+    }
+  }
+
+  throw new Error(`Test case with identifier ${testCaseIdentifier} not found.`);
+}

@@ -17,17 +17,57 @@ import addFailureLogsTools from "./tools/getFailureLogs.js";
 import addAutomateTools from "./tools/automate.js";
 import addSelfHealTools from "./tools/selfheal.js";
 import { setupOnInitialized } from "./oninitialized.js";
+import { ProductManager, BrowserStackProduct } from "./lib/product-manager.js";
+import { addDynamicTools } from "./tools/dynamic.js";
 
-function registerTools(server: McpServer) {
-  addSDKTools(server);
-  addAppLiveTools(server);
-  addBrowserLiveTools(server);
-  addAccessibilityTools(server);
-  addTestManagementTools(server);
-  addAppAutomationTools(server);
-  addFailureLogsTools(server);
-  addAutomateTools(server);
-  addSelfHealTools(server);
+function setupDynamicProductManager(server: McpServer): ProductManager {
+  const productManager = new ProductManager(server);
+
+  // Register all product tool registration functions
+  productManager.registerProduct(BrowserStackProduct.SDK, addSDKTools);
+  productManager.registerProduct(BrowserStackProduct.APP_LIVE, addAppLiveTools);
+  productManager.registerProduct(
+    BrowserStackProduct.BROWSER_LIVE,
+    addBrowserLiveTools,
+  );
+  productManager.registerProduct(
+    BrowserStackProduct.ACCESSIBILITY,
+    addAccessibilityTools,
+  );
+  productManager.registerProduct(
+    BrowserStackProduct.TEST_MANAGEMENT,
+    addTestManagementTools,
+  );
+  productManager.registerProduct(
+    BrowserStackProduct.APP_AUTOMATION,
+    addAppAutomationTools,
+  );
+  productManager.registerProduct(
+    BrowserStackProduct.FAILURE_LOGS,
+    addFailureLogsTools,
+  );
+  productManager.registerProduct(
+    BrowserStackProduct.AUTOMATE,
+    addAutomateTools,
+  );
+  productManager.registerProduct(
+    BrowserStackProduct.SELF_HEAL,
+    addSelfHealTools,
+  );
+
+  return productManager;
+}
+
+function registerDynamicTools(server: McpServer) {
+  // Set up the product manager
+  const productManager = setupDynamicProductManager(server);
+
+  // Add the dynamic tools (enable_products and get_product_status)
+  addDynamicTools(server, productManager);
+
+  logger.info(
+    "Dynamic product management initialized. Use 'enable_products' tool to activate specific BrowserStack capabilities.",
+  );
 }
 
 // Create an MCP server
@@ -38,7 +78,7 @@ const server: McpServer = new McpServer({
 
 setupOnInitialized(server);
 
-registerTools(server);
+registerDynamicTools(server);
 
 async function main() {
   logger.info(
