@@ -49,7 +49,7 @@ export async function pollLCAStatus(
     const elapsedTime = Date.now() - notificationStartTime;
     const progressPercentage = Math.min(
       90,
-      Math.floor((elapsedTime / maxWaitTimeMs) * 90)
+      Math.floor((elapsedTime / maxWaitTimeMs) * 90),
     );
 
     await context.sendNotification({
@@ -139,8 +139,8 @@ export async function pollLCAStatus(
             );
 
             // Cycle through different numbers of dots (2, 3, 4, 5, then back to 2)
-            const dotCount = ((Math.floor(elapsedTime / pollIntervalMs) % 4) + 2);
-            const dots = '.'.repeat(dotCount);
+            const dotCount = (Math.floor(elapsedTime / pollIntervalMs) % 4) + 2;
+            const dots = ".".repeat(dotCount);
 
             await context.sendNotification({
               method: "notifications/progress",
