@@ -400,19 +400,19 @@ export default function addTestManagementTools(server: McpServer) {
 
   server.tool(
     "uploadProductRequirementFile",
-    "Upload files such as PDRs or PDFs to BrowserStack Test Management and get file mapping ID back. Its Used for generating test cases from file.",
+    "Upload files (e.g., PDRs, PDFs) to BrowserStack Test Management and retrieve a file mapping ID. This is utilized for generating test cases from files and is part of the Test Case Generator AI Agent in BrowserStack.",
     UploadFileSchema.shape,
     uploadProductRequirementFileTool,
   );
   server.tool(
     "createTestCasesFromFile",
-    "Create test cases from a file in BrowserStack Test Management.",
+    "Generate test cases from a file in BrowserStack Test Management using the Test Case Generator AI Agent.",
     CreateTestCasesFromFileSchema.shape,
     createTestCasesFromFileTool,
   );
   server.tool(
-    "createLCAStepsForTestCase",
-    "Create LCA (Low Code Automation) steps for a test case in BrowserStack Test Management.",
+    "createLCASteps",
+    "Generate Low Code Automation (LCA) steps for a test case in BrowserStack Test Management using the Low Code Automation Agent.",
     CreateLCAStepsSchema.shape,
     createLCAStepsTool,
   );
