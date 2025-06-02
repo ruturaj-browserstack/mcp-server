@@ -61,29 +61,6 @@ When the server starts, only two core tools are available:
 **Description**: AI-powered test maintenance with automatic selector healing for flaky tests  
 **Tools**: `fetchSelfHealedSelectors`
 
-## Usage Examples
-
-### Enable a Single Product
-```javascript
-// Enable App Live Testing
-await server.callTool("enable_products", {
-  products: ["app-live"]
-});
-```
-
-### Enable Multiple Products
-```javascript
-// Enable both Browser Live and Accessibility Testing
-await server.callTool("enable_products", {
-  products: ["browser-live", "accessibility"]
-});
-```
-
-### Check Current Status
-```javascript
-// View which products are currently enabled
-await server.callTool("get_product_status", {});
-```
 
 ### Typical Workflow
 
@@ -93,56 +70,6 @@ await server.callTool("get_product_status", {});
 4. **Use Product Tools**: The enabled product tools are now available
 5. **Switch Products**: Enable different products as needed (oldest will be auto-disabled)
 
-## Example Scenarios
-
-### Mobile App Testing Workflow
-```javascript
-// Enable mobile testing capabilities
-await server.callTool("enable_products", {
-  products: ["app-live", "app-automation"]
-});
-
-// Now you can use:
-// - runAppLiveSession (interactive testing)
-// - takeAppScreenshot (automated testing)
-```
-
-### Web Testing with Debugging
-```javascript  
-// Enable web testing and debugging
-await server.callTool("enable_products", {
-  products: ["browser-live", "failure-logs"]
-});
-
-// Now you can use:
-// - runBrowserLiveSession (interactive testing)
-// - getFailureLogs (debugging failed tests)
-```
-
-### Full Test Management Pipeline
-```javascript
-// Enable test management and automation
-await server.callTool("enable_products", {
-  products: ["test-management", "automate"]
-});
-
-// Now you can use all test management tools plus automation
-```
-
-## Technical Implementation
-
-### Architecture
-- **ProductManager**: Core class managing the enabled products queue
-- **Dynamic Tools**: Handles the `enable_products` tool registration
-- **Modular Registration**: Each product has its own registration function
-- **Queue Management**: FIFO queue with configurable maximum size
-
-### Benefits
-- **Reduced Complexity**: Users only see relevant tools
-- **Better Organization**: Tools grouped by product/capability
-- **Flexible Usage**: Enable/disable based on current needs  
-- **Performance**: Only active tools are registered
-- **Discoverability**: Clear product descriptions and capabilities
 
 ### Configuration
 The system is configured in `src/lib/product-manager.ts`:
