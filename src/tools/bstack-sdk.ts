@@ -24,7 +24,6 @@ import {
   getPercyInstructions,
 } from "./sdk-utils/percy/instructions.js";
 
-
 /**
  * BrowserStack SDK hooks into your test framework to seamlessly run tests on BrowserStack.
  * This tool gives instructions to setup a browserstack.yml file in the project root and installs the necessary dependencies.
