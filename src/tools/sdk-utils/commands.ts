@@ -7,6 +7,7 @@ const JAVA_FRAMEWORK_MAP: Record<string, string> = {
   junit5: "junit5",
   junit4: "junit4",
   cucumber: "cucumber-testng",
+  serenity: "serenity",
 };
 
 // Common Gradle setup instructions (platform-independent)
