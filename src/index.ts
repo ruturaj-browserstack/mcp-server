@@ -10,10 +10,11 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const packageJson = require("../package.json");
 import "dotenv/config";
-import logger from "./lib/logger.js";
-import { createMcpServer } from "./lib/server-factory.js";
+import logger from "browserstack-mcp-server/lib/logger.js";
+import { createMcpServer } from "browserstack-mcp-server/lib/server-factory.js";
 
 const PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT) : 3000;
+console.log(`Starting BrowserStack MCP HTTP Server on port ${PORT}`);
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || ["*"];
 const ALLOWED_HOSTS = process.env.ALLOWED_HOSTS?.split(",") || [
   "127.0.0.1",

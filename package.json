@@ -34,6 +34,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "browserstack-mcp-server": "file:./mcp-server",
     "@modelcontextprotocol/sdk": "^1.11.4",
     "@types/form-data": "^2.5.2",
     "axios": "^1.8.4",
