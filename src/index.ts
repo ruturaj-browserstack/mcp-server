@@ -10,8 +10,8 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const packageJson = require("../package.json");
 import "dotenv/config";
-import logger from "./logger.js";
-import { createMcpServer } from "./server-factory.js";
+import logger from "./lib/logger.js";
+import { createMcpServer } from "./lib/server-factory.js";
 
 const PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT) : 3000;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || ["*"];
@@ -105,13 +105,11 @@ app.post("/mcp", async (req, res) => {
       };
 
       // Create and connect MCP server
-      const server = createMcpServer() as McpServer & {
-        authHeaders?: Record<string, string>;
-      };
-      server.authHeaders = {
+      const server = createMcpServer({
         "browserstack-username": browserstackUsername,
         "browserstack-access-key": browserstackAccessKey,
-      };
+      }) as McpServer;
+
       await server.connect(transport);
 
       logger.info("MCP server connected to transport");
