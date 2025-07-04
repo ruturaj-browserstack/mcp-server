@@ -10,8 +10,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const packageJson = require("../package.json");
 import "dotenv/config";
-import logger from "browserstack-mcp-server/lib/logger.js";
-import { createMcpServer } from "browserstack-mcp-server/lib/server-factory.js";
+import { logger, createMcpServer } from "browserstack-mcp-server";
 
 const PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT) : 3000;
 console.log(`Starting BrowserStack MCP HTTP Server on port ${PORT}`);
