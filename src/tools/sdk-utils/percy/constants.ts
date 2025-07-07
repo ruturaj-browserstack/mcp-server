@@ -159,6 +159,7 @@ export const PERCY_INSTRUCTIONS: PercyConfigMapping = {
       cucumber: { script_updates: javaSeleniumInstructions },
       junit4: { script_updates: javaSeleniumInstructions },
       junit5: { script_updates: javaSeleniumInstructions },
+      serenity: { script_updates: javaSeleniumInstructions },
     },
   },
   csharp: {
