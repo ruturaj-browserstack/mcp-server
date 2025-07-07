@@ -204,7 +204,7 @@ fi
 
 ---STEP---
 
-macOS (Apple Silicon) setup (required only if arm64 detected):
+macOS (Apple Silicon) setup (Strictly follow if arm64 detected):
 Install the x64 version of .NET for BrowserStack compatibility.
 
 - Check your current .NET version:
@@ -213,6 +213,7 @@ Install the x64 version of .NET for BrowserStack compatibility.
   \`\`\`
 
 - Ensure the path exists strictly; if not, create it first and then run the setup:
+  This automatically installs the x64 version of .NET in the specified path. No need to install it from external sources.
   \`\`\`bash
   sudo dotnet browserstack-sdk setup-dotnet --dotnet-path "<your-chosen-path>" --dotnet-version "<your-dotnet-version>"
   \`\`\`
@@ -221,7 +222,7 @@ Install the x64 version of .NET for BrowserStack compatibility.
 ---STEP---
 
 Run the tests:
-- For macOS (Apple Silicon), use the full path:
+- For macOS (Apple Silicon), use the full path where the x64 version of .NET is installed:
   \`\`\`bash
   <your-chosen-path>/dotnet browserstack-sdk
   \`\`\`
@@ -281,6 +282,7 @@ Install the x64 version of .NET for compatibility with BrowserStack.
   \`\`\`
 
 - Ensure the path exists strictly; if not, create it first and then run the setup:
+  This automatically installs the x64 version of .NET in the specified path. No need to install it from external sources.
   \`\`\`bash
   sudo dotnet browserstack-sdk setup-dotnet --dotnet-path "<your-chosen-path>" --dotnet-version "<your-dotnet-version>"
   \`\`\`
@@ -550,6 +552,8 @@ export const SUPPORTED_CONFIGURATIONS: ConfigMapping = {
       xunit: { instructions: csharpCommonInstructions },
       nunit: { instructions: csharpCommonInstructions },
       mstest: { instructions: csharpCommonInstructions },
+      specflow: { instructions: csharpCommonInstructions },
+      reqnroll: { instructions: csharpCommonInstructions },
     },
   },
   nodejs: {
