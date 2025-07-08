@@ -34,7 +34,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@browserstack/mcp-server": "github:ruturaj-browserstack/mcp-server#local-library-changes",
+    "@browserstack/mcp-server": "github:ruturaj-browserstack/mcp-server#local-library-build",
     "express": "^5.1.0",
     "cors": "^2.8.5"
   },
