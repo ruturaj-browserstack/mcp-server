@@ -5,7 +5,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { createRequire } from "module";
 import "dotenv/config";
-import { logger, createMcpServer } from "browserstack-mcp-server";
+import { logger, createMcpServer } from "@browserstack/mcp-server";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("../package.json");
