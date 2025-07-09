@@ -18,3 +18,19 @@
         }
     ]
 }
+
+// regex
+// exact
+// ignore
+
+
+// {
+//     "content": [
+//       {
+//         "type": "text",
+//         "text": "A project with the provided name already exists in this group. Please request access to the existing project or choose a different name."
+//       }
+//     ],
+//     "isError": true
+//   }
+  
