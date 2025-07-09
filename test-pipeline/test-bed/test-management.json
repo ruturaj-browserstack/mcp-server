@@ -2,15 +2,16 @@
     "tests":[
        {
             "tool_name": "createProjectOrFolder",
-            "input_args": {
-                "project_name": "test-folder_<random_string>",
+            "tool-args": {
+                "project_name": "sample_project_9_july_2025",
                 "project_description": "new test case"
             },
             "response":{
                 "content": [
                   {
                     "type": "text",
-                    "text": "<regex>Project created with identifier=(.*)</regex>"
+                    "match_mode": "regex",
+                    "text": "Project created with identifier=(.*)"
                   }
                 ]
               }
