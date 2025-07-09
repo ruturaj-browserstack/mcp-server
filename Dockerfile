@@ -16,6 +16,7 @@ RUN npm run build
 # Production stage
 FROM node:lts-alpine AS runtime
 WORKDIR /app
+ENV REMOTE_MCP="true"
 
 # Copy built artifacts and production dependencies
 COPY --from=builder /app/dist ./dist
