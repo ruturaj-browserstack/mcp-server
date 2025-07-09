@@ -1,0 +1,19 @@
+{
+    "tests":[
+       {
+            "tool_name": "createProjectOrFolder",
+            "input_args": {
+                "project_name": "test-folder_<random_string>",
+                "project_description": "new test case"
+            },
+            "response":{
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "<regex>Project created with identifier=(.*)</regex>"
+                  }
+                ]
+              }
+        }
+    ]
+}
