@@ -1,0 +1,210 @@
+{
+  "tests": [
+    {
+      "name": "Create Project",
+      "tool": "createProjectOrFolder",
+      "args": {
+        "project_name": "Test Project <random_string>",
+        "project_description": "Test project created by automated tests",
+        "folder_name": "Test Folder <random_string>",
+        "folder_description": "Test folder created by automated tests",
+        "parent_id": null
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "Project created with identifier=(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create Test Case",
+      "tool": "createTestCase",
+      "args": {
+        "project_identifier": "Test Project <random_string>",
+        "folder_id": "<previous_folder_id>",
+        "name": "Test Case <random_string>",
+        "description": "Test case created by automated tests",
+        "owner": "test@example.com",
+        "test_case_steps": [
+          {
+            "step": "Navigate to login page",
+            "result": "Login page should be displayed"
+          },
+          {
+            "step": "Enter credentials and click login",
+            "result": "User should be logged in successfully"
+          }
+        ]
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "Test case created with ID=(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create Test Run",
+      "tool": "createTestRun",
+      "args": {
+        "project_identifier": "<previous_project_id>",
+        "test_run": {
+          "name": "Test Run <random_string>",
+          "description": "Test run created by automated tests",
+          "test_cases": ["<previous_test_case_id>"],
+          "run_state": "new_run"
+        }
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "Test run created with ID=(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List Test Cases",
+      "tool": "listTestCases",
+      "args": {
+        "project_identifier": "<previous_project_id>",
+        "case_type": "functional,regression",
+        "priority": "high,medium",
+        "folder_id": "<previous_folder_id>",
+        "p": 1
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "contains",
+            "text": "Test cases retrieved successfully"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List Test Runs",
+      "tool": "listTestRuns",
+      "args": {
+        "project_identifier": "<previous_project_id>",
+        "run_state": "new_run"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "contains",
+            "text": "Test runs retrieved successfully"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add Test Result",
+      "tool": "addTestResult",
+      "args": {
+        "project_identifier": "<previous_project_id>",
+        "test_run_id": "<previous_test_run_id>",
+        "test_case_id": "<previous_test_case_id>",
+        "test_result": {
+          "status": "passed",
+          "description": "Test executed successfully"
+        }
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "exact",
+            "text": "Test result added successfully"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Upload Product Requirement File",
+      "tool": "uploadProductRequirementFile",
+      "args": {
+        "project_identifier": "<previous_project_id>",
+        "file_path": "./test-data/requirements.pdf"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "File uploaded successfully with ID=(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create Test Cases From File",
+      "tool": "createTestCasesFromFile",
+      "args": {
+        "documentId": "<previous_document_id>",
+        "projectReferenceId": "<previous_project_id>",
+        "folderId": "<previous_folder_id>"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "contains",
+            "text": "Test cases created successfully from file"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create LCA Steps",
+      "tool": "createLCASteps",
+      "args": {
+        "project_identifier": "<previous_project_id>",
+        "test_case_identifier": "<previous_test_case_id>",
+        "test_name": "Login Test <random_string>",
+        "base_url": "https://example.com",
+        "test_case_details": {
+          "name": "Login Test",
+          "description": "Test login functionality",
+          "preconditions": "User has valid credentials",
+          "test_case_steps": [
+            {
+              "step": "Navigate to login page",
+              "result": "Login page should be displayed"
+            },
+            {
+              "step": "Enter credentials and click login",
+              "result": "User should be logged in successfully"
+            }
+          ]
+        },
+        "credentials": {
+          "username": "test@example.com",
+          "password": "password123"
+        },
+        "local_enabled": false,
+        "wait_for_completion": true
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "contains",
+            "text": "LCA steps created successfully"
+          }
+        ]
+      }
+    }
+  ]
+}

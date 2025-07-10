@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Fetch Selectors From Valid Session",
+      "tool": "fetchSelfHealedSelectors",
+      "args": {
+        "sessionId": "1fb9cf9975ac4862d6b732196b7da72f76a8bd56"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "contains",
+            "text": "Self-heal selectors fetched successfully"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Fetch Selectors From Invalid Session",
+      "tool": "fetchSelfHealedSelectors",
+      "args": {
+        "sessionId": "32112321343"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "exact",
+            "text": "Error during fetching self-heal suggestions: Invalid session ID for session logs"
+          }
+        ]
+      }
+    }
+  ]
+}

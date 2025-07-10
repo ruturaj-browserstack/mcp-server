@@ -1,0 +1,55 @@
+{
+  "tests": [
+    {
+      "name": "Get Failures From Build With Errors",
+      "tool": "getFailuresInLastRun",
+      "args": {
+        "buildName": "test-build-<random_string>",
+        "projectName": "test-project"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "Observability URL: https://observability.browserstack.com/builds/(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get Failures From Successful Build",
+      "tool": "getFailuresInLastRun",
+      "args": {
+        "buildName": "successful-build-<random_string>",
+        "projectName": "test-project"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "Observability URL: https://observability.browserstack.com/builds/(.*)\nOverview: No errors found"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get Failures From Invalid Build",
+      "tool": "getFailuresInLastRun",
+      "args": {
+        "buildName": "non-existent-build",
+        "projectName": "test-project"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "exact",
+            "text": "❌ No observability URL found in build data, this is likely because the build is not yet available on BrowserStack Observability."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "tests": [
+    {
+      "name": "Desktop Browser Live Session",
+      "tool": "runBrowserLiveSession",
+      "args": {
+        "platformType": "desktop",
+        "desiredURL": "https://example.com",
+        "desiredOS": "Windows",
+        "desiredOSVersion": "10",
+        "desiredBrowser": "chrome",
+        "desiredBrowserVersion": "latest"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "✅ Session started\\. If it didn't open automatically, visit:\\n.*"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Mobile Browser Live Session",
+      "tool": "runBrowserLiveSession",
+      "args": {
+        "platformType": "mobile",
+        "desiredURL": "https://example.com",
+        "desiredOS": "ios",
+        "desiredOSVersion": "15.0",
+        "desiredBrowser": "safari",
+        "desiredDevice": "iPhone 13"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "✅ Session started\\. If it didn't open automatically, visit:\\n.*"
+          }
+        ]
+      }
+    }
+  ]
+}

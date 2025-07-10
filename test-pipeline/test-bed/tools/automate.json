@@ -1,0 +1,53 @@
+{
+  "tests": [
+    {
+      "name": "Valid automate session screenshots",
+      "tool": "fetchAutomationScreenshots",
+      "args": {
+        "sessionId": "935e790bb494ba0048d95ecf281c749aacfa8b81",
+        "sessionType": "automate"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "No screenshots found in the session or some unexpected error occurred"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Valid app-automate session screenshots",
+      "tool": "fetchAutomationScreenshots",
+      "args": {
+        "sessionId": "6be402fd97af74bcd6ccef7088499c53ea1643a8",
+        "sessionType": "app-automate"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "No screenshots found in the session or some unexpected error occurred"
+          }
+        ],
+        "isError": true
+      }
+    },
+    {
+      "name": "Invalid session ID",
+      "tool": "fetchAutomationScreenshots",
+      "args": {
+        "sessionId": "213213123213",
+        "sessionType": "automate"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Error during fetching automate screenshots: Invalid session ID for Session"
+          }
+        ]
+      }
+    }
+  ]
+}

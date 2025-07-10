@@ -1,0 +1,76 @@
+{
+  "tests": [
+    {
+      "name": "Get Automate Session Logs",
+      "tool": "getFailureLogs",
+      "args": {
+        "sessionId": "281d6254098767a2962b0226731b1ad2d666a8be",
+        "sessionType": "automate",
+        "logTypes": ["networkLogs", "sessionLogs"]
+      },
+      "expectedOutput": {
+        "content": [
+          { "type": "text", "match_mode": "contains", "text": "network" },
+          { "type": "text", "match_mode": "contains", "text": "session" }
+        ]
+      }
+    },
+    {
+      "name": "Get App Automate Session Logs",
+      "tool": "getFailureLogs",
+      "args": {
+        "sessionId": "073be54207e8b9df581fdc0276acf32015127a6bb76c8202",
+        "buildId": "05c2e2912387b06e2b1b2776daec9cec25b7055e",
+        "sessionType": "app-automate",
+        "logTypes": ["deviceLogs", "appiumLogs", "crashLogs"]
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "No device logs available for this session"
+          },
+          {
+            "type": "text",
+            "text": "No Appium logs available for this session"
+          },
+          {
+            "type": "text",
+            "text": "No crash logs available for this session"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get App Automate Logs Without Build ID",
+      "tool": "getFailureLogs",
+      "args": {
+        "sessionId": "073be54207e8b9df581fdc0276acf32015127a6bb76c8202",
+        "sessionType": "app-automate",
+        "logTypes": ["deviceLogs"]
+      },
+      "expectedOutput": {
+        "content": [
+          { "type": "text", "match_mode": "contains", "text": "Build ID is required" }
+        ]
+      }
+    },
+    {
+      "name": "Get Logs With Empty Session ID",
+      "tool": "getFailureLogs",
+      "args": {
+        "sessionId": "1213",
+        "sessionType": "automate",
+        "logTypes": ["networkLogs"]
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "No network logs available for this session"
+          }
+        ]
+      }
+    }
+  ]
+}

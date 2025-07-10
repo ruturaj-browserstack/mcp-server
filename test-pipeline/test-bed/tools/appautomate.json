@@ -1,0 +1,64 @@
+{
+  "tests": [
+    {
+      "name": "Run Android Espresso Tests",
+      "tool": "runAppTestsOnBrowserStack",
+      "args": {
+        "appPath": "test-pipeline/test-bed/resources/app.apk",
+        "testSuitePath": "test-pipeline/test-bed/resources/test.apk",
+        "devices": ["Samsung Galaxy S20-10.0"],
+        "detectedAutomationFramework": "espresso",
+        "project": "Test-Android-Project-<random_string>"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "✅ Test suite uploaded successfully. Build triggered with ID=(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Run iOS XCUITest Tests",
+      "tool": "runAppTestsOnBrowserStack",
+      "args": {
+        "appPath": "test-pipeline/test-bed/resources/app.ipa",
+        "testSuitePath": "test-pipeline/test-bed/resources/test.zip",
+        "devices": ["iPhone 12-14"],
+        "detectedAutomationFramework": "xcuitest",
+        "project": "Test-iOS-Project-<random_string>"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "✅ Test suite uploaded successfully. Build triggered with ID=(.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Invalid Test Framework",
+      "tool": "runAppTestsOnBrowserStack",
+      "args": {
+        "appPath": "test-pipeline/test-bed/resources/app.apk",
+        "testSuitePath": "test-pipeline/test-bed/resources/test.apk",
+        "devices": ["Samsung Galaxy S20-10.0"],
+        "detectedAutomationFramework": "invalid",
+        "project": "Invalid-Project-<random_string>"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "exact",
+            "text": "❌ Unsupported test automation framework: invalid"
+          }
+        ]
+      }
+    }
+  ]
+}

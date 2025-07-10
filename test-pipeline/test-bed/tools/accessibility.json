@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "Failed Accessibility Scan",
+      "tool": "startAccessibilityScan",
+      "args": {
+        "name": "failed-scan-<random_string>",
+        "pageURL": "invalid-url"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "❌ Accessibility scan .* failed with status: failed"
+          }
+        ]
+      }
+    }
+  ]
+}

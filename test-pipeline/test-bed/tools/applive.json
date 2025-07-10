@@ -1,0 +1,80 @@
+{
+  "tests": [
+    {
+      "name": "Android App Live Session",
+      "tool": "runAppLiveSession",
+      "args": {
+        "desiredPlatform": "android",
+        "desiredPlatformVersion": "12.0",
+        "appPath": "test-pipeline/test-bed/resources/app.apk",
+        "desiredPhone": "Samsung Galaxy S21"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "✅ App Live session started successfully. Session URL: (.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "iOS App Live Session",
+      "tool": "runAppLiveSession",
+      "args": {
+        "desiredPlatform": "ios",
+        "desiredPlatformVersion": "15.0",
+        "appPath": "test-pipeline/test-bed/resources/app.ipa",
+        "desiredPhone": "iPhone 13"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "regex",
+            "text": "✅ App Live session started successfully. Session URL: (.*)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Take App Screenshot",
+      "tool": "takeAppScreenshot",
+      "args": {
+        "desiredPlatform": "android",
+        "desiredPlatformVersion": "12.0",
+        "appPath": "test-pipeline/test-bed/resources/app.apk",
+        "desiredPhone": "Samsung Galaxy S21"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "exact",
+            "text": "✅ Screenshot captured successfully"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Invalid Platform",
+      "tool": "runAppLiveSession",
+      "args": {
+        "desiredPlatform": "windows",
+        "desiredPlatformVersion": "10",
+        "appPath": "test-pipeline/test-bed/resources/app.exe",
+        "desiredPhone": "any"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "match_mode": "exact",
+            "text": "❌ Invalid platform. Must be either 'android' or 'ios'."
+          }
+        ]
+      }
+    }
+  ]
+}
