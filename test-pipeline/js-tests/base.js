@@ -22,12 +22,14 @@ export function loadTests() {
       const filePath = path.join(TEST_BED_DIR, filename);
       try {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        if (data.tests) { 
+        if (data.tests) {
           // Add file information to each test for better reporting
-          const testsWithSource = data.tests.map(test => ({
-            ...test,
-            sourceFile: filename
-          }));
+          const testsWithSource = data.tests
+            .filter(test => !test.deactivate)
+            .map(test => ({
+              ...test,
+              sourceFile: filename
+            }));
           tests.push(...testsWithSource);
         }
       } catch (err) {
@@ -73,7 +75,10 @@ export function buildCliArgs(toolName, toolArgs) {
 
   for (const [key, value] of Object.entries(toolArgs)) {
     let processedValue = generateArgValue(value);
-    if (Array.isArray(processedValue) || (typeof processedValue === 'object' && processedValue !== null)) {
+    if (
+      Array.isArray(processedValue) ||
+      (typeof processedValue === 'object' && processedValue !== null)
+    ) {
       processedValue = JSON.stringify(processedValue);
     }
     args.push('--tool-arg', `${key}=${quoteIfNeeded(processedValue)}`);
