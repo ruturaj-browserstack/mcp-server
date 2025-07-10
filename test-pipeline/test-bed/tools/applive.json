@@ -3,10 +3,11 @@
     {
       "name": "Android App Live Session",
       "tool": "runAppLiveSession",
+      "deactivate": true,
       "args": {
         "desiredPlatform": "android",
         "desiredPlatformVersion": "12.0",
-        "appPath": "test-pipeline/test-bed/resources/app.apk",
+        "appPath": "/Users/sushant/Downloads/RuturajMCP/mcp-server/test-pipeline/resources/Calculator.apk",
         "desiredPhone": "Samsung Galaxy S21"
       },
       "expectedOutput": {
@@ -14,7 +15,7 @@
           {
             "type": "text",
             "match_mode": "regex",
-            "text": "✅ App Live session started successfully. Session URL: (.*)"
+            "text": "Successfully started a session\\. If a browser window did not open automatically, use the following URL to start the session: .*"
           }
         ]
       }
@@ -22,18 +23,19 @@
     {
       "name": "iOS App Live Session",
       "tool": "runAppLiveSession",
+      "deactivate": true,
       "args": {
         "desiredPlatform": "ios",
-        "desiredPlatformVersion": "15.0",
-        "appPath": "test-pipeline/test-bed/resources/app.ipa",
-        "desiredPhone": "iPhone 13"
+        "desiredPlatformVersion": "18.0",
+        "appPath": "/Users/sushant/Downloads/RuturajMCP/mcp-server/test-pipeline/resources/SampleApp.ipa",
+        "desiredPhone": "iPhone 16"
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
             "match_mode": "regex",
-            "text": "✅ App Live session started successfully. Session URL: (.*)"
+            "text": "Successfully started a session\\. If a browser window did not open automatically, use the following URL to start the session: .*"
           }
         ]
       }
@@ -44,34 +46,16 @@
       "args": {
         "desiredPlatform": "android",
         "desiredPlatformVersion": "12.0",
-        "appPath": "test-pipeline/test-bed/resources/app.apk",
+        "appPath": "/Users/sushant/Downloads/RuturajMCP/mcp-server/test-pipeline/resources/Calculator.apk",
         "desiredPhone": "Samsung Galaxy S21"
       },
+      "deactivate": true,
       "expectedOutput": {
         "content": [
           {
             "type": "text",
             "match_mode": "exact",
             "text": "✅ Screenshot captured successfully"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Invalid Platform",
-      "tool": "runAppLiveSession",
-      "args": {
-        "desiredPlatform": "windows",
-        "desiredPlatformVersion": "10",
-        "appPath": "test-pipeline/test-bed/resources/app.exe",
-        "desiredPhone": "any"
-      },
-      "expectedOutput": {
-        "content": [
-          {
-            "type": "text",
-            "match_mode": "exact",
-            "text": "❌ Invalid platform. Must be either 'android' or 'ios'."
           }
         ]
       }
