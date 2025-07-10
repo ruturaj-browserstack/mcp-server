@@ -1,207 +1,290 @@
 {
   "tests": [
     {
-      "name": "Create Project",
+      "name": "[Test Management] Create a new project",
       "tool": "createProjectOrFolder",
       "args": {
-        "project_name": "Test Project <random_string>",
-        "project_description": "Test project created by automated tests",
-        "folder_name": "Test Folder <random_string>",
-        "folder_description": "Test folder created by automated tests",
-        "parent_id": null
+        "project_name": "Test Project <random_string>"
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "regex",
-            "text": "Project created with identifier=(.*)"
+            "text": "Project created with identifier=PR-\\d+",
+            "match_mode": "regex"
           }
         ]
       }
     },
     {
-      "name": "Create Test Case",
-      "tool": "createTestCase",
+      "name": "[Test Management] Create a new folder in an existing project",
+      "tool": "createProjectOrFolder",
       "args": {
-        "project_identifier": "Test Project <random_string>",
-        "folder_id": "<previous_folder_id>",
-        "name": "Test Case <random_string>",
-        "description": "Test case created by automated tests",
-        "owner": "test@example.com",
-        "test_case_steps": [
-          {
-            "step": "Navigate to login page",
-            "result": "Login page should be displayed"
-          },
-          {
-            "step": "Enter credentials and click login",
-            "result": "User should be logged in successfully"
-          }
-        ]
+        "project_identifier": "PR-57875",
+        "folder_name": "Test Folder <random_string>"
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "regex",
-            "text": "Test case created with ID=(.*)"
+            "text": "Folder successfully created:",
+            "match_mode": "contains"
           }
         ]
       }
     },
     {
-      "name": "Create Test Run",
-      "tool": "createTestRun",
-      "args": {
-        "project_identifier": "<previous_project_id>",
-        "test_run": {
-          "name": "Test Run <random_string>",
-          "description": "Test run created by automated tests",
-          "test_cases": ["<previous_test_case_id>"],
-          "run_state": "new_run"
-        }
-      },
-      "expectedOutput": {
-        "content": [
-          {
-            "type": "text",
-            "match_mode": "regex",
-            "text": "Test run created with ID=(.*)"
-          }
-        ]
-      }
-    },
-    {
-      "name": "List Test Cases",
+      "name": "[Test Management] List all test cases in a project",
       "tool": "listTestCases",
       "args": {
-        "project_identifier": "<previous_project_id>",
-        "case_type": "functional,regression",
-        "priority": "high,medium",
-        "folder_id": "<previous_folder_id>",
-        "p": 1
+        "project_identifier": "PR-57875"
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "contains",
-            "text": "Test cases retrieved successfully"
+            "text": "Found \\d+ test case\\(s\\):",
+            "match_mode": "regex"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
           }
         ]
       }
     },
     {
-      "name": "List Test Runs",
-      "tool": "listTestRuns",
+      "name": "[Test Management] List test cases with a priority filter",
+      "tool": "listTestCases",
       "args": {
-        "project_identifier": "<previous_project_id>",
-        "run_state": "new_run"
+        "project_identifier": "PR-57875",
+        "priority": "critical"
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "contains",
-            "text": "Test runs retrieved successfully"
+            "text": "Found \\d+ test case\\(s\\):",
+            "match_mode": "regex"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
           }
         ]
       }
     },
     {
-      "name": "Add Test Result",
-      "tool": "addTestResult",
+      "name": "[Test Management] Create a simple test case",
+      "tool": "createTestCase",
       "args": {
-        "project_identifier": "<previous_project_id>",
-        "test_run_id": "<previous_test_run_id>",
-        "test_case_id": "<previous_test_case_id>",
-        "test_result": {
-          "status": "passed",
-          "description": "Test executed successfully"
+        "project_identifier": "PR-57875",
+        "folder_id": "11609687",
+        "name": "Simple Test Case <random_string>",
+        "test_case_steps": [
+          {
+            "step": "Open the website",
+            "result": "Website opens"
+          }
+        ]
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Test case successfully created:",
+            "match_mode": "contains"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[Test Management] Create a complex test case with all fields",
+      "tool": "createTestCase",
+      "args": {
+        "project_identifier": "PR-57875",
+        "folder_id": "11609687",
+        "name": "Complex Test Case <random_string>",
+        "description": "This is a complex test case.",
+        "preconditions": "User is logged in.",
+        "test_case_steps": [
+          { "step": "Step 1", "result": "Result 1" },
+          { "step": "Step 2", "result": "Result 2" }
+        ],
+        "tags": ["complex", "e2e"]
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Test case successfully created:",
+            "match_mode": "contains"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[Test Management] Create a new test run",
+      "tool": "createTestRun",
+      "args": {
+        "project_identifier": "PR-57875",
+        "test_run": {
+          "name": "My Test Run <random_string>",
+          "test_cases": ["TC-1035698"]
         }
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "exact",
-            "text": "Test result added successfully"
+            "text": "Successfully created test run TR-",
+            "match_mode": "contains"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
           }
         ]
       }
     },
     {
-      "name": "Upload Product Requirement File",
+      "name": "[Test Management] List all test runs in a project",
+      "tool": "listTestRuns",
+      "args": {
+        "project_identifier": "PR-57875"
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Found \\d+ test run\\(s\\):",
+            "match_mode": "regex"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[Test Management] Update an existing test run's name",
+      "tool": "updateTestRun",
+      "args": {
+        "project_identifier": "PR-57875",
+        "test_run_id": "TR-1012876",
+        "test_run": {
+          "name": "Updated Run Name <random_string>"
+        }
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Successfully updated test run TR-1012876",
+            "match_mode": "exact"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[Test Management] Add a passed test result to a test run",
+      "tool": "addTestResult",
+      "args": {
+        "project_identifier": "PR-57875",
+        "test_run_id": "TR-1012876",
+        "test_case_id": "TC-1035699",
+        "test_result": {
+          "status": "passed"
+        }
+      },
+      "expectedOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Successfully added test result with ID=",
+            "match_mode": "contains"
+          },
+          {
+            "type": "text",
+            "text": "",
+            "match_mode": "ignore"
+          }
+        ]
+      }
+    },
+    {
+      "name": "[Test Management] Upload a requirement file",
       "tool": "uploadProductRequirementFile",
       "args": {
-        "project_identifier": "<previous_project_id>",
-        "file_path": "./test-data/requirements.pdf"
+        "project_identifier": "PR-57875",
+        "file_path": "/Users/ruturajshinde/Browserstack/AI/mcp-server/test-pipeline/assets/color_prd_final.pdf"
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "regex",
-            "text": "File uploaded successfully with ID=(.*)"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Create Test Cases From File",
-      "tool": "createTestCasesFromFile",
-      "args": {
-        "documentId": "<previous_document_id>",
-        "projectReferenceId": "<previous_project_id>",
-        "folderId": "<previous_folder_id>"
-      },
-      "expectedOutput": {
-        "content": [
+            "text": "Successfully uploaded color_prd_final.pdf to BrowserStack Test Management.",
+            "match_mode": "exact"
+          },
           {
             "type": "text",
-            "match_mode": "contains",
-            "text": "Test cases created successfully from file"
+            "text": "",
+            "match_mode": "ignore"
           }
         ]
       }
     },
     {
-      "name": "Create LCA Steps",
+      "name": "[Test Management] Initiate LCA step generation without waiting",
       "tool": "createLCASteps",
       "args": {
-        "project_identifier": "<previous_project_id>",
-        "test_case_identifier": "<previous_test_case_id>",
-        "test_name": "Login Test <random_string>",
-        "base_url": "https://example.com",
+        "project_identifier": "PR-57875",
+        "test_case_identifier": "TC-1035698",
+        "base_url": "https://bstackdemo.com",
+        "test_name": "LCA Test <random_string>",
         "test_case_details": {
-          "name": "Login Test",
-          "description": "Test login functionality",
-          "preconditions": "User has valid credentials",
+          "name": "Sign In Flow",
+          "description": "Verify user can sign in.",
+          "preconditions": "The bstackdemo website is up.",
           "test_case_steps": [
-            {
-              "step": "Navigate to login page",
-              "result": "Login page should be displayed"
-            },
-            {
-              "step": "Enter credentials and click login",
-              "result": "User should be logged in successfully"
-            }
+            { "step": "Click on sign in button", "result": "The sign in modal should appear" },
+            { "step": "Enter username 'existing_user' and password 'testingisfun!'", "result": "Username and password should be entered" },
+            { "step": "Click on Log In button", "result": "User should be logged in and see their name" }
           ]
         },
-        "credentials": {
-          "username": "test@example.com",
-          "password": "password123"
-        },
-        "local_enabled": false,
-        "wait_for_completion": true
+        "wait_for_completion": false
       },
       "expectedOutput": {
         "content": [
           {
             "type": "text",
-            "match_mode": "contains",
-            "text": "LCA steps created successfully"
+            "text": "LCA steps creation initiated for test case TC-1035698",
+            "match_mode": "contains"
+          },
+          {
+            "type": "text",
+            "text": "LCA build started. Check the BrowserStack Lowcode Automation UI for completion status.",
+            "match_mode": "exact"
           }
         ]
       }
