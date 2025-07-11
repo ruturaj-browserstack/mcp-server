@@ -1,0 +1,217 @@
+{
+    "tests": [
+      {
+        "name": "[Browserstack-SDK] NodeJS - Selenium - WebdriverIO",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "webdriverio",
+          "detectedLanguage": "nodejs",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "@wdio/browserstack-service",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] NodeJS - Cypress",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "cypress",
+          "detectedTestingFramework": "cypress",
+          "detectedLanguage": "nodejs",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "browserstack-cypress-cli",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] NodeJS - Playwright - Jest",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "playwright",
+          "detectedTestingFramework": "jest",
+          "detectedLanguage": "nodejs",
+          "desiredPlatforms": ["windows", "macos"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "npx setup --username",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] NodeJS - Selenium - Jest with Percy",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "jest",
+          "detectedLanguage": "nodejs",
+          "desiredPlatforms": ["windows"],
+          "enablePercy": true
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "percy.snapshot(driver, name)",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] Python - Selenium - Pytest",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "pytest",
+          "detectedLanguage": "python",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "python3 -m pip install browserstack-sdk",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] Python - Playwright - Pytest",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "playwright",
+          "detectedTestingFramework": "pytest",
+          "detectedLanguage": "python",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "browserstack-sdk python",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] Java - Selenium - TestNG",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "testng",
+          "detectedLanguage": "java",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "mvn archetype:generate",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] Java - Selenium - JUnit5 with Percy",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "junit5",
+          "detectedLanguage": "java",
+          "desiredPlatforms": ["windows"],
+          "enablePercy": true
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "mvn archetype:generate",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] C# - Selenium - NUnit",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "nunit",
+          "detectedLanguage": "csharp",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "dotnet add package BrowserStack.TestAdapter",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] C# - Selenium - NUnit with Percy",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "selenium",
+          "detectedTestingFramework": "nunit",
+          "detectedLanguage": "csharp",
+          "desiredPlatforms": ["windows"],
+          "enablePercy": true
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "dotnet add package BrowserStack.TestAdapter",
+              "match_mode": "contains"
+            }
+          ]
+        }
+      },
+      {
+        "name": "[Browserstack-SDK] Unsupported combination (Python + Cypress)",
+        "tool": "runTestsOnBrowserStack",
+        "args": {
+          "detectedBrowserAutomationFramework": "cypress",
+          "detectedTestingFramework": "cypress",
+          "detectedLanguage": "python",
+          "desiredPlatforms": ["windows"]
+        },
+        "expectedOutput": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Failed to bootstrap project with BrowserStack SDK. Error: Error: BrowserStack MCP Server currently does not support cypress for python",
+              "match_mode": "contains"
+            }
+          ],
+          "isError": true
+        }
+      }
+    ]
+  }
