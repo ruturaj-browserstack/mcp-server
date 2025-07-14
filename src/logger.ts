@@ -5,7 +5,7 @@ import chitraguptaLogger from "./lib/chitragupta-logger/logger.js";
 let logger: any;
 
 console.log("Logger initialized with config:");
-console.log(config.REMOTE_MCP)
+console.log(config.REMOTE_MCP);
 
 if (config.REMOTE_MCP) {
   logger = chitraguptaLogger;

@@ -1,6 +1,6 @@
-import * as winston from 'winston';
-import { TransformableInfo } from 'logform';
-import { Chitragupta } from 'chitragupta';
+import * as winston from "winston";
+import { TransformableInfo } from "logform";
+import { Chitragupta } from "chitragupta";
 
 interface ChitraguptaOptions {
   level: string;
@@ -14,12 +14,12 @@ const jsonLogFormatter = winston.format.printf(
 
     const options: ChitraguptaOptions = {
       level,
-      message: message as string, 
+      message: message as string,
       meta,
     };
 
     return Chitragupta.jsonLogFormatter(options);
-  }
+  },
 );
 
 const logger: winston.Logger = winston.createLogger({

@@ -1,3 +1,2 @@
-import { pino } from "pino";
-declare let logger: pino.Logger;
+declare let logger: any;
 export default logger;

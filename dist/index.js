@@ -33,5 +33,4 @@ main().catch(console.error);
 process.on("exit", () => {
     logger.flush();
 });
-export { default as logger } from "./logger.js";
 export { createMcpServer } from "./server-factory.js";

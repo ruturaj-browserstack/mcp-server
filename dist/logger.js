@@ -1,6 +1,13 @@
 import { pino } from "pino";
+import config from "./config.js";
+import chitraguptaLogger from "./lib/chitragupta-logger/logger.js";
 let logger;
-if (process.env.NODE_ENV === "development") {
+console.log("Logger initialized with config:");
+console.log(config.REMOTE_MCP);
+if (config.REMOTE_MCP) {
+    logger = chitraguptaLogger;
+}
+else if (process.env.NODE_ENV === "development") {
     logger = pino({
         level: "debug",
         transport: {
