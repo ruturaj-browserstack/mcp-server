@@ -6,29 +6,7 @@ import { runTestsOnBrowserStackHandler } from "./sdk-utils/runTestsOnBrowserStac
 /**
  * Tool description for runTestsOnBrowserStack
  */
-const TOOL_DESCRIPTION = `Use this tool to get instructions for running tests on BrowserStack and BrowserStack Percy. It sets up the BrowserStack SDK and runs your test cases on BrowserStack.
-
-Three User Execution Modes:
-
-1. **'percy-disabled'** (default) - BrowserStack SDK only
-   • Sets up BrowserStack SDK for cross-browser testing
-   • No visual testing included
-
-2. **'percy-with-sdk'** - BrowserStack SDK with Percy integration  
-   • Sets up BrowserStack SDK + Percy for visual testing
-   • Automatically falls back to Percy Automate if Percy SDK is unsupported
-   • This is what users choose when they want "tests with Percy"
-
-3. **'percy-web'** - Percy Web only 
-   • Uses Percy Web for visual testing without BrowserStack SDK
-   • Currently not implemented
-
-Set 'percyMode' to control the execution path:
-• 'percy-disabled': BrowserStack SDK only (default)
-• 'percy-with-sdk': BrowserStack SDK + Percy (with automatic fallback)
-• 'percy-web': Percy Web only
-
-Note: percy-web mode is not yet implemented. Percy Automate is only used as an internal fallback when Percy SDK is not supported - users never directly choose it.`;
+const TOOL_DESCRIPTION = `Use this tool to get instructions for running tests on BrowserStack and BrowserStack Percy. For percy user may ask to run on browsestack infra or their own infra.`;
 
 /**
  * Registers the runTestsOnBrowserStack tool with the MCP server.
@@ -39,7 +17,7 @@ export function registerRunTestsOnBrowserStackTool(
   config: BrowserStackConfig,
 ) {
   server.tool(
-    "runTestsOnBrowserStack",
+    "assistRunTestCases",
     TOOL_DESCRIPTION,
     RunTestsOnBrowserStackParamsShape,
     async (args) => {
