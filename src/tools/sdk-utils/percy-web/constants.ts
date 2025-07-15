@@ -39,7 +39,7 @@ percy_snapshot(driver, 'Home page')
 ---STEP---
 Run Percy with your tests
   - Use the following command:
-    PERCY_TOKEN=${percyToken} npx percy exec -- <your command to run tests>
+    npx percy exec -- <your command to run tests>
   
 Example output:
   [percy] Percy has started!
@@ -51,12 +51,6 @@ Example output:
 ---STEP---
 Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
-  
-Advanced:
-  - You can add responsive widths or custom Percy CSS in percy_snapshot:
-    percy_snapshot(driver, 'Responsive check', { widths: [768, 992, 1200], percy_css: "iframe { display: none; }" })
-  - To learn more about base build selection, visit:
-    https://docs.percy.io/docs/base-build-selection
 `;
 
 export const generatePythonFrameworkInstructions = 

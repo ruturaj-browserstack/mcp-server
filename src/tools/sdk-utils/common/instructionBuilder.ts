@@ -4,17 +4,19 @@ import { runPercyWeb } from "../percy-web/handler.js";
 import { runBstackSDKOnly } from "../bstack/sdkHandler.js";
 import { runPercyWithSDK } from "../percy-bstack/handler.js";
 import { runPercyAutomateOnly } from "../percy-automate/handler.js";
-
+import { fetchPercyToken } from "../percy-web/fetchPercyToken.js";
+import { getBrowserStackAuth } from "../../../lib/get-auth.js";
 import { RunTestsInstructionResult } from "./types.js";
 
 /**
  * Main instruction builder with clear execution paths
  * Routes to appropriate handlers based on Percy mode
  */
-export function buildRunTestsInstructions(
+export async function buildRunTestsInstructions(
   input: RunTestsOnBrowserStackInput,
   config: BrowserStackConfig,
-): RunTestsInstructionResult {
+  projectName: string // New parameter for project name
+): Promise<RunTestsInstructionResult> {
   switch (input.percyMode) {
     case PercyMode.PercyDisabled:
       // BrowserStack SDK only - no Percy
@@ -24,11 +26,18 @@ export function buildRunTestsInstructions(
       // BrowserStack SDK + Percy integration with automatic fallback
       return handlePercyWithSDKFlow(input, config);
 
-    case PercyMode.PercyWeb:
+    case PercyMode.PercyWeb: {
       // Percy Web only - no BrowserStack SDK
-      // For now, use a placeholder token - this should be provided by the user
-      const percyToken = "YOUR_PERCY_TOKEN_HERE"; 
-      return runPercyWeb(input, percyToken);
+      // Fetch Percy token from API
+      const authorization = getBrowserStackAuth(config);
+      // TODO: Pass the correct PERCY_INSTRUCTIONS map here
+      // For now, pass an empty object as a placeholder
+      const percyToken = await fetchPercyToken(
+        projectName,
+        authorization
+      );
+      return runPercyWeb(input, percyToken || "YOUR_PERCY_TOKEN_HERE");
+    }
 
     default:
       // This should never happen due to schema validation, but TypeScript requires exhaustive handling

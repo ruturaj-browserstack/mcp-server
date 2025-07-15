@@ -69,6 +69,13 @@ export function runPercyWeb(
   // Generate instructions for the supported configuration
   const instructions = testingFrameworkConfig.instructions(percyToken);
 
+  // Prepend a step to set the Percy token in the environment
+  steps.push({
+    type: "instruction",
+    title: "Set Percy Token in Environment",
+    content: `Copy the Percy token generated for your project and set it as an environment variable before running your tests:\n\nexport PERCY_TOKEN="${percyToken}"\n\n(For Windows, use 'setx PERCY_TOKEN "${percyToken}"' or 'set PERCY_TOKEN=${percyToken}' as appropriate.)`,
+  });
+
   steps.push({
     type: "instruction",
     title: `Percy Web Setup for ${input.detectedLanguage} with ${input.detectedBrowserAutomationFramework}/${input.detectedTestingFramework}`,

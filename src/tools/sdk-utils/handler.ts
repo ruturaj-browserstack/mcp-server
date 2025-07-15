@@ -18,6 +18,7 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export async function runTestsOnBrowserStackHandler(
   rawInput: unknown,
   config: BrowserStackConfig,
+  projectName: string
 ): Promise<CallToolResult> {
   try {
     // Validate input with schema
@@ -25,16 +26,16 @@ export async function runTestsOnBrowserStackHandler(
 
     // Build instructions and metadata
     const { steps, requiresPercy, missingDependencies, shouldSkipFormatting } =
-      buildRunTestsInstructions(input, config);
+      await buildRunTestsInstructions(input, config, projectName);
 
     // If shouldSkipFormatting is true (for unsupported cases), return minimal response
     if (shouldSkipFormatting) {
       return {
-        content: steps.map((step) => ({
+        content: steps.map((step: { content: string }) => ({
           type: "text" as const,
           text: step.content,
         })),
-        isError: steps.some((s) => s.isError),
+        isError: steps.some((s: { isError?: boolean }) => s.isError),
         steps,
         requiresPercy,
         missingDependencies,
@@ -42,7 +43,7 @@ export async function runTestsOnBrowserStackHandler(
     }
 
     // Combine all step content into a single string for formatting
-    const combinedInstructions = steps.map((step) => step.content).join("\n");
+    const combinedInstructions = steps.map((step: { content: string }) => step.content).join("\n");
 
     // Apply step numbering using the formatInstructionsWithNumbers function
     const { formattedSteps, stepCount } =
@@ -70,7 +71,7 @@ export async function runTestsOnBrowserStackHandler(
     // Structured output
     return {
       content: finalContent,
-      isError: steps.some((s) => s.isError),
+      isError: steps.some((s: { isError?: boolean }) => s.isError),
       steps,
       requiresPercy,
       missingDependencies,

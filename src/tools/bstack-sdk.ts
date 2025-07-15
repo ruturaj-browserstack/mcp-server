@@ -21,7 +21,7 @@ export function registerRunTestsOnBrowserStackTool(
     TOOL_DESCRIPTION,
     RunTestsOnBrowserStackParamsShape,
     async (args) => {
-      return runTestsOnBrowserStackHandler(args, config);
+      return runTestsOnBrowserStackHandler(args, config, "default-project");
     },
   );
 }
