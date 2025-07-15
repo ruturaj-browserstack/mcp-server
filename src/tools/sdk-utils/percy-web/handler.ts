@@ -29,6 +29,7 @@ export function runPercyWeb(
       ],
       requiresPercy: true,
       missingDependencies: [],
+      shouldSkipFormatting: true,
     };
   }
 
@@ -46,9 +47,10 @@ export function runPercyWeb(
       ],
       requiresPercy: true,
       missingDependencies: [],
+      shouldSkipFormatting: true,
     };
   }
-
+  
   const testingFrameworkConfig = frameworkConfig[input.detectedTestingFramework as SDKSupportedTestingFramework];
   
   if (!testingFrameworkConfig) {
@@ -63,6 +65,7 @@ export function runPercyWeb(
       ],
       requiresPercy: true,
       missingDependencies: [],
+      shouldSkipFormatting: true,
     };
   }
 

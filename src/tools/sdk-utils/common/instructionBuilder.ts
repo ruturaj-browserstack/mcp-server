@@ -27,11 +27,7 @@ export async function buildRunTestsInstructions(
       return handlePercyWithSDKFlow(input, config);
 
     case PercyMode.PercyWeb: {
-      // Percy Web only - no BrowserStack SDK
-      // Fetch Percy token from API
       const authorization = getBrowserStackAuth(config);
-      // TODO: Pass the correct PERCY_INSTRUCTIONS map here
-      // For now, pass an empty object as a placeholder
       const percyToken = await fetchPercyToken(
         projectName,
         authorization

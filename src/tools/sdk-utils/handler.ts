@@ -11,10 +11,7 @@ import {
 import { BrowserStackConfig } from "../../lib/types.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
-/**
- * Handler for the runTestsOnBrowserStack tool.
- * Validates input, builds instructions, and returns structured output.
- */
+
 export async function runTestsOnBrowserStackHandler(
   rawInput: unknown,
   config: BrowserStackConfig,
@@ -84,8 +81,7 @@ export async function runTestsOnBrowserStackHandler(
           text: BOOTSTRAP_FAILED(error, {
             config,
             percyMode: (rawInput as any)?.percyMode,
-          }),
-          isError: true,
+          })
         },
       ],
       isError: true,

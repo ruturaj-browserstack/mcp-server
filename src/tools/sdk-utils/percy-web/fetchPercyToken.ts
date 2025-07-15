@@ -1,7 +1,5 @@
-/**
- * Fetches a Percy token for a given project name from the BrowserStack API.
- * Returns the token if successful, or throws an error if not.
- */
+//Fetches a Percy token for a given project name from the BrowserStack API.
+// Returns the token if successful, or throws an error if not.
 
 export async function fetchPercyToken(
   projectName: string,
