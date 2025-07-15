@@ -26,7 +26,9 @@ export function buildRunTestsInstructions(
 
     case PercyMode.PercyWeb:
       // Percy Web only - no BrowserStack SDK
-      return runPercyWeb();
+      // For now, use a placeholder token - this should be provided by the user
+      const percyToken = "YOUR_PERCY_TOKEN_HERE"; 
+      return runPercyWeb(input, percyToken);
 
     default:
       // This should never happen due to schema validation, but TypeScript requires exhaustive handling

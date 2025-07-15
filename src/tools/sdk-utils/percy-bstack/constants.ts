@@ -1,7 +1,6 @@
 // Percy + BrowserStack SDK configuration constants
-import { PercyConfigMapping } from "./types.js";
 
-const javaSeleniumInstructions = `
+export const javaSeleniumInstructions = `
 Import the BrowserStack Percy SDK in your test script:
 Add the Percy import to your test file.
 
@@ -55,7 +54,7 @@ describe("sample Test", () => {
 \`\`\`
 `;
 
-const webdriverioPercyInstructions = `
+export const webdriverioPercyInstructions = `
 Enable Percy in \`wdio.conf.js\`:
 In your WebdriverIO configuration file, modify the 'browserstack' service options to enable Percy.
 
@@ -118,7 +117,7 @@ describe("My WebdriverIO Test", () => {
 \`\`\`
 `;
 
-const csharpSeleniumInstructions = `
+export const csharpSeleniumInstructions = `
 Import the BrowserStack Percy SDK in your test script:
 Add the Percy import to your test file.
 
@@ -152,32 +151,3 @@ public class MyTest
 }
 \`\`\`
 `;
-
-export const PERCY_INSTRUCTIONS: PercyConfigMapping = {
-  java: {
-    selenium: {
-      testng: { script_updates: javaSeleniumInstructions },
-      cucumber: { script_updates: javaSeleniumInstructions },
-      junit4: { script_updates: javaSeleniumInstructions },
-      junit5: { script_updates: javaSeleniumInstructions },
-    },
-  },
-  csharp: {
-    selenium: {
-      nunit: { script_updates: csharpSeleniumInstructions },
-    },
-  },
-  nodejs: {
-    selenium: {
-      mocha: {
-        script_updates: nodejsSeleniumInstructions,
-      },
-      jest: {
-        script_updates: nodejsSeleniumInstructions,
-      },
-      webdriverio: {
-        script_updates: webdriverioPercyInstructions,
-      },
-    },
-  },
-};

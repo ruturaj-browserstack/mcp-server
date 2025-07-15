@@ -2,7 +2,7 @@
  * Core instruction configuration utilities for runTestsOnBrowserStack tool.
  */
 
-import { SUPPORTED_CONFIGURATIONS } from "../bstack/constants.js";
+import { SUPPORTED_CONFIGURATIONS } from "../bstack/frameworks.js";
 import {
   SDKSupportedLanguage,
   SDKSupportedBrowserAutomationFramework,

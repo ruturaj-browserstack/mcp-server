@@ -4,7 +4,7 @@ import {
   SDKSupportedLanguage,
   SDKSupportedTestingFramework,
 } from "../common/types.js";
-import { PERCY_INSTRUCTIONS } from "./constants.js";
+import { PERCY_INSTRUCTIONS } from "./frameworks.js";
 import { PercyInstructions } from "./types.js";
 
 // Retrieves Percy-specific instructions for a given language and framework
