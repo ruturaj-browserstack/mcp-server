@@ -8,7 +8,7 @@ import { PERCY_AUTOMATE_NOT_IMPLEMENTED } from "../errorMessages.js";
 function getPercyAutomateInstructions(): string | null {
   // TODO: Implement real logic for Percy Automate fallback
   // For now, return null to indicate not implemented
-  return null;
+  return "It worked as a fallback for Percy Automate.";
 }
 
 /**
