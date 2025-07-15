@@ -7,14 +7,14 @@ import {
 
 export enum PercyMode {
   PercyDisabled = "percy-disabled", // BrowserStack SDK only, no Percy
-  PercyWithSDK = "percy-with-sdk", // BrowserStack SDK + Percy integration (with fallback)
+  PercyWithSDK = "percy-on-browserstack-infra", // BrowserStack SDK + Percy integration (with fallback)
   PercyWeb = "percy-web", // Percy Web only (not implemented)
 }
 
 // Internal enum for execution paths (includes fallback)
 export enum InternalPercyMode {
   PercyDisabled = "percy-disabled",
-  PercyWithSDK = "percy-with-sdk",
+  PercyWithSDK = "percy-on-browserstack-infra",
   PercyAutomate = "percy-automate", // Internal fallback only
   PercyWeb = "percy-web",
 }
@@ -31,7 +31,6 @@ export const RunTestsOnBrowserStackParamsShape = {
   detectedLanguage: z.nativeEnum(SDKSupportedLanguageEnum),
   desiredPlatforms: z.array(z.enum(["windows", "macos", "android", "ios"])),
   percyMode: PercyModeEnum.default(PercyMode.PercyDisabled).describe(
-    "Percy integration mode: 'percy-disabled' (SDK only), 'percy-with-sdk' (SDK + Percy with automatic fallback), or 'percy-web' (Percy Web only)",
   ),
 };
 
