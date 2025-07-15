@@ -1,7 +1,7 @@
 import { RunTestsOnBrowserStackSchema } from "./schema.js";
 import { buildRunTestsInstructions } from "./instructionBuilder.js";
 import { BOOTSTRAP_FAILED } from "./errorMessages.js";
-import { IMPORTANT_SETUP_WARNING } from "../instructions.js";
+import { IMPORTANT_SETUP_WARNING, formatInstructionsWithNumbers, generateVerificationMessage } from "../instructions.js";
 import { BrowserStackConfig } from "../../../lib/types.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
@@ -35,21 +35,34 @@ export async function runTestsOnBrowserStackHandler(
       };
     }
 
-    // Format steps for output (only for supported cases)
-    const formattedSteps = steps.map((step, idx) => ({
-      type: "text" as const,
-      text: `Step ${idx + 1}: ${step.title}\n${step.content}`,
-    }));
-
-    // Add setup warning only for supported cases
-    formattedSteps.unshift({
-      type: "text" as const,
-      text: IMPORTANT_SETUP_WARNING,
-    });
+    // Combine all step content into a single string for formatting
+    const combinedInstructions = steps.map(step => step.content).join('\n');
+    
+    // Apply step numbering using the formatInstructionsWithNumbers function
+    const { formattedSteps, stepCount } = formatInstructionsWithNumbers(combinedInstructions);
+    
+    // Generate verification message
+    const verificationMessage = generateVerificationMessage(stepCount);
+    
+    // Create the final content with setup warning, formatted instructions, and verification
+    const finalContent = [
+      {
+        type: "text" as const,
+        text: IMPORTANT_SETUP_WARNING,
+      },
+      {
+        type: "text" as const,
+        text: formattedSteps,
+      },
+      {
+        type: "text" as const,
+        text: verificationMessage,
+      }
+    ];
 
     // Structured output
     return {
-      content: formattedSteps,
+      content: finalContent,
       isError: steps.some((s) => s.isError),
       steps,
       requiresPercy,
