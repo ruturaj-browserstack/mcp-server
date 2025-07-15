@@ -1,0 +1,3 @@
+import { PercyConfigMapping } from "./types.js";
+export declare const nodejsSeleniumInstructions = "\nImport the BrowserStack Percy SDK in your test script:\nAdd the Percy import to your test file.\n\n---STEP---\n\nAdd screenshot capture method at required points:\nUse the `percy.snapshot(driver, name)` method at points in your test script where you want to capture screenshots.\n\n```javascript\nconst { percy } = require('browserstack-node-sdk');\ndescribe(\"sample Test\", () => {\n  // ... other imports and setup\n  \n  test(\"my test\", async () => {\n    // ....\n    await percy.snapshot(driver, \"My Snapshot\")\n    // ....\n  });\n})\n```\n";
+export declare const PERCY_INSTRUCTIONS: PercyConfigMapping;
