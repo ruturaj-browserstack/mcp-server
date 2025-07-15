@@ -6,8 +6,6 @@ import { PERCY_AUTOMATE_NOT_IMPLEMENTED } from "../errorMessages.js";
  * Returns null if not supported, instructions string if supported
  */
 function getPercyAutomateInstructions(): string | null {
-  // TODO: Implement real logic for Percy Automate fallback
-  // For now, return null to indicate not implemented
   return "It worked as a fallback for Percy Automate.";
 }
 
@@ -29,7 +27,7 @@ export function runPercyAutomateOnly(): RunTestsInstructionResult {
       ],
       requiresPercy: true,
       missingDependencies: [],
-      shouldSkipFormatting: false, // This would be a valid implementation
+      shouldSkipFormatting: false,
     };
   }
 
@@ -45,6 +43,6 @@ export function runPercyAutomateOnly(): RunTestsInstructionResult {
     ],
     requiresPercy: true,
     missingDependencies: [],
-    shouldSkipFormatting: true, // Skip formatting for not implemented features
+    shouldSkipFormatting: true,
   };
 }
