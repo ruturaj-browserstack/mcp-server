@@ -52,3 +52,18 @@ export type ConfigMapping = Record<
     >
   >
 >;
+
+// Common interfaces for instruction results
+export interface RunTestsStep {
+  type: "instruction" | "error" | "warning";
+  title: string;
+  content: string;
+  isError?: boolean;
+}
+
+export interface RunTestsInstructionResult {
+  steps: RunTestsStep[];
+  requiresPercy: boolean;
+  missingDependencies: string[];
+  shouldSkipFormatting?: boolean;
+}

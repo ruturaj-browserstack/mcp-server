@@ -1,3 +1,4 @@
+// Percy + BrowserStack SDK configuration constants
 import { PercyConfigMapping } from "./types.js";
 
 const javaSeleniumInstructions = `

@@ -1,8 +1,14 @@
-import { RunTestsOnBrowserStackSchema } from "./schema.js";
-import { buildRunTestsInstructions } from "./instructionBuilder.js";
-import { BOOTSTRAP_FAILED, IMPORTANT_SETUP_WARNING } from "./errorMessages.js";
-import { formatInstructionsWithNumbers, generateVerificationMessage } from "./formatUtils.js";
-import { BrowserStackConfig } from "../../../lib/types.js";
+import { RunTestsOnBrowserStackSchema } from "./common/schema.js";
+import { buildRunTestsInstructions } from "./common/instructionBuilder.js";
+import {
+  BOOTSTRAP_FAILED,
+  IMPORTANT_SETUP_WARNING,
+} from "./common/errorMessages.js";
+import {
+  formatInstructionsWithNumbers,
+  generateVerificationMessage,
+} from "./common/formatUtils.js";
+import { BrowserStackConfig } from "../../lib/types.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 /**
@@ -36,14 +42,15 @@ export async function runTestsOnBrowserStackHandler(
     }
 
     // Combine all step content into a single string for formatting
-    const combinedInstructions = steps.map(step => step.content).join('\n');
-    
+    const combinedInstructions = steps.map((step) => step.content).join("\n");
+
     // Apply step numbering using the formatInstructionsWithNumbers function
-    const { formattedSteps, stepCount } = formatInstructionsWithNumbers(combinedInstructions);
-    
+    const { formattedSteps, stepCount } =
+      formatInstructionsWithNumbers(combinedInstructions);
+
     // Generate verification message
     const verificationMessage = generateVerificationMessage(stepCount);
-    
+
     // Create the final content with setup warning, formatted instructions, and verification
     const finalContent = [
       {
@@ -57,7 +64,7 @@ export async function runTestsOnBrowserStackHandler(
       {
         type: "text" as const,
         text: verificationMessage,
-      }
+      },
     ];
 
     // Structured output

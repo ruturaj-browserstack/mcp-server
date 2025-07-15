@@ -1,4 +1,4 @@
-import { SDKSupportedLanguage } from "./types.js";
+import { SDKSupportedLanguage } from "../common/types.js";
 
 // Constants
 const MAVEN_ARCHETYPE_GROUP_ID = "com.browserstack";
@@ -14,7 +14,10 @@ const JAVA_FRAMEWORK_MAP: Record<string, string> = {
 } as const;
 
 // Template for Node.js SDK setup instructions
-const NODEJS_SDK_INSTRUCTIONS = (username: string, accessKey: string): string => `---STEP---
+const NODEJS_SDK_INSTRUCTIONS = (
+  username: string,
+  accessKey: string,
+): string => `---STEP---
 Install BrowserStack Node SDK using command:
 \`\`\`bash
 npm i -D browserstack-node-sdk@latest
@@ -43,9 +46,10 @@ const GRADLE_SETUP_INSTRUCTIONS = `
 // Generates Maven archetype command for Windows platform
 function getMavenCommandForWindows(
   framework: string,
-  mavenFramework: string
+  mavenFramework: string,
 ): string {
-  return `mvn archetype:generate -B ` +
+  return (
+    `mvn archetype:generate -B ` +
     `-DarchetypeGroupId="${MAVEN_ARCHETYPE_GROUP_ID}" ` +
     `-DarchetypeArtifactId="${MAVEN_ARCHETYPE_ARTIFACT_ID}" ` +
     `-DarchetypeVersion="${MAVEN_ARCHETYPE_VERSION}" ` +
@@ -54,14 +58,15 @@ function getMavenCommandForWindows(
     `-Dversion="${MAVEN_ARCHETYPE_VERSION}" ` +
     `-DBROWSERSTACK_USERNAME="${process.env.BROWSERSTACK_USERNAME}" ` +
     `-DBROWSERSTACK_ACCESS_KEY="${process.env.BROWSERSTACK_ACCESS_KEY}" ` +
-    `-DBROWSERSTACK_FRAMEWORK="${mavenFramework}"`;
+    `-DBROWSERSTACK_FRAMEWORK="${mavenFramework}"`
+  );
 }
 
 // Generates Maven archetype command for Unix-like platforms (macOS/Linux)
 function getMavenCommandForUnix(
   username: string,
   accessKey: string,
-  mavenFramework: string
+  mavenFramework: string,
 ): string {
   return `mvn archetype:generate -B -DarchetypeGroupId=${MAVEN_ARCHETYPE_GROUP_ID} \\
 -DarchetypeArtifactId=${MAVEN_ARCHETYPE_ARTIFACT_ID} -DarchetypeVersion=${MAVEN_ARCHETYPE_VERSION} \\
@@ -75,7 +80,7 @@ function getMavenCommandForUnix(
 function getJavaSDKInstructions(
   framework: string,
   username: string,
-  accessKey: string
+  accessKey: string,
 ): string {
   const mavenFramework = getJavaFrameworkForMaven(framework);
   const isWindows = process.platform === "win32";

@@ -1,18 +1,13 @@
-import { RunTestsInstructionResult } from "../instructionBuilder.js";
-import { PERCY_AUTOMATE_NOT_IMPLEMENTED } from "../errorMessages.js";
+// Handler for Percy Automate only (fallback when Percy SDK not supported)
+import { RunTestsInstructionResult } from "../common/types.js";
+import { PERCY_AUTOMATE_NOT_IMPLEMENTED } from "../common/errorMessages.js";
 
-/**
- * Placeholder function for Percy Automate fallback
- * Returns null if not supported, instructions string if supported
- */
+// Placeholder function for Percy Automate fallback
+// Returns null if not supported, instructions string if supported
 function getPercyAutomateInstructions(): string | null {
   return "It worked as a fallback for Percy Automate.";
 }
 
-/**
- * Handler for Percy Automate only (fallback when Percy SDK not supported)
- * Currently not implemented - returns error step with minimal formatting
- */
 export function runPercyAutomateOnly(): RunTestsInstructionResult {
   const percyAutomateInstructions = getPercyAutomateInstructions();
 
@@ -20,7 +15,7 @@ export function runPercyAutomateOnly(): RunTestsInstructionResult {
     return {
       steps: [
         {
-          type: "percy",
+          type: "instruction",
           title: "Percy Automate Setup (Fallback)",
           content: percyAutomateInstructions,
         },

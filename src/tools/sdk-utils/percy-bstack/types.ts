@@ -1,8 +1,9 @@
+// Percy + BrowserStack SDK types and interfaces
 import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedLanguage,
   SDKSupportedTestingFramework,
-} from "../runTestsOnBrowserStack/types.js";
+} from "../common/types.js";
 
 export interface PercyInstructions {
   script_updates: string;

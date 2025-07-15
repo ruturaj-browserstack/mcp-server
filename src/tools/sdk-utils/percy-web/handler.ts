@@ -1,13 +1,7 @@
-import {
-  RunTestsInstructionResult,
-  RunTestsStep,
-} from "../instructionBuilder.js";
-import { PERCY_WEB_NOT_IMPLEMENTED } from "../errorMessages.js";
+// Handler for Percy Web only mode - Currently not implemented
+import { RunTestsInstructionResult, RunTestsStep } from "../common/types.js";
+import { PERCY_WEB_NOT_IMPLEMENTED } from "../common/errorMessages.js";
 
-/**
- * Handler for Percy Web only mode
- * Currently not implemented - returns error step with minimal formatting
- */
 export function runPercyWeb(): RunTestsInstructionResult {
   const steps: RunTestsStep[] = [
     {

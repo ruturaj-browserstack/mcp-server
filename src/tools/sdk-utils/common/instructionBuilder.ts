@@ -1,26 +1,11 @@
 import { RunTestsOnBrowserStackInput, PercyMode } from "./schema.js";
 import { BrowserStackConfig } from "../../../lib/types.js";
-import {
-  runPercyWeb,
-  runBstackSDKOnly,
-  runPercyWithSDK,
-  runPercyAutomateOnly,
-} from "./handlers/index.js";
+import { runPercyWeb } from "../percy-web/handler.js";
+import { runBstackSDKOnly } from "../bstack/sdkHandler.js";
+import { runPercyWithSDK } from "../percy-bstack/handler.js";
+import { runPercyAutomateOnly } from "../percy-automate/handler.js";
 
-// Step metadata type
-export interface RunTestsStep {
-  type: "setup" | "yml" | "framework" | "percy" | "info" | "error";
-  title: string;
-  content: string;
-  isError?: boolean;
-}
-
-export interface RunTestsInstructionResult {
-  steps: RunTestsStep[];
-  requiresPercy: boolean;
-  missingDependencies: string[];
-  shouldSkipFormatting?: boolean; // Skip formatting for unsupported cases
-}
+import { RunTestsInstructionResult } from "./types.js";
 
 /**
  * Main instruction builder with clear execution paths

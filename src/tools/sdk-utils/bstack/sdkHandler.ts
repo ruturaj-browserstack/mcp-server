@@ -1,23 +1,17 @@
-import {
-  RunTestsInstructionResult,
-  RunTestsStep,
-} from "../instructionBuilder.js";
-import { RunTestsOnBrowserStackInput } from "../schema.js";
-import { getBrowserStackAuth } from "../../../../lib/get-auth.js";
-import { getSDKPrefixCommand } from "../commands.js";
-import { generateBrowserStackYMLInstructions } from "../configUtils.js";
-import { getInstructionsForProjectConfiguration } from "../instructionUtils.js";
-import { BrowserStackConfig } from "../../../../lib/types.js";
+// Handler for BrowserStack SDK only (no Percy) - Sets up BrowserStack SDK with YML configuration
+import { RunTestsInstructionResult, RunTestsStep } from "../common/types.js";
+import { RunTestsOnBrowserStackInput } from "../common/schema.js";
+import { getBrowserStackAuth } from "../../../lib/get-auth.js";
+import { getSDKPrefixCommand } from "./commands.js";
+import { generateBrowserStackYMLInstructions } from "./configUtils.js";
+import { getInstructionsForProjectConfiguration } from "../common/instructionUtils.js";
+import { BrowserStackConfig } from "../../../lib/types.js";
 import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedTestingFramework,
   SDKSupportedLanguage,
-} from "../types.js";
+} from "../common/types.js";
 
-/**
- * Handler for BrowserStack SDK only (no Percy)
- * Sets up BrowserStack SDK with YML configuration
- */
 export function runBstackSDKOnly(
   input: RunTestsOnBrowserStackInput,
   config: BrowserStackConfig,
@@ -40,7 +34,7 @@ export function runBstackSDKOnly(
     );
 
     steps.push({
-      type: "framework",
+      type: "instruction",
       title: "Framework-Specific Setup",
       content: frameworkInstructions,
     });
@@ -62,7 +56,7 @@ export function runBstackSDKOnly(
 
   if (sdkSetupCommand) {
     steps.push({
-      type: "setup",
+      type: "instruction",
       title: "Install BrowserStack SDK",
       content: sdkSetupCommand,
     });
@@ -75,7 +69,7 @@ export function runBstackSDKOnly(
 
   if (ymlInstructions) {
     steps.push({
-      type: "yml",
+      type: "instruction",
       title: "Configure browserstack.yml",
       content: ymlInstructions,
     });
@@ -91,7 +85,7 @@ export function runBstackSDKOnly(
 
   if (frameworkInstructions) {
     steps.push({
-      type: "framework",
+      type: "instruction",
       title: "Framework-Specific Setup",
       content: frameworkInstructions,
     });

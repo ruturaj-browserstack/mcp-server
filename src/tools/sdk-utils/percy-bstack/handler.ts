@@ -1,27 +1,21 @@
-import {
-  RunTestsInstructionResult,
-  RunTestsStep,
-} from "../instructionBuilder.js";
-import { RunTestsOnBrowserStackInput } from "../schema.js";
-import { getBrowserStackAuth } from "../../../../lib/get-auth.js";
-import { getSDKPrefixCommand } from "../commands.js";
-import { generateBrowserStackYMLInstructions } from "../configUtils.js";
-import { getInstructionsForProjectConfiguration } from "../instructionUtils.js";
+// Percy + BrowserStack SDK combined handler
+import { RunTestsInstructionResult, RunTestsStep } from "../common/types.js";
+import { RunTestsOnBrowserStackInput } from "../common/schema.js";
+import { getBrowserStackAuth } from "../../../lib/get-auth.js";
+import { getSDKPrefixCommand } from "../bstack/commands.js";
+import { generateBrowserStackYMLInstructions } from "../bstack/configUtils.js";
+import { getInstructionsForProjectConfiguration } from "../common/instructionUtils.js";
 import {
   formatPercyInstructions,
   getPercyInstructions,
-} from "../../percy/instructions.js";
-import { BrowserStackConfig } from "../../../../lib/types.js";
+} from "./instructions.js";
+import { BrowserStackConfig } from "../../../lib/types.js";
 import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedTestingFramework,
   SDKSupportedLanguage,
-} from "../types.js";
+} from "../common/types.js";
 
-/**
- * Handler for BrowserStack SDK with Percy integration
- * Sets up both BrowserStack SDK and Percy visual testing
- */
 export function runPercyWithSDK(
   input: RunTestsOnBrowserStackInput,
   config: BrowserStackConfig,
@@ -68,13 +62,13 @@ export function runPercyWithSDK(
     );
 
     steps.push({
-      type: "framework",
+      type: "instruction",
       title: "Framework-Specific Setup",
       content: frameworkInstructions,
     });
 
     steps.push({
-      type: "percy",
+      type: "instruction",
       title: "Percy Setup (BrowserStack SDK + Percy)",
       content: formatPercyInstructions(percyResult),
     });
@@ -96,7 +90,7 @@ export function runPercyWithSDK(
 
   if (sdkSetupCommand) {
     steps.push({
-      type: "setup",
+      type: "instruction",
       title: "Install BrowserStack SDK",
       content: sdkSetupCommand,
     });
@@ -109,7 +103,7 @@ export function runPercyWithSDK(
 
   if (ymlInstructions) {
     steps.push({
-      type: "yml",
+      type: "instruction",
       title: "Configure browserstack.yml",
       content: ymlInstructions,
     });
@@ -125,14 +119,14 @@ export function runPercyWithSDK(
 
   if (frameworkInstructions) {
     steps.push({
-      type: "framework",
+      type: "instruction",
       title: "Framework-Specific Setup",
       content: frameworkInstructions,
     });
   }
 
   steps.push({
-    type: "percy",
+    type: "instruction",
     title: "Percy Setup (BrowserStack SDK + Percy)",
     content: formatPercyInstructions(percyResult),
   });

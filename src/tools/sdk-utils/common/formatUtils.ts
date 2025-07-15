@@ -16,7 +16,7 @@ export function formatInstructionsWithNumbers(
   if (steps.length === 1 && !instructionText.includes(separator)) {
     return {
       formattedSteps: `**Step 1:**\n${instructionText.trim()}`,
-      stepCount: 1
+      stepCount: 1,
     };
   }
 
@@ -29,7 +29,7 @@ export function formatInstructionsWithNumbers(
 
   return {
     formattedSteps,
-    stepCount: steps.length
+    stepCount: steps.length,
   };
 }
 

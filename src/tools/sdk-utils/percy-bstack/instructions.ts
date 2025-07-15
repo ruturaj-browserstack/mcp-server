@@ -1,14 +1,13 @@
+// Percy + BrowserStack SDK instructions and utilities
 import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedLanguage,
   SDKSupportedTestingFramework,
-} from "../runTestsOnBrowserStack/types.js";
+} from "../common/types.js";
 import { PERCY_INSTRUCTIONS } from "./constants.js";
 import { PercyInstructions } from "./types.js";
 
-/**
- * Retrieves Percy-specific instructions for a given language and framework.
- */
+// Retrieves Percy-specific instructions for a given language and framework
 export function getPercyInstructions(
   language: SDKSupportedLanguage,
   automationFramework: SDKSupportedBrowserAutomationFramework,
@@ -32,9 +31,7 @@ export function getPercyInstructions(
   return percyInstructions;
 }
 
-/**
- * Formats the retrieved Percy instructions into a user-friendly string.
- */
+// Formats the retrieved Percy instructions into a user-friendly string
 export function formatPercyInstructions(
   instructions: PercyInstructions,
 ): string {

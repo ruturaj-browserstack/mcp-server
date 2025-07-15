@@ -1,4 +1,4 @@
-import { ConfigMapping } from "./types.js";
+import { ConfigMapping } from "../common/types.js";
 
 /**
  * ---------- PYTHON INSTRUCTIONS ----------

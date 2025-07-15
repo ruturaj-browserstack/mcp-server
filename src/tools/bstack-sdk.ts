@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { BrowserStackConfig } from "../lib/types.js";
-import { RunTestsOnBrowserStackParamsShape } from "./sdk-utils/runTestsOnBrowserStack/schema.js";
-import { runTestsOnBrowserStackHandler } from "./sdk-utils/runTestsOnBrowserStack/handler.js";
+import { RunTestsOnBrowserStackParamsShape } from "./sdk-utils/common/schema.js";
+import { runTestsOnBrowserStackHandler } from "./sdk-utils/handler.js";
 
 /**
  * Tool description for runTestsOnBrowserStack
