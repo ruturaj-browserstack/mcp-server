@@ -6,6 +6,12 @@ import { SDKSupportedTestingFramework } from "./types.js";
 const errorMessageSuffix =
   "Please open an issue at our Github repo: https://github.com/browserstack/browserstack-mcp-server/issues to request support for your project configuration";
 
+export const IMPORTANT_SETUP_WARNING =
+  "⚠️ IMPORTANT: DO NOT SKIP ANY STEP\nAll the setup steps described below MUST be executed regardless of any existing configuration or setup.\nThis ensures proper BrowserStack SDK setup.";
+
+export const UNKNOWN_CONFIGURATION_ERROR =
+  "Unknown configuration for runTestsOnBrowserStack. Please check your input parameters and try again.";
+
 export const getInstructionsForProjectConfiguration = (
   detectedBrowserAutomationFramework: SDKSupportedBrowserAutomationFramework,
   detectedTestingFramework: SDKSupportedTestingFramework,
