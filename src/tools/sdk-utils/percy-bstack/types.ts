@@ -1,22 +1,14 @@
-// Percy + BrowserStack SDK types and interfaces
-import {
-  SDKSupportedBrowserAutomationFramework,
-  SDKSupportedLanguage,
-  SDKSupportedTestingFramework,
-} from "../common/types.js";
+/**
+ * Type for Percy + BrowserStack SDK configuration mapping.
+ * Structure: language -> automationFramework -> testingFramework -> { instructions: (bsdkToken: string) => string }
+ */
 
-export interface PercyInstructions {
-  script_updates: string;
-}
-
-export type PercyConfigMapping = Partial<
-  Record<
-    SDKSupportedLanguage,
-    Partial<
-      Record<
-        SDKSupportedBrowserAutomationFramework,
-        Partial<Record<SDKSupportedTestingFramework, PercyInstructions>>
-      >
-    >
-  >
->;
+export type ConfigMapping = {
+  [language: string]: {
+    [automationFramework: string]: {
+      [testingFramework: string]: {
+        instructions: string;
+      };
+    };
+  };
+};
