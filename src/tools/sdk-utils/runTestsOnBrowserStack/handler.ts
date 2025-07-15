@@ -1,7 +1,7 @@
 import { RunTestsOnBrowserStackSchema } from "./schema.js";
 import { buildRunTestsInstructions } from "./instructionBuilder.js";
-import { BOOTSTRAP_FAILED } from "./errorMessages.js";
-import { IMPORTANT_SETUP_WARNING, formatInstructionsWithNumbers, generateVerificationMessage } from "../instructions.js";
+import { BOOTSTRAP_FAILED, IMPORTANT_SETUP_WARNING } from "./errorMessages.js";
+import { formatInstructionsWithNumbers, generateVerificationMessage } from "./formatUtils.js";
 import { BrowserStackConfig } from "../../../lib/types.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 

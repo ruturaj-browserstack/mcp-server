@@ -4,17 +4,15 @@ import {
 } from "../instructionBuilder.js";
 import { RunTestsOnBrowserStackInput } from "../schema.js";
 import { getBrowserStackAuth } from "../../../../lib/get-auth.js";
-import { getSDKPrefixCommand } from "../../commands.js";
-import {
-  generateBrowserStackYMLInstructions,
-  getInstructionsForProjectConfiguration,
-} from "../../instructions.js";
+import { getSDKPrefixCommand } from "../commands.js";
+import { generateBrowserStackYMLInstructions } from "../configUtils.js";
+import { getInstructionsForProjectConfiguration } from "../instructionUtils.js";
 import { BrowserStackConfig } from "../../../../lib/types.js";
 import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedTestingFramework,
   SDKSupportedLanguage,
-} from "../../types.js";
+} from "../types.js";
 
 /**
  * Handler for BrowserStack SDK only (no Percy)

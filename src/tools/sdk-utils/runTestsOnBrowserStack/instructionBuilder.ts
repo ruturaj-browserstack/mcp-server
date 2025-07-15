@@ -43,7 +43,9 @@ export function buildRunTestsInstructions(
       // Percy Web only - no BrowserStack SDK
       return runPercyWeb();
 
-    // No default case needed - TypeScript ensures exhaustive checking
+    default:
+      // This should never happen due to schema validation, but TypeScript requires exhaustive handling
+      throw new Error(`Unsupported percy mode: ${input.percyMode}`);
   }
 }
 

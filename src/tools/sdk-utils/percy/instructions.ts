@@ -2,7 +2,7 @@ import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedLanguage,
   SDKSupportedTestingFramework,
-} from "../types.js";
+} from "../runTestsOnBrowserStack/types.js";
 import { PERCY_INSTRUCTIONS } from "./constants.js";
 import { PercyInstructions } from "./types.js";
 

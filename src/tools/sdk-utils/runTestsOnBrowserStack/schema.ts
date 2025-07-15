@@ -3,7 +3,7 @@ import {
   SDKSupportedBrowserAutomationFrameworkEnum,
   SDKSupportedTestingFrameworkEnum,
   SDKSupportedLanguageEnum,
-} from "../types.js";
+} from "./types.js";
 
 export enum PercyMode {
   PercyDisabled = "percy-disabled", // BrowserStack SDK only, no Percy

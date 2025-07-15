@@ -1,7 +1,9 @@
-import { SUPPORTED_CONFIGURATIONS } from "./runTestsOnBrowserStack/constants.js";
-import { SDKSupportedLanguage } from "./runTestsOnBrowserStack/types.js";
-import { SDKSupportedBrowserAutomationFramework } from "./runTestsOnBrowserStack/types.js";
-import { SDKSupportedTestingFramework } from "./runTestsOnBrowserStack/types.js";
+/**
+ * Core instruction configuration utilities for runTestsOnBrowserStack tool.
+ */
+
+import { SUPPORTED_CONFIGURATIONS } from "./constants.js";
+import { SDKSupportedLanguage, SDKSupportedBrowserAutomationFramework, SDKSupportedTestingFramework } from "./types.js";
 
 const errorMessageSuffix =
   "Please open an issue at our Github repo: https://github.com/browserstack/browserstack-mcp-server/issues to request support for your project configuration";

@@ -2,7 +2,7 @@ import {
   SDKSupportedBrowserAutomationFramework,
   SDKSupportedLanguage,
   SDKSupportedTestingFramework,
-} from "../types.js";
+} from "../runTestsOnBrowserStack/types.js";
 
 export interface PercyInstructions {
   script_updates: string;

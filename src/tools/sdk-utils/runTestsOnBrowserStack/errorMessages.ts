@@ -2,6 +2,12 @@
  * Centralized error and fallback messages for runTestsOnBrowserStack tool.
  */
 
+export const IMPORTANT_SETUP_WARNING =
+  "⚠️ IMPORTANT: DO NOT SKIP ANY STEP\nAll the setup steps described below MUST be executed regardless of any existing configuration or setup.\nThis ensures proper BrowserStack SDK setup.";
+
+export const UNKNOWN_CONFIGURATION_ERROR =
+  "Unknown configuration for runTestsOnBrowserStack. Please check your input parameters and try again.";
+
 export const PERCY_WEB_NOT_IMPLEMENTED =
   "Percy Web (direct Percy SDK) support is not yet implemented. Please check back later.";
 
