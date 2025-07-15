@@ -4,4 +4,4 @@ export {
   getPercyInstructions,
   formatPercyInstructions,
 } from "./instructions.js";export { PERCY_INSTRUCTIONS } from "./frameworks.js";
-export type { PercyInstructions, PercyConfigMapping } from "./types.js";
+export type { ConfigMapping } from "./types.js";

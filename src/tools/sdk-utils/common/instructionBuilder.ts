@@ -15,7 +15,7 @@ import { RunTestsInstructionResult } from "./types.js";
 export async function buildRunTestsInstructions(
   input: RunTestsOnBrowserStackInput,
   config: BrowserStackConfig,
-  projectName: string // New parameter for project name
+  projectName: string
 ): Promise<RunTestsInstructionResult> {
   switch (input.percyMode) {
     case PercyMode.PercyDisabled:

@@ -5,14 +5,13 @@ import {
   SDKSupportedTestingFramework,
 } from "../common/types.js";
 import { PERCY_INSTRUCTIONS } from "./frameworks.js";
-import { PercyInstructions } from "./types.js";
 
 // Retrieves Percy-specific instructions for a given language and framework
 export function getPercyInstructions(
   language: SDKSupportedLanguage,
   automationFramework: SDKSupportedBrowserAutomationFramework,
   testingFramework: SDKSupportedTestingFramework,
-): PercyInstructions | null {
+): { instructions: string } | null {
   const langConfig = PERCY_INSTRUCTIONS[language];
   if (!langConfig) {
     return null;
@@ -33,10 +32,10 @@ export function getPercyInstructions(
 
 // Formats the retrieved Percy instructions into a user-friendly string
 export function formatPercyInstructions(
-  instructions: PercyInstructions,
+  instructions: { instructions: string },
 ): string {
   return `## Percy Visual Testing Setup
 To enable visual testing with Percy, you need to make the following changes to your project configuration and test scripts.
-${instructions.script_updates}
+${instructions.instructions}
 `;
 }
