@@ -1,6 +1,4 @@
-/**
- * Shared Percy steps for all languages
- */
+// Shared Percy steps for all languages
 export const percySetTokenStep = (percyToken: string) => `
 ---STEP---
 Set the Percy token as an environment variable
@@ -17,10 +15,6 @@ export const percyReviewSnapshotsStep = `
 Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
 `;
-
-/**
- * ---------- PYTHON INSTRUCTIONS ----------
- */
 
 export const pythonInstructions = (percyToken: string) => `
 ${percySetTokenStep(percyToken)}
@@ -63,10 +57,6 @@ Example output:
 ${percyReviewSnapshotsStep}
 `;
 
-/**
- * ---------- NODEJS INSTRUCTIONS ----------
- */
-
 export const nodejsInstructions = (percyToken: string) => `
 ${percySetTokenStep(percyToken)}
 ---STEP---
@@ -102,10 +92,6 @@ Run Percy with your tests
 Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
 `;
-
-/**
- * ---------- JAVA INSTRUCTIONS ----------
- */
 
 export const javaInstructions = (percyToken: string) => `
 ${percySetTokenStep(percyToken)}
@@ -155,10 +141,6 @@ Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
 `;
 
-/**
- * ---------- RUBY INSTRUCTIONS ----------
- */
-
 export const rubyInstructions = (percyToken: string) => `
 ${percySetTokenStep(percyToken)}
 ---STEP---
@@ -195,10 +177,6 @@ Run Percy with your tests
 Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
 `;
-
-/**
- * ---------- CSHARP INSTRUCTIONS ----------
- */
 
 export const csharpInstructions = (percyToken: string) => `
 ${percySetTokenStep(percyToken)}
