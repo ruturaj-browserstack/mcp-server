@@ -36,19 +36,22 @@ export enum SDKSupportedTestingFrameworkEnum {
   xunit = "xunit",
   specflow = "specflow",
   reqnroll = "reqnroll",
+  rspec = "rspec",
 }
 export type SDKSupportedTestingFramework =
   keyof typeof SDKSupportedTestingFrameworkEnum;
 
-export type ConfigMapping = Record<
-  SDKSupportedLanguageEnum,
-  Partial<
-    Record<
-      SDKSupportedBrowserAutomationFrameworkEnum,
-      Partial<
-        Record<
-          SDKSupportedTestingFrameworkEnum,
-          { instructions: (username: string, accessKey: string) => string }
+export type ConfigMapping = Partial<
+  Record<
+    SDKSupportedLanguageEnum,
+    Partial<
+      Record<
+        SDKSupportedBrowserAutomationFrameworkEnum,
+        Partial<
+          Record<
+            SDKSupportedTestingFrameworkEnum,
+            { instructions: (username: string, accessKey: string) => string }
+          >
         >
       >
     >

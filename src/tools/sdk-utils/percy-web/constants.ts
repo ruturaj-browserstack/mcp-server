@@ -1,23 +1,22 @@
-// Shared Percy steps for all languages
-export const percySetTokenStep = (percyToken: string) => `
----STEP---
-Set the Percy token as an environment variable
-  - For macOS/Linux:
-    export PERCY_TOKEN="${percyToken}"
-  - For Windows PowerShell:
-    setx PERCY_TOKEN "${percyToken}"
-  - For Windows CMD:
-    set PERCY_TOKEN=${percyToken}
-`;
-
 export const percyReviewSnapshotsStep = `
 ---STEP---
 Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
 `;
 
+export const percyAggressiveInstruction = `
+**MANDATORY: Aggressive, Exhaustive Percy Integration**
+
+You MUST follow these steps with NO EXCEPTIONS:
+
+1. Recursively search the ENTIRE target directory and ALL subdirectories for EVERY file relevant to the language/framework.
+2. For EACH relevant file, analyze the code to find EVERY location where a Percy snapshot (or equivalent) should be called (e.g., after each navigation, UI change, or significant state in tests). Insert snapshot calls at ALL such points, not just the first or most obvious one.
+3. At the top of EVERY relevant file, ensure the necessary import/setup is present (do NOT duplicate if already present).
+4. Insert the snapshot call (with a clear, descriptive, and unique name) at EVERY identified point in EVERY relevant file.
+5. Double-check your work. If in doubt, add more snapshot calls rather than fewer. DO NOT stop until you have processed ALL relevant files and ALL important points within them.
+`;
+
 export const pythonInstructions = (percyToken: string) => `
-${percySetTokenStep(percyToken)}
 ---STEP---
 Install Percy dependencies
   - Install Percy CLI:
@@ -27,11 +26,7 @@ Install Percy dependencies
 
 ---STEP---
 Update your Python Selenium script
-  - Import the Percy snapshot helper:
-    from percy import percy_snapshot
-  - In your test, take snapshots like this:
-    percy_snapshot(driver, "Your snapshot name")
-  
+${percyAggressiveInstruction}
 Example:
 \`\`\`python
 from selenium import webdriver
@@ -40,6 +35,8 @@ from percy import percy_snapshot
 driver = webdriver.Chrome()
 driver.get('http://localhost:8000')
 percy_snapshot(driver, 'Home page')
+# ... more test steps ...
+percy_snapshot(driver, 'After login')
 \`\`\`
 
 ---STEP---
@@ -58,7 +55,6 @@ ${percyReviewSnapshotsStep}
 `;
 
 export const nodejsInstructions = (percyToken: string) => `
-${percySetTokenStep(percyToken)}
 ---STEP---
 Install Percy dependencies
   - Install Percy CLI:
@@ -68,6 +64,7 @@ Install Percy dependencies
 
 ---STEP---
 Update your Node.js Selenium script
+${percyAggressiveInstruction}
   - Import the Percy snapshot helper:
     const { percySnapshot } = require('@percy/selenium-js');
   - In your test, take snapshots like this:
@@ -94,7 +91,6 @@ Review the snapshots
 `;
 
 export const javaInstructions = (percyToken: string) => `
-${percySetTokenStep(percyToken)}
 ---STEP---
 Add Percy dependencies to your project
   - For Maven, add to your pom.xml:
@@ -108,6 +104,7 @@ Add Percy dependencies to your project
 
 ---STEP---
 Update your Java Selenium test
+${percyAggressiveInstruction}
   - Import the Percy snapshot helper:
     import io.percy.selenium.Percy;
   - In your test, take snapshots like this:
@@ -142,7 +139,7 @@ Review the snapshots
 `;
 
 export const rubyInstructions = (percyToken: string) => `
-${percySetTokenStep(percyToken)}
+
 ---STEP---
 Install Percy dependencies
   - Install Percy CLI:
@@ -152,6 +149,7 @@ Install Percy dependencies
 
 ---STEP---
 Update your Ruby Selenium test
+${percyAggressiveInstruction}
   - Require the Percy snapshot helper:
     require 'percy'
   - In your test, take snapshots like this:
@@ -178,8 +176,10 @@ Review the snapshots
   - Go to your Percy project on https://percy.io to review snapshots and approve/reject any visual changes.
 `;
 
+
+/* rubyInstructions is already exported above */
+
 export const csharpInstructions = (percyToken: string) => `
-${percySetTokenStep(percyToken)}
 ---STEP---
 Add Percy dependencies to your project
   - Add the Percy .NET Selenium NuGet package:
@@ -187,6 +187,9 @@ Add Percy dependencies to your project
 
 ---STEP---
 Update your C# Selenium test
+
+${percyAggressiveInstruction}
+
   - Import the Percy snapshot helper:
     using PercyIO.Selenium;
   - In your test, take snapshots like this:
