@@ -39,11 +39,12 @@ export function runPercyWithSDK(
           type: "error",
           title: "Percy Not Supported",
           content:
-            "Percy is not supported for this framework configuration. Please use BrowserStack SDK only mode or try a different framework combination.",
+            `Percy is not supported for this ${input.detectedBrowserAutomationFramework} framework configuration. Please use BrowserStack SDK only mode or try a different framework combination.`,
           isError: true,
         },
       ],
       requiresPercy: true,
+      shouldSkipFormatting: true,
       missingDependencies: [],
     };
   }
