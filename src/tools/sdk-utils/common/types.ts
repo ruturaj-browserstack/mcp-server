@@ -1,8 +1,10 @@
 export enum SDKSupportedLanguageEnum {
   nodejs = "nodejs",
+  javascript = "javascript",
   python = "python",
   java = "java",
   csharp = "csharp",
+  ruby = "ruby",
 }
 export type SDKSupportedLanguage = keyof typeof SDKSupportedLanguageEnum;
 

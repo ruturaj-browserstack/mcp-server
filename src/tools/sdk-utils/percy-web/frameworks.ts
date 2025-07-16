@@ -7,4 +7,24 @@ export const SUPPORTED_CONFIGURATIONS: ConfigMapping = {
       pytest: { instructions: constants.pythonInstructions },
     }
   },
+  javascript: {
+    selenium: {
+      mocha: { instructions: constants.nodejsInstructions },
+    }
+  },
+  java: {
+    selenium: {
+      junit: { instructions: constants.javaInstructions },
+    }
+  },
+  ruby: {
+    selenium: {
+      rspec: { instructions: constants.rubyInstructions },
+    }
+  },
+  csharp: {
+    selenium: {
+      nunit: { instructions: constants.csharpInstructions },
+    }
+  },
 };
