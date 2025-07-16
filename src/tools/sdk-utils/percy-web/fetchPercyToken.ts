@@ -6,11 +6,12 @@ export async function fetchPercyToken(
   authorization: string
 ): Promise<string> {
   try {
+    const encodedAuth = `Basic ${Buffer.from(authorization).toString("base64")}`;
     const response = await fetch(
       `https://api.browserstack.com/api/app_percy/get_project_token?name=${encodeURIComponent(projectName)}&type=web`,
       {
         headers: {
-          Authorization: authorization,
+          Authorization: encodedAuth,
         },
       }
     );
