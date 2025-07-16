@@ -7,6 +7,16 @@
     "type": "git",
     "url": "git+https://github.com/browserstack/mcp-server.git"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./logger": {
+      "import": "./dist/logger.js",
+      "types": "./dist/logger.d.ts"
+    }
+  },
   "type": "module",
   "scripts": {
     "build": "npm run lint && npm run format && npm test && tsc",
