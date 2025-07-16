@@ -1,7 +1,3 @@
-declare let logger: any;
-/**
- * Set a custom logger instance
- * @param customLogger - The logger instance to use
- */
+declare const logger: any;
 export declare function setLogger(customLogger: any): void;
 export default logger;
