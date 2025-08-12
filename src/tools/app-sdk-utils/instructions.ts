@@ -3,6 +3,7 @@ import {
   AppSDKSupportedFramework,
   AppSDKSupportedTestingFramework,
 } from "./types.js";
+import { AppSDKSupportedLanguageEnum, AppSDKSupportedTestingFrameworkEnum } from "./types.js";
 
 // App Automate specific device configurations
 const APP_DEVICE_CONFIGS = {
@@ -33,8 +34,8 @@ export function generateAppBrowserStackYMLInstructions(
       return devices
         .map(
           (device) => `  - platformName: ${platform}
-    deviceName: ${device.deviceName}
-    platformVersion: "${device.platformVersion}"`,
+          deviceName: ${device.deviceName}
+          platformVersion: "${device.platformVersion}"`,
         )
         .join("\n");
     })
@@ -80,8 +81,10 @@ export function getAppInstructionsForProjectConfiguration(
     return "";
   }
   switch (language) {
-    case "java":
+    case AppSDKSupportedLanguageEnum.java:
       return getJavaAppInstructions(testingFramework);
+    case AppSDKSupportedLanguageEnum.nodejs:
+      return getNodejsAppInstructions(testingFramework);
     default:
       return "";
   }
@@ -90,15 +93,40 @@ export function getAppInstructionsForProjectConfiguration(
 function getJavaAppInstructions(
   testingFramework: AppSDKSupportedTestingFramework,
 ): string {
-  if (testingFramework === "testng") {
+  if (testingFramework === AppSDKSupportedTestingFrameworkEnum.testng) {
     return `---STEP---
-Run your App Automate test suite:
+    Run your App Automate test suite:
 
-\`\`\`bash
-mvn test
-\`\`\``;
+    \`\`\`bash
+    mvn test
+    \`\`\``;
   }
+  return "";
+}
 
+function getNodejsAppInstructions(
+  testingFramework: AppSDKSupportedTestingFramework,
+): string {
+  if (testingFramework === AppSDKSupportedTestingFrameworkEnum.webdriverio) {
+    return `---STEP---
+    Run your App Automate test suite:
+
+    \`\`\`bash
+    npx wdio run ./wdio.conf.js
+    \`\`\``;
+  }
+  else if (testingFramework === AppSDKSupportedTestingFrameworkEnum.nightwatch) {
+    return `---STEP---
+    Run your App Automate test suite:
+    For Android:
+    \`\`\`bash
+      npx nightwatch <path to tests> --env browserstack.android
+    \`\`\`
+    For iOS:
+    \`\`\`bash
+      npx nightwatch <path to tests> --env browserstack.ios
+    \`\`\``;
+  }
   return "";
 }
 
