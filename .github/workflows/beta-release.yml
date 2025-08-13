@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   publish-beta:
@@ -38,14 +38,9 @@ jobs:
           echo "version=$BETA_VERSION" >> $GITHUB_OUTPUT
           echo "Beta version: $BETA_VERSION"
 
-      - name: "Check if beta version already exists"
+      - name: "Check if beta version already exists on NPM"
         run: |
           BETA_VERSION=${{ steps.get_version.outputs.version }}
-          # Check if tag already exists
-          if git tag -l | grep -q "^v$BETA_VERSION$"; then
-            echo "Error: Beta version v$BETA_VERSION already exists as a Git tag!"
-            exit 1
-          fi
           # Check if version exists on npm
           if npm view @browserstack/mcp-server@$BETA_VERSION version 2>/dev/null; then
             echo "Error: Beta version $BETA_VERSION already exists on NPM!"
@@ -57,99 +52,7 @@ jobs:
         run: |
           npm version ${{ steps.get_version.outputs.version }} --no-git-tag-version
 
-      - name: Get previous Git tag
-        id: get_previous_tag
-        run: |
-          PREV_TAG=$(git tag --sort=-creatordate | grep '^v' | grep -v 'beta' | head -n 1)
-          echo "previous_tag=$PREV_TAG" >> $GITHUB_OUTPUT
-
-      - name: Fetch and categorize merged PRs
-        id: fetch_prs
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -e
-          PREVIOUS_TAG=${{ steps.get_previous_tag.outputs.previous_tag }}
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "pr_list=No previous tag found to compare PRs." >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          PREVIOUS_SHA=$(git rev-list -n 1 $PREVIOUS_TAG)
-          PREVIOUS_DATE=$(git show -s --format=%cI $PREVIOUS_SHA)
-          CURRENT_DATE=$(git show -s --format=%cI HEAD)
-          echo "Fetching PRs merged between $PREVIOUS_DATE and $CURRENT_DATE"
-          
-          RAW_PRS=$(gh pr list --state merged --search "merged:${PREVIOUS_DATE}..${CURRENT_DATE}" \
-            --json number,title,url \
-            --jq '.[] | "- [#\(.number)](\(.url)) \(.title)"')
-      
-          if [ -z "$RAW_PRS" ]; then
-            echo "pr_list=No pull requests were merged during this release." >> $GITHUB_OUTPUT
-            exit 0
-          fi
-      
-          ADDED=""
-          FIXED=""
-          while IFS= read -r pr; do
-            if echo "$pr" | grep -iq "fix"; then
-              FIXED+="$pr"$'\n'
-            else
-              ADDED+="$pr"$'\n'
-            fi
-          done <<< "$RAW_PRS"
-      
-          BODY=""
-          if [ -n "$ADDED" ]; then
-            BODY="$BODY### Added"$'\n'"$ADDED"
-          fi
-          if [ -n "$FIXED" ]; then
-            BODY="$BODY"$'\n'"### Fixed"$'\n'"$FIXED"
-          fi
-      
-          echo "pr_list<<EOF" >> $GITHUB_OUTPUT
-          echo "$BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: "Set Git user name and email"
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-      - name: "Create Git tag for version"
-        run: git tag v${{ steps.get_version.outputs.version }}
-
-      - name: "Push tag to origin"
-        run: git push origin v${{ steps.get_version.outputs.version }}
-
       - name: "Publish beta to NPM"
         run: npm publish --tag beta --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: "Create GitHub Release (Pre-release)"
-        uses: actions/create-release@v1
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          release_name: v${{ steps.get_version.outputs.version }} (Beta)
-          body: |
-            🚧 **Beta Release** 🚧
-            
-            This is a beta release from the `beta` branch.
-            
-            ${{ steps.fetch_prs.outputs.pr_list }}
-            
-            ## Installation
-            
-            To install this beta version:
-            ```bash
-            npm install @browserstack/mcp-server@beta
-            # or specify the exact version:
-            npm install @browserstack/mcp-server@${{ steps.get_version.outputs.version }}
-            ```
-            
-            **⚠️ Important:** This is a beta version and may contain experimental features or bugs. It is not tagged as `latest` and won't be installed by default.
-            
-            Published by ${{ github.actor }}
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
