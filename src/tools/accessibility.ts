@@ -76,6 +76,10 @@ async function runAccessibilityScan(
         type: "text",
         text: `Scan results: ${JSON.stringify(records, null, 2)}`,
       },
+      {
+        type: "text",
+        text: `You can also download the full report from the following link: ${reportLink}`,
+      },
     ],
   };
 }
