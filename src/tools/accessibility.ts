@@ -66,7 +66,7 @@ async function runAccessibilityScan(
     content: [
       {
         type: "text",
-        text: `✅ Accessibility scan "${name}" completed. check the BrowserStack dashboard for more details [https://scanner.browserstack.com/site-scanner/scan-details/${name}].`,
+        text: `✅ Accessibility scan "${name}" completed. check the BrowserStack dashboard for more details [https://scanner.browserstack.com/site-scanner/scan-details/${name}]. The scanId is ${scanId} and the scanRunId is ${scanRunId}.`,
       },
       {
         type: "text",
