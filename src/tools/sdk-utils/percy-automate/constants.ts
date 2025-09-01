@@ -40,7 +40,7 @@ def test_homepage(driver):
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- browserstack-sdk pytest').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- browserstack-sdk pytest'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -78,7 +78,7 @@ def test_visual_regression():
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- <command to run the script file>').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- <command to run the script file>'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -110,7 +110,7 @@ describe('Percy Automate Cypress Example', () => {
 \`\`\`  
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- cypress run').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- cypress run'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -131,7 +131,7 @@ Update your Mocha Automate test script
     await percyScreenshot(driver, 'Screenshot 2', options);
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- mocha').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- mocha'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -158,7 +158,7 @@ await percyScreenshot(page, "Screenshot 2", { percyCSS: "h1{color:green;}" });
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- <command to run the tests>').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- <command to run the tests>'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -198,7 +198,7 @@ describe("JestJS test", () => {
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npm run [your-test-script-name]-browserstack').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npm run [your-test-script-name]-browserstack'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -253,7 +253,7 @@ describe("WebdriverIO Test", () => {
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command as defined in your package.json file.
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: as defined in your package.json file. Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -279,7 +279,7 @@ test('Test1', async t => {
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- testcafe chrome:headless tests').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- testcafe chrome:headless tests'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyAutomateReviewSnapshotsStep}
 `;
 
@@ -312,7 +312,7 @@ percy.screenshot("screenshot_2", options);
 \`\`\`
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- <command to run the automate script file>').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- <command to run the automate script file>'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyAutomateReviewSnapshotsStep}
 `;

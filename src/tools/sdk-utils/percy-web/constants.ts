@@ -550,7 +550,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${pythonInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- python tests.py').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- python tests.py'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyReviewSnapshotsStep}
 `;
 
@@ -567,7 +567,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- node script.js').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- node script.js'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -592,7 +592,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${javaInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- mvn test').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- mvn test'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -611,7 +611,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${rubyInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- bundle exec rspec').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- bundle exec rspec'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -651,7 +651,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${csharpInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- dotnet test').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- dotnet test'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -671,7 +671,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${javaPlaywrightInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g. npx percy exec -- <command to run the test script file>).
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g. npx percy exec -- <command to run the test script file>). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -687,7 +687,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsPlaywrightInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., npx percy exec -- <command to run the test script file>).
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., npx percy exec -- <command to run the test script file>). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyReviewSnapshotsStep}
 `;
 
@@ -706,7 +706,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsWebdriverioInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- wdio run wdio.conf.js').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- wdio run wdio.conf.js'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -724,7 +724,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsEmberInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- ember test').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- ember test'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -742,7 +742,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsCypressInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- cypress run').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- cypress run'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -778,7 +778,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsNightmareInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- node script.js').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- node script.js'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -796,7 +796,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsNightwatchInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- nightwatch').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- nightwatch'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -814,7 +814,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsProtractorInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- protractor conf.js').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- protractor conf.js'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 
 ${percyReviewSnapshotsStep}
 `;
@@ -832,7 +832,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsTestcafeInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- testcafe chrome:headless tests').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- testcafe chrome:headless tests'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyReviewSnapshotsStep}
 `;
 
@@ -849,7 +849,7 @@ ${PERCY_SNAPSHOT_INSTRUCTION}
 ${nodejsGatsbyInstructionsSnapshot}
 
 ---STEP---
-To run the Percy build, call the tool runPercyScan with the appropriate test command (e.g., 'npx percy exec -- gatsby build').
+To run the Percy build, you must always call the tool runPercyScan. Call the tool with this sample command: (e.g., 'npx percy exec -- gatsby build'). Never run the Percy build command standalone; always use the tool for accuracy and reliability.
 ${percyReviewSnapshotsStep}
 `;
 
