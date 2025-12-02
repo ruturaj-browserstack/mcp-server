@@ -13,8 +13,12 @@ export interface TestCaseUpdateRequest {
   test_case_identifier: string;
   name?: string;
   description?: string;
+  preconditions?: string;
+  test_case_steps?: Array<{
+    step: string;
+    result: string;
+  }>;
 }
-
 
 export const UpdateTestCaseSchema = z.object({
   project_identifier: z
@@ -32,8 +36,20 @@ export const UpdateTestCaseSchema = z.object({
     .string()
     .optional()
     .describe("Updated brief description of the test case."),
+  preconditions: z
+    .string()
+    .optional()
+    .describe("Updated preconditions for the test case."),
+  test_case_steps: z
+    .array(
+      z.object({
+        step: z.string().describe("The action to perform in this step."),
+        result: z.string().describe("The expected result of this step."),
+      }),
+    )
+    .optional()
+    .describe("Updated list of test case steps with expected results."),
 });
-
 
 /**
  * Updates an existing test case in BrowserStack Test Management.
@@ -54,6 +70,14 @@ export async function updateTestCase(
 
   if (params.description !== undefined) {
     testCaseBody.description = params.description;
+  }
+
+  if (params.preconditions !== undefined) {
+    testCaseBody.preconditions = params.preconditions;
+  }
+
+  if (params.test_case_steps !== undefined) {
+    testCaseBody.steps = params.test_case_steps;
   }
 
   const body = { test_case: testCaseBody };

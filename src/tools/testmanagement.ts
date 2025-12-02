@@ -17,7 +17,6 @@ import {
 import {
   updateTestCase as updateTestCaseAPI,
   TestCaseUpdateRequest,
-  sanitizeUpdateArgs,
   UpdateTestCaseSchema,
 } from "./testmanagement-utils/update-testcase.js";
 
@@ -145,8 +144,6 @@ export async function updateTestCaseTool(
   config: BrowserStackConfig,
   server: McpServer,
 ): Promise<CallToolResult> {
-  // Sanitize input arguments
-  const cleanedArgs = sanitizeUpdateArgs(args);
   try {
     trackMCP(
       "updateTestCase",
@@ -154,7 +151,7 @@ export async function updateTestCaseTool(
       undefined,
       config,
     );
-    return await updateTestCaseAPI(cleanedArgs, config);
+    return await updateTestCaseAPI(args, config);
   } catch (err) {
     logger.error("Failed to update test case: %s", err);
     trackMCP("updateTestCase", server.server.getClientVersion()!, err, config);
