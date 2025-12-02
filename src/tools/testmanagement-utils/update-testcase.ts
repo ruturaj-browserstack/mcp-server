@@ -15,37 +15,6 @@ export interface TestCaseUpdateRequest {
   description?: string;
 }
 
-export interface TestCaseUpdateResponse {
-  data: {
-    success: boolean;
-    test_case: {
-      case_type: string;
-      priority: string;
-      status: string;
-      folder_id: number;
-      issues: Array<{
-        jira_id: string;
-        issue_type: string;
-      }>;
-      tags: string[];
-      template: string;
-      description: string;
-      preconditions: string;
-      title: string;
-      identifier: string;
-      automation_status: string;
-      owner: string;
-      steps: Array<{
-        step: string;
-        result: string;
-      }>;
-      custom_fields: Array<{
-        name: string;
-        value: string;
-      }>;
-    };
-  };
-}
 
 export const UpdateTestCaseSchema = z.object({
   project_identifier: z
@@ -65,27 +34,6 @@ export const UpdateTestCaseSchema = z.object({
     .describe("Updated brief description of the test case."),
 });
 
-export function sanitizeUpdateArgs(args: any) {
-  const cleaned = { ...args };
-
-  // Remove null values and undefined
-  Object.keys(cleaned).forEach((key) => {
-    if (cleaned[key] === null || cleaned[key] === undefined) {
-      delete cleaned[key];
-    }
-  });
-
-  if (cleaned.issue_tracker) {
-    if (
-      cleaned.issue_tracker.name === undefined ||
-      cleaned.issue_tracker.host === undefined
-    ) {
-      delete cleaned.issue_tracker;
-    }
-  }
-
-  return cleaned;
-}
 
 /**
  * Updates an existing test case in BrowserStack Test Management.
