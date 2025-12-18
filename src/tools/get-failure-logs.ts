@@ -91,6 +91,7 @@ export async function getFailureLogs(
           text: `No valid log types found for ${args.sessionType} session.\nErrors encountered:\n${errors.join("\n")}`,
         },
       ],
+      isError: true,
     };
   }
   let response;
