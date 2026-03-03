@@ -51,7 +51,9 @@ export class AccessibilityReportFetcher {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const reportResp = await apiClient.get({
         url: reportUrl,
-        headers: basicAuthHeader ? { Authorization: basicAuthHeader } : undefined,
+        headers: basicAuthHeader
+          ? { Authorization: basicAuthHeader }
+          : undefined,
       });
       const reportData: ReportResponse = reportResp.data;
       if (!reportData.success) {
