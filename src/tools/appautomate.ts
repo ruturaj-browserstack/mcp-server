@@ -360,6 +360,7 @@ export default function addAppAutomationTools(
               text: `Error during app automation or screenshot capture: ${errorMessage}`,
             },
           ],
+          isError: true,
         };
       }
     },
