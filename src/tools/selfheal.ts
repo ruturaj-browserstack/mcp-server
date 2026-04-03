@@ -25,7 +25,17 @@ export async function fetchSelfHealSelectorTool(
     };
   } catch (error) {
     logger.error("Error fetching self-heal selector suggestions", error);
-    throw error;
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Error fetching self-heal selector suggestions: ${errorMessage}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }
 
@@ -67,6 +77,7 @@ export default function addSelfHealTools(
               text: `Error during fetching self-heal suggestions: ${errorMessage}`,
             },
           ],
+          isError: true,
         };
       }
     },

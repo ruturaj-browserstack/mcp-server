@@ -52,7 +52,17 @@ export async function fetchAutomationScreenshotsTool(
     };
   } catch (error) {
     logger.error("Error during fetching screenshots", error);
-    throw error;
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Error during fetching screenshots: ${errorMessage}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }
 
@@ -99,6 +109,7 @@ export default function addAutomationTools(
               text: `Error during fetching automate screenshots: ${errorMessage}`,
             },
           ],
+          isError: true,
         };
       }
     },
