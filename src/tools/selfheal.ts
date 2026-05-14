@@ -16,50 +16,34 @@ import logger from "../logger.js";
 import { trackMCP } from "../lib/instrumentation.js";
 import { BrowserStackConfig } from "../lib/types.js";
 
-// Local helper: merges per-call credential overrides (when the user pastes
-// credentials in chat) with the server-configured pair, returning null when
-// neither source has a usable username/accessKey. Lives here because the
-// self-heal tools are the only callers that need to degrade gracefully —
-// `getBrowserStackAuth` throws, which is wrong for these flows.
+// Local helper: returns the server-configured BrowserStack credentials, or
+// null when either is missing. Lives here because the self-heal tools need
+// to degrade gracefully — `getBrowserStackAuth` throws, which is wrong for
+// these flows. Credentials are sourced from the server config (env) only;
+// they are deliberately NOT accepted as tool arguments, since pasting them
+// in chat is a credential-leak vector.
 function resolveBrowserStackAuth(
   config: BrowserStackConfig,
-  overrides: { username?: string; accessKey?: string } = {},
 ): { config: BrowserStackConfig } | null {
-  const username = (
-    overrides.username?.trim() || config["browserstack-username"] || ""
-  ).trim();
-  const accessKey = (
-    overrides.accessKey?.trim() || config["browserstack-access-key"] || ""
-  ).trim();
+  const username = (config["browserstack-username"] || "").trim();
+  const accessKey = (config["browserstack-access-key"] || "").trim();
   if (!username || !accessKey) return null;
-  return {
-    config: {
-      ...config,
-      "browserstack-username": username,
-      "browserstack-access-key": accessKey,
-    },
-  };
+  return { config };
 }
 
 type SessionType = "automate" | "app-automate";
 
-interface CredsArgs {
-  username?: string;
-  accessKey?: string;
-}
-
-interface FetchArgs extends CredsArgs {
+interface FetchArgs {
   sessionId?: string;
   sessionType?: SessionType;
   buildUuid?: string;
 }
 
 const CREDS_PROMPT_TEXT =
-  "BrowserStack credentials are required to call this API. " +
-  "Please ask the user for their BrowserStack username and access key " +
-  "(https://www.browserstack.com/accounts/profile/details) and re-invoke " +
-  "this tool with the `username` and `accessKey` arguments, or configure " +
-  "BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY on the server.";
+  "BrowserStack credentials are not configured on the MCP server. " +
+  "Ask the user to set BROWSERSTACK_USERNAME and BROWSERSTACK_ACCESS_KEY " +
+  "in the server environment (https://www.browserstack.com/accounts/profile/details), " +
+  "restart the MCP server, and retry. Do NOT ask the user to paste credentials in chat.";
 
 function credsMissingResult(): CallToolResult {
   return {
@@ -268,10 +252,7 @@ export async function fetchSelfHealSelectorTool(
     };
   }
 
-  const resolved = resolveBrowserStackAuth(config, {
-    username: args.username,
-    accessKey: args.accessKey,
-  });
+  const resolved = resolveBrowserStackAuth(config);
   if (!resolved) return credsMissingResult();
   const effectiveConfig = resolved.config;
 
@@ -367,7 +348,7 @@ interface SessionPayload {
   locators: SessionLocator[];
 }
 
-interface PlanArgs extends CredsArgs {
+interface PlanArgs {
   sessions: SessionPayload[];
 }
 
@@ -508,10 +489,7 @@ export async function prepareSelfHealingPlanTool(
 
   // Try to enrich the plan with test code per session. Missing credentials
   // are not fatal — the plan is still useful to the caller.
-  const resolved = resolveBrowserStackAuth(config, {
-    username: args.username,
-    accessKey: args.accessKey,
-  });
+  const resolved = resolveBrowserStackAuth(config);
   const sessionIds = plannedSessions
     .map((s) => trimOrUndefined(s?.sessionId))
     .filter((id): id is string => Boolean(id));
@@ -550,13 +528,18 @@ export async function prepareSelfHealingPlanTool(
       [
         "### BrowserStack credentials not provided",
         "",
-        "Diagnosis: no credentials were available to fetch test code — the " +
-          "plan was still generated from the locator pairs you sent.",
+        "Diagnosis: BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY are not " +
+          "configured on the MCP server, so test code could not be fetched. " +
+          "The plan was still generated from the locator pairs you sent.",
         "",
-        "Say this to the user: \"I don't have BrowserStack credentials on " +
-          "hand, so I couldn't pull the test source automatically. Want to " +
-          "share a username + access key for me to retry, or would you " +
-          'rather point me at the local test file directly?"',
+        "Say this to the user: \"I couldn't pull the test source " +
+          "automatically because BrowserStack credentials aren't configured " +
+          "on the MCP server. Please set BROWSERSTACK_USERNAME and " +
+          "BROWSERSTACK_ACCESS_KEY in the server environment and restart " +
+          "the MCP server, or point me at the local test file directly so " +
+          'I can apply the healed locators."',
+        "",
+        "Do NOT ask the user to paste credentials in chat.",
       ].join("\n"),
     );
   }
@@ -592,9 +575,9 @@ export default function addSelfHealTools(
       "the run. Provide exactly one of `sessionId` (single Automate / " +
       "App-Automate session) or `buildUuid` (full self-healing report for a " +
       "build). Pass the returned locator pairs to `prepareSelfHealingPlan` " +
-      "to plan edits. `username`/`accessKey` are optional — forward them " +
-      "when the user shares credentials in chat; otherwise the server " +
-      "config is used.",
+      "to plan edits. Credentials are read from the server's " +
+      "BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY env vars; do not ask " +
+      "the user for them in chat.",
     {
       sessionId: z
         .string()
@@ -607,14 +590,6 @@ export default function addSelfHealTools(
       buildUuid: z
         .string()
         .describe("Build UUID. Fetches the build's self-healing report.")
-        .optional(),
-      username: z
-        .string()
-        .describe("Optional BrowserStack username override.")
-        .optional(),
-      accessKey: z
-        .string()
-        .describe("Optional BrowserStack access key override.")
         .optional(),
     },
     async (args) => {
@@ -687,21 +662,15 @@ export default function addSelfHealTools(
       "[...]}`, the raw report `{healing_logs: [...]}` (with " +
       "`healed_selectors` aliasing `locators`), and snake_case keys " +
       "(`session_id`, `original_locator`, `healed_locator`, " +
-      "`healing_thought`). `username`/`accessKey` are optional and only " +
-      "used to enrich the plan with test code; missing credentials do not " +
-      "block plan generation.",
+      "`healing_thought`). Credentials are read from the server's " +
+      "BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY env vars and are " +
+      "only used to enrich the plan with test code; missing server " +
+      "credentials do not block plan generation. Do not ask the user for " +
+      "credentials in chat.",
     {
       sessions: sessionsFieldSchema.describe(
         "Sessions to plan edits for. See tool description for accepted shapes.",
       ),
-      username: z
-        .string()
-        .describe("Optional BrowserStack username override.")
-        .optional(),
-      accessKey: z
-        .string()
-        .describe("Optional BrowserStack access key override.")
-        .optional(),
     },
     async (args) => {
       try {

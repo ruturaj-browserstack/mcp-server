@@ -209,17 +209,20 @@ export function describeTestCodeFetchIssues(
           "(HTTP 401). This IS an authentication problem for this specific " +
           "API — the healing report endpoint and test-code endpoint use the " +
           "same BrowserStack auth, so if the report fetch above succeeded " +
-          "with the same creds, suspect that the access key was rotated or " +
-          "that the user supplied a different key for this call.",
+          "with the same creds, suspect that the access key configured on " +
+          "the MCP server was rotated.",
         "",
         "DO NOT say 'credentials or session issue' (that hides the real cause). " +
-          "Name the 401 explicitly and offer the user a choice.",
+          "Name the 401 explicitly and offer the user a choice. Do NOT ask " +
+          "the user to paste a BrowserStack username or access key in chat — " +
+          "the MCP server reads credentials from its own environment.",
         "",
         "Say this (or very close to it) to the user, then wait for their reply:",
         '  "The BrowserStack test-code API returned 401 Unauthorized for ' +
-          `session(s) ${ids}. Would you like to: (a) re-run this with an updated ` +
-          "BrowserStack username + access key, or (b) skip the API and point me " +
-          'at the local test file so I can apply the healed locators there?"',
+          `session(s) ${ids}. Would you like to: (a) update the BrowserStack ` +
+          "username and access key on the MCP server (BROWSERSTACK_USERNAME / " +
+          "BROWSERSTACK_ACCESS_KEY) and restart it, or (b) skip the API and " +
+          'point me at the local test file so I can apply the healed locators there?"',
       ].join("\n"),
     );
   }

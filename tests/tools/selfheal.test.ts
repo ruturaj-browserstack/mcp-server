@@ -46,14 +46,16 @@ describe("fetchSelfHealSelectorTool input validation", () => {
     );
   });
 
-  it("asks for credentials when neither config nor args supply them", async () => {
+  it("asks the user to configure server env vars when config has no credentials", async () => {
     const result = await fetchSelfHealSelectorTool(
       { buildUuid: "b1" },
       EMPTY_CONFIG,
     );
-    expect((result.content[0] as any).text).toMatch(
-      /BrowserStack credentials are required/,
-    );
+    const text = (result.content[0] as any).text;
+    expect(text).toMatch(/BrowserStack credentials are not configured/);
+    expect(text).toMatch(/BROWSERSTACK_USERNAME/);
+    expect(text).toMatch(/BROWSERSTACK_ACCESS_KEY/);
+    expect(text).toMatch(/Do NOT ask the user to paste/);
   });
 });
 
@@ -230,8 +232,10 @@ describe("describeTestCodeFetchIssues", () => {
     expect(note).toContain("### Unauthorized (HTTP 401)");
     expect(note).toContain("s-401");
     expect(note).toMatch(/Name the 401 explicitly/);
-    expect(note).toMatch(/updated\s+BrowserStack username/);
+    expect(note).toMatch(/BROWSERSTACK_USERNAME/);
+    expect(note).toMatch(/BROWSERSTACK_ACCESS_KEY/);
     expect(note).toMatch(/local test file/);
+    expect(note).toMatch(/Do NOT ask the user to paste/);
   });
 
   it("groups sessions by status and emits one note per status", () => {
