@@ -97,10 +97,7 @@ export const UpdateTestCaseSchema = z.object({
       "Replacement list of linked Jira/Asana/Azure issue IDs for the test case.",
     ),
   custom_fields: z
-    .record(
-      z.string(),
-      z.union([z.string(), z.number(), z.boolean()]),
-    )
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
     .optional()
     .describe(
       "Map of custom field name/id to value. Valid field names and value types are per-project; discover them via the project's form fields.",
@@ -118,7 +115,11 @@ export const UpdateTestCaseSchema = z.object({
  * pass the raw value through so the backend can surface its own error.
  */
 function normalizeDefaultFieldValue(
-  fieldValues: Array<{ internal_name?: string | null; name?: string; value: any }>,
+  fieldValues: Array<{
+    internal_name?: string | null;
+    name?: string;
+    value: any;
+  }>,
   input: string,
   emit: "name" | "internal_name",
 ): string | undefined {

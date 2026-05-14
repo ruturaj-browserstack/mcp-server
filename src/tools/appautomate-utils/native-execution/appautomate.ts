@@ -2,6 +2,7 @@ import fs from "fs";
 import FormData from "form-data";
 import { apiClient } from "../../../lib/apiClient.js";
 import { customFuzzySearch } from "../../../lib/fuzzy.js";
+import { getBrowserStackAuth } from "../../../lib/get-auth.js";
 import { BrowserStackConfig } from "../../../lib/types.js";
 
 interface Device {
@@ -258,18 +259,15 @@ export async function triggerEspressoBuild(
   test_suite_url: string,
   devices: string[],
   project: string,
+  config: BrowserStackConfig,
 ): Promise<string> {
-  const auth = {
-    username: process.env.BROWSERSTACK_USERNAME || "",
-    password: process.env.BROWSERSTACK_ACCESS_KEY || "",
-  };
+  const authHeader =
+    "Basic " + Buffer.from(getBrowserStackAuth(config)).toString("base64");
 
   const response = await apiClient.post({
     url: "https://api-cloud.browserstack.com/app-automate/espresso/v2/build",
     headers: {
-      Authorization:
-        "Basic " +
-        Buffer.from(`${auth.username}:${auth.password}`).toString("base64"),
+      Authorization: authHeader,
       "Content-Type": "application/json",
     },
     body: {

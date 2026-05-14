@@ -43,7 +43,8 @@ const GRADLE_SETUP_INSTRUCTIONS = `
 
 // Generates Maven archetype command for Windows platform
 function getMavenCommandForWindows(
-  framework: string,
+  username: string,
+  accessKey: string,
   mavenFramework: string,
 ): string {
   return (
@@ -54,8 +55,8 @@ function getMavenCommandForWindows(
     `-DgroupId="${MAVEN_ARCHETYPE_GROUP_ID}" ` +
     `-DartifactId="${MAVEN_ARCHETYPE_ARTIFACT_ID}" ` +
     `-Dversion="${MAVEN_ARCHETYPE_VERSION}" ` +
-    `-DBROWSERSTACK_USERNAME="${process.env.BROWSERSTACK_USERNAME}" ` +
-    `-DBROWSERSTACK_ACCESS_KEY="${process.env.BROWSERSTACK_ACCESS_KEY}" ` +
+    `-DBROWSERSTACK_USERNAME="${username}" ` +
+    `-DBROWSERSTACK_ACCESS_KEY="${accessKey}" ` +
     `-DBROWSERSTACK_FRAMEWORK="${mavenFramework}"`
   );
 }
@@ -85,7 +86,7 @@ function getJavaSDKInstructions(
   const platformLabel = isWindows ? "Windows" : "macOS/Linux";
 
   const mavenCommand = isWindows
-    ? getMavenCommandForWindows(framework, mavenFramework)
+    ? getMavenCommandForWindows(username, accessKey, mavenFramework)
     : getMavenCommandForUnix(username, accessKey, mavenFramework);
 
   return `---STEP---

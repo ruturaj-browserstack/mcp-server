@@ -233,6 +233,7 @@ async function runAppTestsOnBrowserStack(
           test_suite_url,
           deviceStrings,
           args.project,
+          config,
         );
 
         return {
