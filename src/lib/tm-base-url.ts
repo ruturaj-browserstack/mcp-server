@@ -2,6 +2,7 @@ import { apiClient } from "./apiClient.js";
 import logger from "../logger.js";
 import { BrowserStackConfig } from "./types.js";
 import { getBrowserStackAuth } from "./get-auth.js";
+import appConfig from "../config.js";
 
 const TM_BASE_URLS = [
   "https://test-management.browserstack.com",
@@ -14,7 +15,10 @@ let cachedBaseUrl: string | null = null;
 export async function getTMBaseURL(
   config: BrowserStackConfig,
 ): Promise<string> {
-  if (cachedBaseUrl) {
+  // Skip the module-level cache in remote (multi-tenant) mode: it is process-shared,
+  // so the first user's region would be served to every subsequent user — breaking
+  // requests for users on a different region's BrowserStack account.
+  if (!appConfig.REMOTE_MCP && cachedBaseUrl) {
     logger.debug(`Using cached TM base URL: ${cachedBaseUrl}`);
     return cachedBaseUrl;
   }
@@ -37,7 +41,11 @@ export async function getTMBaseURL(
       });
 
       if (res.ok) {
-        cachedBaseUrl = baseUrl;
+        // Only populate the cache in single-tenant (stdio) mode; in remote mode
+        // the cache must stay empty so each user discovers their own region.
+        if (!appConfig.REMOTE_MCP) {
+          cachedBaseUrl = baseUrl;
+        }
         logger.info(`Selected TM base URL: ${baseUrl}`);
         return baseUrl;
       }
