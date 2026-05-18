@@ -3,6 +3,13 @@ import FormData from "form-data";
 import { apiClient } from "../../../lib/apiClient.js";
 import { customFuzzySearch } from "../../../lib/fuzzy.js";
 import { BrowserStackConfig } from "../../../lib/types.js";
+import {
+  validateUploadPath,
+  UploadValidationOptions,
+  APP_BINARY_EXTENSIONS,
+  MAX_APP_UPLOAD_BYTES,
+} from "../../../lib/upload-validator.js";
+import appConfig from "../../../config.js";
 
 interface Device {
   device: string;
@@ -138,14 +145,14 @@ export async function uploadApp(
   username: string,
   password: string,
 ): Promise<string> {
-  const filePath = appPath;
-
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File not found at path: ${filePath}`);
-  }
+  const safePath = validateUploadPath(appPath, {
+    allowedExtensions: APP_BINARY_EXTENSIONS,
+    maxSizeBytes: MAX_APP_UPLOAD_BYTES,
+    allowedBaseDir: appConfig.UPLOAD_BASE_DIR,
+  });
 
   const formData = new FormData();
-  formData.append("file", fs.createReadStream(filePath));
+  formData.append("file", fs.createReadStream(safePath));
 
   const response = await apiClient.post<UploadResponse>({
     url: "https://api-cloud.browserstack.com/app-automate/upload",
@@ -170,13 +177,16 @@ async function uploadFileToBrowserStack(
   endpoint: string,
   responseKey: string,
   config: BrowserStackConfig,
+  validation: Pick<UploadValidationOptions, "allowedExtensions">,
 ): Promise<string> {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File not found at path: ${filePath}`);
-  }
+  const safePath = validateUploadPath(filePath, {
+    allowedExtensions: validation.allowedExtensions,
+    maxSizeBytes: MAX_APP_UPLOAD_BYTES,
+    allowedBaseDir: appConfig.UPLOAD_BASE_DIR,
+  });
 
   const formData = new FormData();
-  formData.append("file", fs.createReadStream(filePath));
+  formData.append("file", fs.createReadStream(safePath));
 
   const authHeader =
     "Basic " +
@@ -210,6 +220,7 @@ export async function uploadEspressoApp(
     "https://api-cloud.browserstack.com/app-automate/espresso/v2/app",
     "app_url",
     config,
+    { allowedExtensions: [".apk", ".aab"] },
   );
 }
 
@@ -223,6 +234,7 @@ export async function uploadEspressoTestSuite(
     "https://api-cloud.browserstack.com/app-automate/espresso/v2/test-suite",
     "test_suite_url",
     config,
+    { allowedExtensions: [".apk"] },
   );
 }
 
@@ -236,6 +248,7 @@ export async function uploadXcuiApp(
     "https://api-cloud.browserstack.com/app-automate/xcuitest/v2/app",
     "app_url",
     config,
+    { allowedExtensions: [".ipa"] },
   );
 }
 
@@ -249,6 +262,7 @@ export async function uploadXcuiTestSuite(
     "https://api-cloud.browserstack.com/app-automate/xcuitest/v2/test-suite",
     "test_suite_url",
     config,
+    { allowedExtensions: [".zip"] },
   );
 }
 
