@@ -40,6 +40,7 @@ export class Config {
     public readonly browserstackLocalOptions: Record<string, any>,
     public readonly USE_OWN_LOCAL_BINARY_PROCESS: boolean,
     public readonly REMOTE_MCP: boolean,
+    public readonly UPLOAD_BASE_DIR: string | undefined,
   ) {}
 }
 
@@ -48,6 +49,9 @@ const config = new Config(
   browserstackLocalOptions,
   process.env.USE_OWN_LOCAL_BINARY_PROCESS === "true",
   process.env.REMOTE_MCP === "true",
+  process.env.MCP_UPLOAD_BASE_DIR && process.env.MCP_UPLOAD_BASE_DIR.length > 0
+    ? process.env.MCP_UPLOAD_BASE_DIR
+    : undefined,
 );
 
 export default config;

@@ -1,6 +1,12 @@
 import { apiClient } from "../../lib/apiClient.js";
 import FormData from "form-data";
 import fs from "fs";
+import {
+  validateUploadPath,
+  APP_BINARY_EXTENSIONS,
+  MAX_APP_UPLOAD_BYTES,
+} from "../../lib/upload-validator.js";
+import appConfig from "../../config.js";
 
 interface UploadResponse {
   app_url: string;
@@ -11,12 +17,14 @@ export async function uploadApp(
   username: string,
   password: string,
 ): Promise<UploadResponse> {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`File not found at path: ${filePath}`);
-  }
+  const safePath = validateUploadPath(filePath, {
+    allowedExtensions: APP_BINARY_EXTENSIONS,
+    maxSizeBytes: MAX_APP_UPLOAD_BYTES,
+    allowedBaseDir: appConfig.UPLOAD_BASE_DIR,
+  });
 
   const formData = new FormData();
-  formData.append("file", fs.createReadStream(filePath));
+  formData.append("file", fs.createReadStream(safePath));
 
   try {
     const response = await apiClient.post<UploadResponse>({

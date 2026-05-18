@@ -10,6 +10,12 @@ import { signedUrlMap } from "../../lib/inmemory-store.js";
 import { projectIdentifierToId } from "./TCG-utils/api.js";
 import { BrowserStackConfig } from "../../lib/types.js";
 import { getTMBaseURL } from "../../lib/tm-base-url.js";
+import {
+  validateUploadPath,
+  TEST_MANAGEMENT_ATTACHMENT_EXTENSIONS,
+  MAX_ATTACHMENT_UPLOAD_BYTES,
+} from "../../lib/upload-validator.js";
+import appConfig from "../../config.js";
 
 /**
  * Schema for the upload file tool
@@ -35,18 +41,14 @@ export async function uploadFile(
   const { project_identifier, file_path } = args;
 
   try {
-    // Validate file exists
-    if (!fs.existsSync(file_path)) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `File ${file_path} does not exist.`,
-          },
-        ],
-        isError: true,
-      };
-    }
+    // Canonicalize path and enforce upload safety rules (extension, size,
+    // hidden-directory traversal, optional base-dir containment).
+    const safePath = validateUploadPath(file_path, {
+      allowedExtensions: TEST_MANAGEMENT_ATTACHMENT_EXTENSIONS,
+      maxSizeBytes: MAX_ATTACHMENT_UPLOAD_BYTES,
+      allowedBaseDir: appConfig.UPLOAD_BASE_DIR,
+    });
+
     // Get the project ID
     const projectIdResponse = await projectIdentifierToId(
       project_identifier,
@@ -54,7 +56,7 @@ export async function uploadFile(
     );
 
     const formData = new FormData();
-    formData.append("attachments[]", fs.createReadStream(file_path));
+    formData.append("attachments[]", fs.createReadStream(safePath));
 
     const tmBaseUrl = await getTMBaseURL(config);
     const uploadUrl = `${tmBaseUrl}/api/v1/projects/${projectIdResponse}/generic/attachments/ai_uploads`;
