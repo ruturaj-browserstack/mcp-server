@@ -233,7 +233,7 @@ export async function updateTestCase(
   if (params.preconditions !== undefined)
     testCaseBody.preconditions = params.preconditions;
   if (params.test_case_steps !== undefined)
-    testCaseBody.steps = params.test_case_steps;
+    testCaseBody.test_case_steps = params.test_case_steps;
   if (params.owner !== undefined) testCaseBody.owner = params.owner;
   if (params.status !== undefined) testCaseBody.status = params.status;
   if (params.tags !== undefined) testCaseBody.tags = params.tags;
