@@ -280,7 +280,9 @@ async function executeCreateAuthConfig(
       undefined,
       config,
     );
-    logger.info(`Creating auth config: ${JSON.stringify(args)}`);
+    logger.info(
+      `Creating auth config: ${JSON.stringify({ ...args, password: "***" })}`,
+    );
 
     const result = await createAuthConfig(args, config);
 
