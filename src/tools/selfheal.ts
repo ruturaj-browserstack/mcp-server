@@ -581,9 +581,7 @@ export default function addSelfHealTools(
       "the run. Provide exactly one of `sessionId` (single Automate / " +
       "App-Automate session) or `buildUuid` (full self-healing report for a " +
       "build). Pass the returned locator pairs to `prepareSelfHealingPlan` " +
-      "to plan edits. Credentials are read from the server's " +
-      "BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY env vars; do not ask " +
-      "the user for them in chat.",
+      "to plan edits.",
     {
       sessionId: z
         .string()
@@ -666,11 +664,7 @@ export default function addSelfHealTools(
       "[...]}`, the raw report `{healing_logs: [...]}` (with " +
       "`healed_selectors` aliasing `locators`), and snake_case keys " +
       "(`session_id`, `original_locator`, `healed_locator`, " +
-      "`healing_thought`). Credentials are read from the server's " +
-      "BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY env vars and are " +
-      "only used to enrich the plan with test code; missing server " +
-      "credentials do not block plan generation. Do not ask the user for " +
-      "credentials in chat.",
+      "`healing_thought`).",
     {
       sessions: sessionsFieldSchema.describe(
         "Sessions to plan edits for. See tool description for accepted shapes.",
