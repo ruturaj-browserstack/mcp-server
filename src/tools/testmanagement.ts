@@ -73,6 +73,16 @@ import {
   GetTestPlanSchema,
 } from "./testmanagement-utils/get-testplan.js";
 
+import {
+  listSubTestPlans,
+  ListSubTestPlansSchema,
+} from "./testmanagement-utils/list-sub-testplans.js";
+
+import {
+  getSubTestPlan,
+  GetSubTestPlanSchema,
+} from "./testmanagement-utils/get-sub-testplan.js";
+
 import { BrowserStackConfig } from "../lib/types.js";
 
 //TODO: Moving the traceMCP and catch block to the parent(server) function
@@ -547,6 +557,77 @@ export async function getTestPlanTool(
 }
 
 /**
+ * Lists sub-test-plans under a parent test plan.
+ */
+export async function listSubTestPlansTool(
+  args: z.infer<typeof ListSubTestPlansSchema>,
+  config: BrowserStackConfig,
+  server: McpServer,
+): Promise<CallToolResult> {
+  try {
+    trackMCP(
+      "listSubTestPlans",
+      server.server.getClientVersion()!,
+      undefined,
+      config,
+    );
+    return await listSubTestPlans(args, config);
+  } catch (err) {
+    logger.error("Failed to list sub-test-plans: %s", err);
+    trackMCP(
+      "listSubTestPlans",
+      server.server.getClientVersion()!,
+      err,
+      config,
+    );
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to list sub-test-plans: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
+ * Fetches a sub-test-plan by identifier, with its linked runs and a derived status summary.
+ */
+export async function getSubTestPlanTool(
+  args: z.infer<typeof GetSubTestPlanSchema>,
+  config: BrowserStackConfig,
+  server: McpServer,
+): Promise<CallToolResult> {
+  try {
+    trackMCP(
+      "getSubTestPlan",
+      server.server.getClientVersion()!,
+      undefined,
+      config,
+    );
+    return await getSubTestPlan(args, config);
+  } catch (err) {
+    logger.error("Failed to fetch sub-test-plan: %s", err);
+    trackMCP("getSubTestPlan", server.server.getClientVersion()!, err, config);
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Failed to fetch sub-test-plan: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }. Please open an issue on GitHub if the problem persists`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
  * Registers both project/folder and test-case tools.
  */
 export default function addTestManagementTools(
@@ -652,6 +733,20 @@ export default function addTestManagementTools(
     "Fetch a test plan by identifier (TP-*) from BrowserStack Test Management. Returns plan metadata, the full list of linked test runs, total test-case count across runs, and a status summary — suitable for generating test documentation or QA status reports.",
     GetTestPlanSchema.shape,
     (args) => getTestPlanTool(args, config, server),
+  );
+
+  tools.listSubTestPlans = server.tool(
+    "listSubTestPlans",
+    "List sub-test-plans under a parent test plan (TP-*) in a Test Management project. Supports pagination.",
+    ListSubTestPlansSchema.shape,
+    (args) => listSubTestPlansTool(args, config, server),
+  );
+
+  tools.getSubTestPlan = server.tool(
+    "getSubTestPlan",
+    "Fetch a sub-test-plan (STP-*) under a parent plan (TP-*). Returns metadata and linked test runs.",
+    GetSubTestPlanSchema.shape,
+    (args) => getSubTestPlanTool(args, config, server),
   );
 
   return tools;

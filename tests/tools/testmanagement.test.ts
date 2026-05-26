@@ -11,6 +11,8 @@ import {
   listTestCasesTool,
   listTestPlansTool,
   getTestPlanTool,
+  listSubTestPlansTool,
+  getSubTestPlanTool,
 } from '../../src/tools/testmanagement';
 import addTestManagementTools from '../../src/tools/testmanagement';
 import { createProjectOrFolder } from '../../src/tools/testmanagement-utils/create-project-folder';
@@ -22,10 +24,12 @@ import { listTestRuns } from '../../src/tools/testmanagement-utils/list-testruns
 import { updateTestRun } from '../../src/tools/testmanagement-utils/update-testrun';
 import { listTestPlans } from '../../src/tools/testmanagement-utils/list-testplans';
 import { getTestPlan } from '../../src/tools/testmanagement-utils/get-testplan';
+import { listSubTestPlans } from '../../src/tools/testmanagement-utils/list-sub-testplans';
+import { getSubTestPlan } from '../../src/tools/testmanagement-utils/get-sub-testplan';
 import { createTestCasesFromFile } from '../../src/tools/testmanagement-utils/testcase-from-file';
 import { createLCASteps } from '../../src/tools/testmanagement-utils/create-lca-steps';
 import axios from 'axios';
-import { beforeEach, it, expect, describe, Mocked} from 'vitest';
+import { beforeAll, beforeEach, it, expect, describe, Mocked} from 'vitest';
 import { vi, Mock } from 'vitest';
 import { signedUrlMap } from '../../src/lib/inmemory-store';
 import { uploadFile } from '../../src/tools/testmanagement-utils/upload-file';
@@ -164,6 +168,30 @@ vi.mock('../../src/tools/testmanagement-utils/get-testplan', () => ({
     parse: (args: any) => args,
     shape: {},
   },
+}));
+vi.mock('../../src/tools/testmanagement-utils/list-sub-testplans', () => ({
+  listSubTestPlans: vi.fn(),
+  ListSubTestPlansSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
+vi.mock('../../src/tools/testmanagement-utils/get-sub-testplan', () => ({
+  getSubTestPlan: vi.fn(),
+  GetSubTestPlanSchema: {
+    parse: (args: any) => args,
+    shape: {},
+  },
+}));
+// Mocked for the util-level fail-soft test on getSubTestPlan (which calls
+// vi.importActual to reach the real util). Other tests in this file mock their
+// utils at the module level, so apiClient and tm-base-url never get reached
+// through real code paths today — adding these mocks is safe.
+vi.mock('../../src/lib/apiClient', () => ({
+  apiClient: { get: vi.fn(), post: vi.fn() },
+}));
+vi.mock('../../src/lib/tm-base-url', () => ({
+  getTMBaseURL: vi.fn(async () => 'https://test-management.browserstack.com'),
 }));
 
 
@@ -788,5 +816,218 @@ describe('getTestPlanTool', () => {
     const result = await getTestPlanTool(args, mockConfig, mockServer);
     expect(result.isError).toBe(true);
     expect(result.content?.[0]?.text).toContain('Failed to fetch test plan: Not Found');
+  });
+});
+
+describe('listSubTestPlansTool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const args = {
+    project_identifier: 'PR-1',
+    parent_test_plan_identifier: 'TP-45',
+  };
+  const mockSubPlans = [
+    { identifier: 'STP-194', name: 'Sprint 1', active_state: 'active', parent_plan_id: 'TP-45', tags: ['sprint'] },
+    { identifier: 'STP-195', name: 'Sprint 2', active_state: 'active', parent_plan_id: 'TP-45' },
+  ];
+
+  it('should return summary and raw JSON on success', async () => {
+    (listSubTestPlans as Mock).mockResolvedValue({
+      content: [
+        { type: 'text', text: 'Found 2 sub-test-plan(s) under TP-45 in project PR-1:\n\n• STP-194: Sprint 1 [active]' },
+        { type: 'text', text: JSON.stringify(mockSubPlans, null, 2) },
+      ],
+      isError: false,
+    });
+    const result = await listSubTestPlansTool(args, mockConfig, mockServer);
+    expect(result.isError).toBe(false);
+    expect(result.content?.[0]?.text).toContain('Found 2 sub-test-plan(s)');
+    expect(result.content?.[1]?.text).toBe(JSON.stringify(mockSubPlans, null, 2));
+  });
+
+  it('should handle errors', async () => {
+    (listSubTestPlans as Mock).mockRejectedValue(new Error('Network Error'));
+    const result = await listSubTestPlansTool(args, mockConfig, mockServer);
+    expect(result.isError).toBe(true);
+    expect(result.content?.[0]?.text).toContain('Failed to list sub-test-plans: Network Error');
+  });
+});
+
+describe('getSubTestPlanTool', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const args = {
+    project_identifier: 'PR-1',
+    parent_test_plan_identifier: 'TP-45',
+    sub_test_plan_identifier: 'STP-194',
+  };
+
+  it('should return sub-plan details, linked runs and status summary on success', async () => {
+    const payload = {
+      sub_test_plan: {
+        identifier: 'STP-194',
+        name: 'Sprint 1',
+        active_state: 'active',
+        parent_plan_id: 'TP-45',
+        tags: ['sprint', 'regression'],
+      },
+      linked_test_runs: [
+        { identifier: 'TR-1', name: 'Run One', run_state: 'new_run', test_cases_count: 8 },
+      ],
+      status_summary: { new_run: 1 },
+      total_test_cases: 8,
+    };
+    (getSubTestPlan as Mock).mockResolvedValue({
+      content: [
+        { type: 'text', text: 'Sub-Test-Plan STP-194: Sprint 1\nParent plan: TP-45\nStatus: active\nTotal test cases across runs: 8' },
+        { type: 'text', text: JSON.stringify(payload, null, 2) },
+      ],
+      isError: false,
+    });
+    const result = await getSubTestPlanTool(args, mockConfig, mockServer);
+    expect(result.isError).toBe(false);
+    expect(result.content?.[0]?.text).toContain('STP-194');
+    expect(result.content?.[0]?.text).toContain('Parent plan: TP-45');
+    expect(result.content?.[1]?.text).toBe(JSON.stringify(payload, null, 2));
+  });
+
+  it('should handle errors', async () => {
+    (getSubTestPlan as Mock).mockRejectedValue(new Error('Not Found'));
+    const result = await getSubTestPlanTool(args, mockConfig, mockServer);
+    expect(result.isError).toBe(true);
+    expect(result.content?.[0]?.text).toContain('Failed to fetch sub-test-plan: Not Found');
+  });
+});
+
+// Util-level test for the riskier fail-soft enrichment branch in getSubTestPlan.
+// Uses vi.importActual to reach the real util (the top-level vi.mock above
+// otherwise replaces it). vi.mock is statically hoisted, so a top-level import
+// is unusable — importActual inside beforeAll is the only viable path.
+describe('getSubTestPlan util — fail-soft enrichment', () => {
+  let getSubTestPlanReal: typeof import('../../src/tools/testmanagement-utils/get-sub-testplan').getSubTestPlan;
+  let apiClientMock: typeof import('../../src/lib/apiClient').apiClient;
+
+  beforeAll(async () => {
+    const actual = await vi.importActual<typeof import('../../src/tools/testmanagement-utils/get-sub-testplan')>(
+      '../../src/tools/testmanagement-utils/get-sub-testplan'
+    );
+    getSubTestPlanReal = actual.getSubTestPlan;
+    const apiClientModule = await import('../../src/lib/apiClient');
+    apiClientMock = apiClientModule.apiClient;
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const baseSubPlan = {
+    identifier: 'STP-194',
+    name: 'Sprint 1',
+    active_state: 'active',
+    parent_plan_id: 'TP-45',
+    test_runs_count: { active: 0, closed: 0 },
+    tags: [],
+  };
+
+  it('returns sub-plan metadata + "No test runs linked" when enrichment rejects (does NOT flip isError); calls the link URL verbatim', async () => {
+    const subPlan = {
+      ...baseSubPlan,
+      links: { test_runs: '/api/v2/projects/PR-1/test-plans/STP-194/test-runs' },
+    };
+    (apiClientMock.get as Mock)
+      .mockResolvedValueOnce({ data: { success: true, sub_test_plan: subPlan } })
+      .mockRejectedValueOnce(new Error('Network Error'));
+
+    const result = await getSubTestPlanReal(
+      {
+        project_identifier: 'PR-1',
+        parent_test_plan_identifier: 'TP-45',
+        sub_test_plan_identifier: 'STP-194',
+      },
+      mockConfig as any,
+    );
+
+    expect(result.isError).toBeFalsy();
+    expect(result.content?.[0]?.text).toContain('STP-194');
+    expect(result.content?.[0]?.text).toContain('Parent plan: TP-45');
+    expect(result.content?.[0]?.text).toContain('No test runs linked to this sub-plan');
+
+    // Verify the enrichment call hit the link URL verbatim (joined under tmBaseUrl),
+    // not a re-constructed path. This protects the URL composition contract.
+    const enrichmentCall = (apiClientMock.get as Mock).mock.calls[1][0];
+    expect(enrichmentCall.url).toBe(
+      'https://test-management.browserstack.com/api/v2/projects/PR-1/test-plans/STP-194/test-runs',
+    );
+  });
+
+  it('returns sub-plan metadata + "No test runs linked" when enrichment returns success:false (non-throwing degradation)', async () => {
+    const subPlan = {
+      ...baseSubPlan,
+      links: { test_runs: '/api/v2/projects/PR-1/test-plans/STP-194/test-runs' },
+    };
+    (apiClientMock.get as Mock)
+      .mockResolvedValueOnce({ data: { success: true, sub_test_plan: subPlan } })
+      .mockResolvedValueOnce({ data: { success: false, error: 'rate limited' } });
+
+    const result = await getSubTestPlanReal(
+      {
+        project_identifier: 'PR-1',
+        parent_test_plan_identifier: 'TP-45',
+        sub_test_plan_identifier: 'STP-194',
+      },
+      mockConfig as any,
+    );
+
+    expect(result.isError).toBeFalsy();
+    expect(result.content?.[0]?.text).toContain('STP-194');
+    expect(result.content?.[0]?.text).toContain('No test runs linked to this sub-plan');
+  });
+
+  it('falls back to constructed URL when links.test_runs is an absolute URL with a mismatched host (SSRF guard)', async () => {
+    const subPlan = {
+      ...baseSubPlan,
+      links: { test_runs: 'http://169.254.169.254/latest/meta-data/' },
+    };
+    (apiClientMock.get as Mock)
+      .mockResolvedValueOnce({ data: { success: true, sub_test_plan: subPlan } })
+      .mockRejectedValueOnce(new Error('Network Error'));
+
+    await getSubTestPlanReal(
+      {
+        project_identifier: 'PR-1',
+        parent_test_plan_identifier: 'TP-45',
+        sub_test_plan_identifier: 'STP-194',
+      },
+      mockConfig as any,
+    );
+
+    // The off-host link must NOT be called; the constructed fallback must be used instead.
+    const enrichmentCall = (apiClientMock.get as Mock).mock.calls[1][0];
+    expect(enrichmentCall.url).not.toContain('169.254.169.254');
+    expect(enrichmentCall.url).toBe(
+      'https://test-management.browserstack.com/api/v2/projects/PR-1/test-plans/STP-194/test-runs',
+    );
+  });
+
+  it('returns isError on primary fetch failure', async () => {
+    (apiClientMock.get as Mock).mockResolvedValueOnce({
+      data: { success: false, message: 'Sub-plan not found' },
+    });
+
+    const result = await getSubTestPlanReal(
+      {
+        project_identifier: 'PR-1',
+        parent_test_plan_identifier: 'TP-45',
+        sub_test_plan_identifier: 'STP-999',
+      },
+      mockConfig as any,
+    );
+
+    expect(result.isError).toBe(true);
+    expect(result.content?.[0]?.text).toContain('Failed to fetch sub-test-plan');
   });
 });
