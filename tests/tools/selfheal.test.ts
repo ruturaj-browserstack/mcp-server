@@ -1,9 +1,30 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("../../src/tools/selfheal-utils/selfheal.js", () => ({
+  getSelfHealSelectors: vi.fn().mockResolvedValue([]),
+  fetchSelfHealingReportByBuild: vi
+    .fn()
+    .mockResolvedValue({ healing_logs: [] }),
+}));
+vi.mock("../../src/tools/selfheal-utils/fetch-test-code.js", async () => {
+  const actual = await vi.importActual<
+    typeof import("../../src/tools/selfheal-utils/fetch-test-code")
+  >("../../src/tools/selfheal-utils/fetch-test-code.js");
+  return {
+    ...actual,
+    fetchTestCodeForSessions: vi.fn().mockResolvedValue([]),
+  };
+});
+
 import {
   fetchSelfHealSelectorTool,
   prepareSelfHealingPlanTool,
 } from "../../src/tools/selfheal";
 import { describeTestCodeFetchIssues } from "../../src/tools/selfheal-utils/fetch-test-code";
+import {
+  getSelfHealSelectors,
+  fetchSelfHealingReportByBuild,
+} from "../../src/tools/selfheal-utils/selfheal.js";
 
 const FAKE_CONFIG = {
   "browserstack-username": "fake-user",
@@ -19,8 +40,11 @@ const canonicalSession = {
   sessionId: "s1",
   locators: [
     {
-      original: { strategy: "css selector", value: "*[id=\"email-field\"]" },
-      healed: { strategy: "css selector", value: "input[id=\"user-email-input\"]" },
+      original: { strategy: "css selector", value: '*[id="email-field"]' },
+      healed: {
+        strategy: "css selector",
+        value: 'input[id="user-email-input"]',
+      },
       thought: "email field properties changed",
     },
   ],
@@ -59,6 +83,59 @@ describe("fetchSelfHealSelectorTool input validation", () => {
   });
 });
 
+describe("fetchSelfHealSelectorTool error contract", () => {
+  // The function's declared return type is Promise<CallToolResult>. The catch
+  // block must produce a structured { isError: true } result, never reject
+  // the promise — otherwise direct (non-MCP-wrapper) callers see a rejected
+  // promise instead of the documented shape.
+  beforeEach(() => {
+    vi.mocked(getSelfHealSelectors).mockReset();
+    vi.mocked(fetchSelfHealingReportByBuild).mockReset();
+  });
+
+  it("returns { isError: true } when the sessionId path throws", async () => {
+    vi.mocked(getSelfHealSelectors).mockRejectedValueOnce(
+      new Error("Request failed with status code 401 Unauthorized"),
+    );
+
+    const result = await fetchSelfHealSelectorTool(
+      { sessionId: "abc" },
+      FAKE_CONFIG,
+    );
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as any).text;
+    expect(text).toMatch(/Authentication with BrowserStack failed/);
+    expect(text).toMatch(/sessionId=abc/);
+  });
+
+  it("returns { isError: true } when the buildUuid path throws", async () => {
+    vi.mocked(fetchSelfHealingReportByBuild).mockRejectedValueOnce(
+      new Error("Request failed with status code 404 Not Found"),
+    );
+
+    const result = await fetchSelfHealSelectorTool(
+      { buildUuid: "build-xyz" },
+      FAKE_CONFIG,
+    );
+
+    expect(result.isError).toBe(true);
+    const text = (result.content[0] as any).text;
+    expect(text).toMatch(/BrowserStack returned 404/);
+    expect(text).toMatch(/buildUuid=build-xyz/);
+  });
+
+  it("does not reject the promise on failure", async () => {
+    vi.mocked(getSelfHealSelectors).mockRejectedValueOnce(
+      new Error("transport error"),
+    );
+
+    await expect(
+      fetchSelfHealSelectorTool({ sessionId: "s1" }, FAKE_CONFIG),
+    ).resolves.toMatchObject({ isError: true });
+  });
+});
+
 describe("prepareSelfHealingPlanTool", () => {
   it("returns plan instructions explicitly telling the caller NOT to edit files itself", async () => {
     const res = await prepareSelfHealingPlanTool(
@@ -76,7 +153,7 @@ describe("prepareSelfHealingPlanTool", () => {
       EMPTY_CONFIG,
     );
     const text = String(res.content?.[0]?.text);
-    expect(text).toContain("input[id=\\\"user-email-input\\\"]");
+    expect(text).toContain('input[id=\\"user-email-input\\"]');
     expect(text).toContain("email field properties changed");
   });
 
@@ -148,7 +225,7 @@ describe("prepareSelfHealingPlanTool", () => {
     );
     const text = String(res.content?.[0]?.text);
     expect(text).toContain("## Plan");
-    expect(text).toContain("input[id=\\\"user-email-input\\\"]");
+    expect(text).toContain('input[id=\\"user-email-input\\"]');
   });
 
   it("accepts a single session object (not wrapped in an array)", async () => {
@@ -157,7 +234,7 @@ describe("prepareSelfHealingPlanTool", () => {
       EMPTY_CONFIG,
     );
     expect(String(res.content?.[0]?.text)).toContain(
-      "input[id=\\\"user-email-input\\\"]",
+      'input[id=\\"user-email-input\\"]',
     );
   });
 
@@ -248,9 +325,7 @@ describe("describeTestCodeFetchIssues", () => {
       },
       {
         sessionId: "b",
-        tests: [
-          { testRunId: 1, code: null, filename: null, url: "" },
-        ],
+        tests: [{ testRunId: 1, code: null, filename: null, url: "" }],
         status: "non_sdk_build",
         httpStatus: 200,
       },
@@ -270,9 +345,7 @@ describe("describeTestCodeFetchIssues", () => {
     const note = describeTestCodeFetchIssues([
       {
         sessionId: "ok",
-        tests: [
-          { testRunId: 1, code: "x", filename: "t.js", url: "" },
-        ],
+        tests: [{ testRunId: 1, code: "x", filename: "t.js", url: "" }],
         status: "ok",
         httpStatus: 200,
       },

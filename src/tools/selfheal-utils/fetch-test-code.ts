@@ -107,14 +107,16 @@ export async function fetchTestCodeBySession(
   const url = `${OBSERVABILITY_API_BASE}/sessions/${encodeURIComponent(sessionId)}/testCode`;
 
   try {
-    const response = await apiClient.get<TestCodeApiResponse | TestCodeEntry[]>({
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${auth}`,
+    const response = await apiClient.get<TestCodeApiResponse | TestCodeEntry[]>(
+      {
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${auth}`,
+        },
+        raise_error: false,
       },
-      raise_error: false,
-    });
+    );
 
     if (!response.ok) {
       logger.warn(

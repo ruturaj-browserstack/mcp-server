@@ -332,7 +332,13 @@ export async function fetchSelfHealSelectorTool(
     };
   } catch (error) {
     logger.error("Error fetching self-heal selector suggestions", error);
-    throw error;
+    const context = sessionId
+      ? `fetching self-heal selectors for sessionId=${sessionId}`
+      : `fetching self-healing report for buildUuid=${buildUuid}`;
+    return {
+      content: [{ type: "text", text: friendlyApiError(error, context) }],
+      isError: true,
+    };
   }
 }
 
@@ -614,9 +620,7 @@ export default function addSelfHealTools(
             ? `fetching self-healing report for buildUuid=${args.buildUuid}`
             : "fetching self-heal suggestions";
         return {
-          content: [
-            { type: "text", text: friendlyApiError(error, context) },
-          ],
+          content: [{ type: "text", text: friendlyApiError(error, context) }],
           isError: true,
         };
       }
