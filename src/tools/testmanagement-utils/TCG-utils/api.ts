@@ -34,6 +34,30 @@ export async function fetchFormFields(
 }
 
 /**
+ * Resolve a default-field input (priority/case_type) to the form's display or
+ * internal name, matching case-insensitively. Returns undefined if no match.
+ */
+export function normalizeDefaultFieldValue(
+  fieldValues: Array<{
+    internal_name?: string | null;
+    name?: string;
+    value: any;
+  }>,
+  input: string,
+  emit: "name" | "internal_name",
+): string | undefined {
+  const normalized = input.toLowerCase().trim();
+  const match = fieldValues.find(
+    (v) =>
+      (v.internal_name ?? "").toLowerCase() === normalized ||
+      (v.name ?? "").toLowerCase() === normalized,
+  );
+  if (!match) return undefined;
+  if (emit === "name") return match.name;
+  return match.internal_name ?? match.name;
+}
+
+/**
  * Trigger AI-based test case generation for a document.
  */
 export async function triggerTestCaseGeneration(

@@ -2,9 +2,14 @@ import { apiClient } from "../../lib/apiClient.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { formatAxiosError } from "../../lib/error.js";
-import { projectIdentifierToId } from "./TCG-utils/api.js";
+import {
+  fetchFormFields,
+  normalizeDefaultFieldValue,
+  projectIdentifierToId,
+} from "./TCG-utils/api.js";
 import { BrowserStackConfig } from "../../lib/types.js";
 import { getTMBaseURL } from "../../lib/tm-base-url.js";
+import logger from "../../logger.js";
 
 interface TestCaseStep {
   step: string;
@@ -29,6 +34,7 @@ export interface TestCaseCreateRequest {
   tags?: string[];
   custom_fields?: Record<string, string>;
   automation_status?: string;
+  priority?: string;
 }
 
 export interface TestCaseResponse {
@@ -125,6 +131,12 @@ export const CreateTestCaseSchema = z.object({
     .describe(
       "Automation status of the test case. Common values include 'not_automated', 'automated', 'automation_not_required'.",
     ),
+  priority: z
+    .string()
+    .optional()
+    .describe(
+      "Priority of the test case. Accepts either display name (e.g. 'Critical', 'High', 'Medium', 'Low') or internal name (e.g. 'medium'). If omitted, the project default (usually 'Medium') is applied. Valid values are per-project and discoverable via the form-fields endpoint.",
+    ),
 });
 
 export function sanitizeArgs(args: any) {
@@ -149,11 +161,52 @@ export function sanitizeArgs(args: any) {
 
 import { getBrowserStackAuth } from "../../lib/get-auth.js";
 
+/**
+ * Normalize priority to the display name the create endpoint accepts (it
+ * rejects lowercase). On lookup failure, pass the raw value through.
+ */
+async function normalizePriority(
+  projectIdentifier: string,
+  priority: string,
+  config: BrowserStackConfig,
+): Promise<string> {
+  try {
+    const numericProjectId = await projectIdentifierToId(
+      projectIdentifier,
+      config,
+    );
+    const { default_fields } = await fetchFormFields(numericProjectId, config);
+    return (
+      normalizeDefaultFieldValue(
+        default_fields?.priority?.values ?? [],
+        priority,
+        "name",
+      ) ?? priority
+    );
+  } catch (err) {
+    logger.warn(
+      "Failed to normalize priority value; passing through as given: %s",
+      err instanceof Error ? err.message : String(err),
+    );
+    return priority;
+  }
+}
+
 export async function createTestCase(
   params: TestCaseCreateRequest,
   config: BrowserStackConfig,
 ): Promise<CallToolResult> {
-  const body = { test_case: params };
+  const testCaseParams: TestCaseCreateRequest = { ...params };
+
+  if (testCaseParams.priority !== undefined) {
+    testCaseParams.priority = await normalizePriority(
+      params.project_identifier,
+      testCaseParams.priority,
+      config,
+    );
+  }
+
+  const body = { test_case: testCaseParams };
   const authString = getBrowserStackAuth(config);
   const [username, password] = authString.split(":");
 
