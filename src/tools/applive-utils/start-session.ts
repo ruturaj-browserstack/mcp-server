@@ -127,6 +127,15 @@ export async function startSession(
  */
 function openBrowser(launchUrl: string): void {
   try {
+    const parsed = new URL(launchUrl);
+    if (
+      parsed.protocol !== "https:" ||
+      !/(^|\.)browserstack\.com$/i.test(parsed.hostname)
+    ) {
+      logger.error(`Refusing to open untrusted URL: ${launchUrl}`);
+      return;
+    }
+
     const command =
       process.platform === "darwin"
         ? ["open", launchUrl]
