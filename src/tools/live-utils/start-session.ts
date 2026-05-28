@@ -1,5 +1,4 @@
 import logger from "../../logger.js";
-import childProcess from "child_process";
 import { filterDesktop } from "./desktop-filter.js";
 import { filterMobile } from "./mobile-filter.js";
 import {
@@ -73,10 +72,21 @@ export async function startBrowserSession(
           isLocal,
         )
       : buildMobileUrl(args as MobileSearchArgs, entry as MobileEntry, isLocal);
+  const note = entry.notes ? `, ${entry.notes}` : "";
+
   if (!envConfig.REMOTE_MCP) {
-    openBrowser(url);
+    const openCommand = getOpenBrowserCommand(url);
+    if (openCommand) {
+      return [
+        `Live session URL: ${url}${note}`,
+        ``,
+        `To open the session in the default browser, run:`,
+        `    ${openCommand}`,
+      ].join("\n");
+    }
   }
-  return entry.notes ? `${url}, ${entry.notes}` : url;
+
+  return `${url}${note}`;
 }
 
 function buildDesktopUrl(
@@ -125,28 +135,35 @@ function buildMobileUrl(
   return `https://live.browserstack.com/dashboard#${params.toString()}`;
 }
 
-// ——— Open a browser window ———
+// ——— Build a browser-open command for the host agent ———
 
-function openBrowser(launchUrl: string): void {
+/**
+ * Returns the platform-appropriate shell command to open `launchUrl` in the
+ * default browser, or null if the URL is not a trusted BrowserStack URL.
+ *
+ * The command is returned to the MCP client so the host agent can prompt the
+ * user before executing it. The server itself never spawns a process, which
+ * eliminates the command-injection surface entirely.
+ */
+function getOpenBrowserCommand(launchUrl: string): string | null {
+  let parsed: URL;
   try {
-    const command =
-      process.platform === "darwin"
-        ? ["open", launchUrl]
-        : process.platform === "win32"
-          ? ["cmd", "/c", "start", `""`, `"${launchUrl}"`]
-          : ["xdg-open", launchUrl];
-
-    // nosemgrep:javascript.lang.security.detect-child-process.detect-child-process
-    const child = childProcess.spawn(command[0], command.slice(1), {
-      stdio: "ignore",
-      detached: true,
-      ...(process.platform === "win32" ? { shell: true } : {}),
-    });
-    child.on("error", (err) =>
-      logger.error(`Failed to open browser: ${err}. URL: ${launchUrl}`),
-    );
-    child.unref();
-  } catch (err) {
-    logger.error(`Failed to launch browser: ${err}. URL: ${launchUrl}`);
+    parsed = new URL(launchUrl);
+  } catch {
+    logger.error(`Refusing to surface malformed URL: ${launchUrl}`);
+    return null;
   }
+
+  if (
+    parsed.protocol !== "https:" ||
+    !/(^|\.)browserstack\.com$/i.test(parsed.hostname)
+  ) {
+    logger.error(`Refusing to surface untrusted URL: ${launchUrl}`);
+    return null;
+  }
+
+  const quoted = `"${parsed.toString()}"`;
+  if (process.platform === "darwin") return `open ${quoted}`;
+  if (process.platform === "win32") return `cmd /c start "" ${quoted}`;
+  return `xdg-open ${quoted}`;
 }
