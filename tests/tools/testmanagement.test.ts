@@ -98,7 +98,9 @@ vi.mock('../../src/lib/get-auth', () => ({
   getBrowserStackAuth: vi.fn(() => 'fake-user:fake-key')
 }));
 vi.mock('../../src/tools/testmanagement-utils/TCG-utils/api', () => ({
-  projectIdentifierToId: vi.fn(() => Promise.resolve('999'))
+  projectIdentifierToId: vi.fn(() => Promise.resolve('999')),
+  fetchFormFields: vi.fn(),
+  normalizeDefaultFieldValue: vi.fn(),
 }));
 vi.mock('form-data', () => {
   return {
@@ -192,6 +194,9 @@ vi.mock('../../src/lib/apiClient', () => ({
 }));
 vi.mock('../../src/lib/tm-base-url', () => ({
   getTMBaseURL: vi.fn(async () => 'https://test-management.browserstack.com'),
+}));
+vi.mock('../../src/logger', () => ({
+  default: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
 
@@ -1029,5 +1034,132 @@ describe('getSubTestPlan util — fail-soft enrichment', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content?.[0]?.text).toContain('Failed to fetch sub-test-plan');
+  });
+});
+
+// Real function via importActual (the module is mocked at the top).
+describe('normalizeDefaultFieldValue', () => {
+  let normalize: typeof import('../../src/tools/testmanagement-utils/TCG-utils/api').normalizeDefaultFieldValue;
+
+  beforeAll(async () => {
+    const actual = await vi.importActual<
+      typeof import('../../src/tools/testmanagement-utils/TCG-utils/api')
+    >('../../src/tools/testmanagement-utils/TCG-utils/api');
+    normalize = actual.normalizeDefaultFieldValue;
+  });
+
+  const values = [
+    { name: 'Critical', internal_name: 'critical', value: 1 },
+    { name: 'Medium', internal_name: 'medium', value: 2 },
+  ];
+
+  it('resolves a lowercase internal name to the Title-Case display name', () => {
+    expect(normalize(values, 'critical', 'name')).toBe('Critical');
+  });
+
+  it('matches case-insensitively regardless of input casing', () => {
+    expect(normalize(values, 'CRITICAL', 'name')).toBe('Critical');
+    expect(normalize(values, '  Critical  ', 'name')).toBe('Critical');
+  });
+
+  it('resolves a display name to the internal name when emit is internal_name', () => {
+    expect(normalize(values, 'Critical', 'internal_name')).toBe('critical');
+  });
+
+  it('returns undefined when no option matches (caller passes raw value through)', () => {
+    expect(normalize(values, 'urgent', 'name')).toBeUndefined();
+    expect(normalize([], 'critical', 'name')).toBeUndefined();
+  });
+});
+
+// Real createTestCase via importActual; collaborators are mocked at module scope.
+describe('createTestCase — priority normalization', () => {
+  let createTestCaseReal: typeof import('../../src/tools/testmanagement-utils/create-testcase').createTestCase;
+  let apiClientMock: typeof import('../../src/lib/apiClient').apiClient;
+  let fetchFormFieldsMock: Mock;
+  let normalizeMock: Mock;
+
+  beforeAll(async () => {
+    const actual = await vi.importActual<
+      typeof import('../../src/tools/testmanagement-utils/create-testcase')
+    >('../../src/tools/testmanagement-utils/create-testcase');
+    createTestCaseReal = actual.createTestCase;
+    apiClientMock = (await import('../../src/lib/apiClient')).apiClient;
+    const api = await import('../../src/tools/testmanagement-utils/TCG-utils/api');
+    fetchFormFieldsMock = api.fetchFormFields as unknown as Mock;
+    normalizeMock = api.normalizeDefaultFieldValue as unknown as Mock;
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Priority options as returned by fetchFormFields.
+  const priorityValues = [
+    { name: 'Critical', internal_name: 'critical', value: 1 },
+    { name: 'Medium', internal_name: 'medium', value: 2 },
+  ];
+  const formFields = {
+    default_fields: { priority: { values: priorityValues } },
+    custom_fields: {},
+  };
+  const createSuccess = {
+    data: {
+      data: {
+        success: true,
+        test_case: {
+          identifier: 'TC-1',
+          title: 'Sample',
+          priority: 'Critical',
+          folder_id: 1,
+        },
+      },
+    },
+  };
+
+  const baseArgs = {
+    project_identifier: 'PR-1',
+    folder_id: 'F-1',
+    name: 'Sample',
+    test_case_steps: [{ step: 'a', result: 'b' }],
+  };
+
+  it('looks up the project form fields and sends the normalized priority in the request body', async () => {
+    fetchFormFieldsMock.mockResolvedValue(formFields);
+    normalizeMock.mockReturnValue('Critical');
+    (apiClientMock.post as Mock).mockResolvedValueOnce(createSuccess);
+
+    const result = await createTestCaseReal(
+      { ...baseArgs, priority: 'critical' },
+      mockConfig as any,
+    );
+
+    expect(result.isError).toBeFalsy();
+    expect(normalizeMock).toHaveBeenCalledWith(priorityValues, 'critical', 'name');
+    const body = (apiClientMock.post as Mock).mock.calls[0][0].body;
+    expect(body.test_case.priority).toBe('Critical');
+  });
+
+  it('omits priority from the request body when not provided (preserves project default)', async () => {
+    (apiClientMock.post as Mock).mockResolvedValueOnce(createSuccess);
+
+    await createTestCaseReal({ ...baseArgs }, mockConfig as any);
+
+    expect(fetchFormFieldsMock).not.toHaveBeenCalled();
+    const body = (apiClientMock.post as Mock).mock.calls[0][0].body;
+    expect(body.test_case).not.toHaveProperty('priority');
+  });
+
+  it('passes the raw priority through when the form-fields lookup fails (graceful fallback)', async () => {
+    fetchFormFieldsMock.mockRejectedValue(new Error('Network Error'));
+    (apiClientMock.post as Mock).mockResolvedValueOnce(createSuccess);
+
+    await createTestCaseReal(
+      { ...baseArgs, priority: 'critical' },
+      mockConfig as any,
+    );
+
+    const body = (apiClientMock.post as Mock).mock.calls[0][0].body;
+    expect(body.test_case.priority).toBe('critical');
   });
 });

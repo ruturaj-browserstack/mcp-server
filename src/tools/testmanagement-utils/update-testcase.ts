@@ -2,7 +2,11 @@ import { apiClient } from "../../lib/apiClient.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { formatAxiosError } from "../../lib/error.js";
-import { fetchFormFields, projectIdentifierToId } from "./TCG-utils/api.js";
+import {
+  fetchFormFields,
+  normalizeDefaultFieldValue,
+  projectIdentifierToId,
+} from "./TCG-utils/api.js";
 import { BrowserStackConfig } from "../../lib/types.js";
 import { getTMBaseURL } from "../../lib/tm-base-url.js";
 import { getBrowserStackAuth } from "../../lib/get-auth.js";
@@ -103,36 +107,6 @@ export const UpdateTestCaseSchema = z.object({
       "Map of custom field name/id to value. Valid field names and value types are per-project; discover them via the project's form fields.",
     ),
 });
-
-/**
- * Build a normalizer for a default field's accepted value.
- * The TM PATCH endpoint accepts different casings for different default
- * fields (Title-Case display name for priority/case_type, snake_case
- * internal_name for automation_status). We accept either from the caller
- * and emit the form the API actually wants.
- *
- * Returns undefined when no matching option is found — callers should
- * pass the raw value through so the backend can surface its own error.
- */
-function normalizeDefaultFieldValue(
-  fieldValues: Array<{
-    internal_name?: string | null;
-    name?: string;
-    value: any;
-  }>,
-  input: string,
-  emit: "name" | "internal_name",
-): string | undefined {
-  const normalized = input.toLowerCase().trim();
-  const match = fieldValues.find(
-    (v) =>
-      (v.internal_name ?? "").toLowerCase() === normalized ||
-      (v.name ?? "").toLowerCase() === normalized,
-  );
-  if (!match) return undefined;
-  if (emit === "name") return match.name;
-  return match.internal_name ?? match.name;
-}
 
 /**
  * Normalise default-field inputs (priority/case_type/automation_status) to
