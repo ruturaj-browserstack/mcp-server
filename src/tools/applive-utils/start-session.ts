@@ -9,7 +9,6 @@ import { getBrowserStackAuth } from "../../lib/get-auth.js";
 import { findDeviceByName } from "./device-search.js";
 import { pickVersion } from "./version-utils.js";
 import { DeviceEntry } from "./types.js";
-import childProcess from "child_process";
 import { BrowserStackConfig } from "../../lib/types.js";
 import envConfig from "../../config.js";
 
@@ -114,51 +113,47 @@ export async function startSession(
   const launchUrl = `https://app-live.browserstack.com/dashboard#${params.toString()}&device=${deviceParam}`;
 
   if (!envConfig.REMOTE_MCP) {
-    openBrowser(launchUrl);
+    const openCommand = getOpenBrowserCommand(launchUrl);
+    if (openCommand) {
+      return [
+        `App Live session URL: ${launchUrl}${note}`,
+        ``,
+        `To open the session in the default browser, run:`,
+        `    ${openCommand}`,
+      ].join("\n");
+    }
   }
 
   return launchUrl + note;
 }
 
 /**
- * Opens the launch URL in the default browser.
- * @param launchUrl - The URL to open.
- * @throws Will throw an error if the browser fails to open.
+ * Returns the platform-appropriate shell command to open `launchUrl` in the
+ * default browser, or null if the URL is not a trusted BrowserStack URL.
+ *
+ * The command is returned to the MCP client so the host agent can prompt the
+ * user before executing it. The server itself never spawns a process, which
+ * eliminates the command-injection surface entirely.
  */
-function openBrowser(launchUrl: string): void {
+function getOpenBrowserCommand(launchUrl: string): string | null {
+  let parsed: URL;
   try {
-    const parsed = new URL(launchUrl);
-    if (
-      parsed.protocol !== "https:" ||
-      !/(^|\.)browserstack\.com$/i.test(parsed.hostname)
-    ) {
-      logger.error(`Refusing to open untrusted URL: ${launchUrl}`);
-      return;
-    }
-
-    const command =
-      process.platform === "darwin"
-        ? ["open", launchUrl]
-        : process.platform === "win32"
-          ? ["cmd", "/c", "start", launchUrl]
-          : ["xdg-open", launchUrl];
-
-    // nosemgrep:javascript.lang.security.detect-child-process.detect-child-process
-    const child = childProcess.spawn(command[0], command.slice(1), {
-      stdio: "ignore",
-      detached: true,
-    });
-
-    child.on("error", (error) => {
-      logger.error(
-        `Failed to open browser automatically: ${error}. Please open this URL manually: ${launchUrl}`,
-      );
-    });
-
-    child.unref();
-  } catch (error) {
-    logger.error(
-      `Failed to open browser automatically: ${error}. Please open this URL manually: ${launchUrl}`,
-    );
+    parsed = new URL(launchUrl);
+  } catch {
+    logger.error(`Refusing to surface malformed URL: ${launchUrl}`);
+    return null;
   }
+
+  if (
+    parsed.protocol !== "https:" ||
+    !/(^|\.)browserstack\.com$/i.test(parsed.hostname)
+  ) {
+    logger.error(`Refusing to surface untrusted URL: ${launchUrl}`);
+    return null;
+  }
+
+  const quoted = `"${parsed.toString()}"`;
+  if (process.platform === "darwin") return `open ${quoted}`;
+  if (process.platform === "win32") return `cmd /c start "" ${quoted}`;
+  return `xdg-open ${quoted}`;
 }
