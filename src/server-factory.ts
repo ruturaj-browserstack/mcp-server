@@ -20,6 +20,7 @@ import addBuildInsightsTools from "./tools/build-insights.js";
 import { setupOnInitialized } from "./oninitialized.js";
 import { BrowserStackConfig } from "./lib/types.js";
 import addRCATools from "./tools/rca-agent.js";
+import { withInstrumentation } from "./lib/tool-middleware.js";
 
 /**
  * Wrapper class for BrowserStack MCP Server
@@ -63,10 +64,14 @@ export class BrowserStackMcpServer {
       addRCATools,
     ];
 
+    // Instrumentation (trackMCP + standard error envelope) is applied centrally
+    // here via a Proxy, so individual tool handlers carry only business logic.
+    const instrumented = withInstrumentation(this.server, this.config);
+
     toolAdders.forEach((adder) => {
       // Each adder now returns a Record<string, Tool>
       const added: Record<string, RegisteredTool> = adder(
-        this.server,
+        instrumented,
         this.config,
       );
       Object.assign(this.tools, added);
