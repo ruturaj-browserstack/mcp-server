@@ -1,4 +1,3 @@
-import { trackMCP } from "../index.js";
 import { BrowserStackConfig } from "../lib/types.js";
 import { fetchPercyChanges } from "./review-agent.js";
 import { addListTestFiles } from "./list-test-files.js";
@@ -25,7 +24,6 @@ import {
   FetchPercyChangesParamsShape,
   ManagePercyBuildApprovalParamsShape,
 } from "./sdk-utils/common/schema.js";
-import { handleMCPError } from "../lib/utils.js";
 
 export function registerPercyTools(
   server: McpServer,
@@ -59,133 +57,49 @@ export function registerPercyTools(
     "percyVisualTestIntegrationAgent",
     SIMULATE_PERCY_CHANGE_DESCRIPTION,
     SetUpPercyParamsShape,
-    async (args) => {
-      try {
-        trackMCP(
-          "VisualTestIntegrationAgent",
-          server.server.getClientVersion()!,
-          config,
-        );
-        return simulatePercyChangeHandler(args, config);
-      } catch (error) {
-        return handleMCPError(
-          "VisualTestIntegrationAgent",
-          server,
-          config,
-          error,
-        );
-      }
-    },
+    async (args) => simulatePercyChangeHandler(args, config),
   );
 
   tools.setupPercyVisualTesting = server.tool(
     "expandPercyVisualTesting",
     SETUP_PERCY_DESCRIPTION,
     SetUpPercyParamsShape,
-    async (args) => {
-      try {
-        trackMCP(
-          "setupPercyVisualTesting",
-          server.server.getClientVersion()!,
-          config,
-        );
-        return setUpPercyHandler(args, config);
-      } catch (error) {
-        return handleMCPError("setupPercyVisualTesting", server, config, error);
-      }
-    },
+    async (args) => setUpPercyHandler(args, config),
   );
 
   tools.addPercySnapshotCommands = server.tool(
     "addPercySnapshotCommands",
     PERCY_SNAPSHOT_COMMANDS_DESCRIPTION,
     UpdateTestFileWithInstructionsParams,
-    async (args) => {
-      try {
-        trackMCP(
-          "addPercySnapshotCommands",
-          server.server.getClientVersion()!,
-          config,
-        );
-        return await updateTestsWithPercyCommands(args);
-      } catch (error) {
-        return handleMCPError(
-          "addPercySnapshotCommands",
-          server,
-          config,
-          error,
-        );
-      }
-    },
+    async (args) => updateTestsWithPercyCommands(args),
   );
 
   tools.listTestFiles = server.tool(
     "listTestFiles",
     LIST_TEST_FILES_DESCRIPTION,
     {},
-    async () => {
-      try {
-        trackMCP("listTestFiles", server.server.getClientVersion()!, config);
-        return addListTestFiles();
-      } catch (error) {
-        return handleMCPError("listTestFiles", server, config, error);
-      }
-    },
+    async () => addListTestFiles(),
   );
 
   tools.runPercyScan = server.tool(
     "runPercyScan",
     "Run a Percy visual test scan. Example prompts : Run this Percy build/scan. Never run percy scan/build without this tool",
     RunPercyScanParamsShape,
-    async (args) => {
-      try {
-        trackMCP("runPercyScan", server.server.getClientVersion()!, config);
-        return runPercyScan(args);
-      } catch (error) {
-        return handleMCPError("runPercyScan", server, config, error);
-      }
-    },
+    async (args) => runPercyScan(args),
   );
 
   tools.fetchPercyChanges = server.tool(
     "fetchPercyChanges",
     "Retrieves and summarizes all visual changes detected by Percy AI between the latest and previous builds, helping quickly review what has changed in your project.",
     FetchPercyChangesParamsShape,
-    async (args) => {
-      try {
-        trackMCP(
-          "fetchPercyChanges",
-          server.server.getClientVersion()!,
-          config,
-        );
-        return await fetchPercyChanges(args, config);
-      } catch (error) {
-        return handleMCPError("fetchPercyChanges", server, config, error);
-      }
-    },
+    async (args) => fetchPercyChanges(args, config),
   );
 
   tools.managePercyBuildApproval = server.tool(
     "managePercyBuildApproval",
     "Approve or reject a Percy build",
     ManagePercyBuildApprovalParamsShape,
-    async (args) => {
-      try {
-        trackMCP(
-          "managePercyBuildApproval",
-          server.server.getClientVersion()!,
-          config,
-        );
-        return await approveOrDeclinePercyBuild(args, config);
-      } catch (error) {
-        return handleMCPError(
-          "managePercyBuildApproval",
-          server,
-          config,
-          error,
-        );
-      }
-    },
+    async (args) => approveOrDeclinePercyBuild(args, config),
   );
 
   return tools;

@@ -8,8 +8,6 @@ import { getTestIds } from "./rca-agent-utils/get-failed-test-id.js";
 import { getRCAData } from "./rca-agent-utils/rca-data.js";
 import { formatRCAData } from "./rca-agent-utils/format-rca.js";
 import { TestStatus } from "./rca-agent-utils/types.js";
-import { handleMCPError } from "../lib/utils.js";
-import { trackMCP } from "../index.js";
 import { BuildIdArgs } from "./rca-agent-utils/types.js";
 import {
   FETCH_RCA_PARAMS,
@@ -146,57 +144,21 @@ export default function addRCATools(
     "fetchRCA",
     "Retrieves AI-RCA (Root Cause Analysis) data for a BrowserStack Automate and App-Automate session and provides insights into test failures.",
     FETCH_RCA_PARAMS,
-    async (args) => {
-      try {
-        trackMCP(
-          "fetchRCA",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await fetchRCADataTool(args, config);
-      } catch (error) {
-        return handleMCPError("fetchRCA", server, config, error);
-      }
-    },
+    async (args) => fetchRCADataTool(args, config),
   );
 
   tools.getBuildId = server.tool(
     "getBuildId",
     "Get the BrowserStack build ID for a given project and build name.",
     GET_BUILD_ID_PARAMS,
-    async (args) => {
-      try {
-        trackMCP(
-          "getBuildId",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await getBuildIdTool(args, config);
-      } catch (error) {
-        return handleMCPError("getBuildId", server, config, error);
-      }
-    },
+    async (args) => getBuildIdTool(args, config),
   );
 
   tools.listTestIds = server.tool(
     "listTestIds",
     "List test IDs from a BrowserStack Automate build, optionally filtered by status",
     LIST_TEST_IDS_PARAMS,
-    async (args) => {
-      try {
-        trackMCP(
-          "listTestIds",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await listTestIdsTool(args, config);
-      } catch (error) {
-        return handleMCPError("listTestIds", server, config, error);
-      }
-    },
+    async (args) => listTestIdsTool(args, config),
   );
 
   return tools;

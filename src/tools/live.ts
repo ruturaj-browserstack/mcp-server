@@ -1,9 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import logger from "../logger.js";
 import { startBrowserSession } from "./live-utils/start-session.js";
 import { PlatformType } from "./live-utils/types.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import { BrowserStackConfig } from "../lib/types.js";
 import globalConfig from "../config.js";
 
@@ -128,34 +126,7 @@ export default function addBrowserLiveTools(
     "runBrowserLiveSession",
     "Launch a BrowserStack Live session (desktop or mobile).",
     LiveArgsShape,
-    async (args) => {
-      try {
-        trackMCP(
-          "runBrowserLiveSession",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await runBrowserSession(args, config);
-      } catch (error) {
-        logger.error("Live session failed: %s", error);
-        trackMCP(
-          "runBrowserLiveSession",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Failed to start a browser live session. Error: ${error}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => runBrowserSession(args, config),
   );
 
   return tools;

@@ -4,7 +4,6 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import fs from "fs";
 import { startSession } from "./applive-utils/start-session.js";
 import logger from "../logger.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import { BrowserStackConfig } from "../lib/types.js";
 
 /**
@@ -106,34 +105,7 @@ export default function addAppLiveTools(
           "The path to the .ipa or .apk file to install on the device. Always ask the user for the app path, do not assume it.",
         ),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "runAppLiveSession",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await startAppLiveSession(args, config);
-      } catch (error) {
-        logger.error("App live session failed: %s", error);
-        trackMCP(
-          "runAppLiveSession",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to start app live session: ${error instanceof Error ? error.message : String(error)}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => startAppLiveSession(args, config),
   );
 
   return tools;

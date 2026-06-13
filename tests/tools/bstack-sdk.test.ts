@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import addSDKTools from "../../src/tools/bstack-sdk";
+import { withInstrumentation } from "../../src/lib/tool-middleware";
 import { runTestsOnBrowserStackHandler } from "../../src/tools/sdk-utils/handler";
 
 vi.mock("../../src/tools/sdk-utils/handler", () => ({
@@ -33,7 +34,7 @@ describe("BStack SDK Tool", () => {
       }),
       server: { getClientVersion: vi.fn().mockReturnValue({ version: "1.0" }) },
     };
-    addSDKTools(serverMock, mockConfig);
+    addSDKTools(withInstrumentation(serverMock, mockConfig as any), mockConfig);
   });
 
   it("registers setupBrowserStackAutomateTests tool", () => {

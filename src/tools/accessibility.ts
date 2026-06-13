@@ -4,7 +4,6 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { AccessibilityScanner } from "./accessiblity-utils/scanner.js";
 import { AccessibilityReportFetcher } from "./accessiblity-utils/report-fetcher.js";
 import { AccessibilityAuthConfig } from "./accessiblity-utils/auth-config.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import { parseAccessibilityReportFromCSV } from "./accessiblity-utils/report-parser.js";
 import { queryAccessibilityRAG } from "./accessiblity-utils/accessibility-rag.js";
 import { getBrowserStackAuth } from "../lib/get-auth.js";
@@ -71,19 +70,6 @@ function createSuccessResponse(messages: string[]): CallToolResult {
   };
 }
 
-function handleMCPError(
-  toolName: string,
-  server: McpServer,
-  config: BrowserStackConfig,
-  error: unknown,
-): CallToolResult {
-  trackMCP(toolName, server.server.getClientVersion()!, error, config);
-  const errorMessage = error instanceof Error ? error.message : "Unknown error";
-  return createErrorResponse(
-    `Failed to ${toolName.replace(/([A-Z])/g, " $1").toLowerCase()}: ${errorMessage}. Please open an issue on GitHub if the problem persists`,
-  );
-}
-
 async function notifyScanProgress(
   context: ScanProgressContext,
   message: string,
@@ -116,47 +102,6 @@ async function initializeReportFetcher(
   const auth = setupAuth(config);
   reportFetcher.setAuth(auth);
   return reportFetcher;
-}
-
-async function executeAccessibilityRAG(
-  args: { query: string },
-  server: McpServer,
-  config: BrowserStackConfig,
-): Promise<CallToolResult> {
-  try {
-    trackMCP(
-      "accessibilityExpert",
-      server.server.getClientVersion()!,
-      undefined,
-      config,
-    );
-    return await queryAccessibilityRAG(args.query, config);
-  } catch (error) {
-    return handleMCPError("accessibilityExpert", server, config, error);
-  }
-}
-
-async function executeFetchAccessibilityIssues(
-  args: { scanId: string; scanRunId: string; cursor?: number },
-  server: McpServer,
-  config: BrowserStackConfig,
-): Promise<CallToolResult> {
-  try {
-    trackMCP(
-      "fetchAccessibilityIssues",
-      server.server.getClientVersion()!,
-      undefined,
-      config,
-    );
-    return await fetchAccessibilityIssues(
-      args.scanId,
-      args.scanRunId,
-      config,
-      args.cursor,
-    );
-  } catch (error) {
-    return handleMCPError("fetchAccessibilityIssues", server, config, error);
-  }
 }
 
 async function fetchAccessibilityIssues(
@@ -192,37 +137,6 @@ async function fetchAccessibilityIssues(
   }
 
   return createSuccessResponse(messages);
-}
-
-async function executeAccessibilityScan(
-  args: {
-    name: string;
-    pageURL: string;
-    authConfigId?: number;
-    advancedRules?: boolean;
-  },
-  context: ScanProgressContext,
-  server: McpServer,
-  config: BrowserStackConfig,
-): Promise<CallToolResult> {
-  try {
-    trackMCP(
-      "startAccessibilityScan",
-      server.server.getClientVersion()!,
-      undefined,
-      config,
-    );
-    return await runAccessibilityScan(
-      args.name,
-      args.pageURL,
-      context,
-      config,
-      args.authConfigId,
-      args.advancedRules,
-    );
-  } catch (error) {
-    return handleMCPError("startAccessibilityScan", server, config, error);
-  }
 }
 
 function validateFormAuthArgs(args: AuthConfigArgs): args is FormAuthArgs {
@@ -270,68 +184,34 @@ async function createAuthConfig(
 
 async function executeCreateAuthConfig(
   args: AuthConfigArgs,
-  server: McpServer,
   config: BrowserStackConfig,
 ): Promise<CallToolResult> {
-  try {
-    trackMCP(
-      "createAccessibilityAuthConfig",
-      server.server.getClientVersion()!,
-      undefined,
-      config,
-    );
-    logger.info(
-      `Creating auth config: ${JSON.stringify({ ...args, password: "***" })}`,
-    );
+  logger.info(
+    `Creating auth config: ${JSON.stringify({ ...args, password: "***" })}`,
+  );
 
-    const result = await createAuthConfig(args, config);
+  const result = await createAuthConfig(args, config);
 
-    return createSuccessResponse([
-      `✅ Auth config "${args.name}" created successfully with ID: ${result.data?.id}`,
-      `Auth config details: ${JSON.stringify(result.data, null, 2)}`,
-    ]);
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes("Form authentication requires")
-    ) {
-      return createErrorResponse(error.message);
-    }
-    return handleMCPError(
-      "createAccessibilityAuthConfig",
-      server,
-      config,
-      error,
-    );
-  }
+  return createSuccessResponse([
+    `✅ Auth config "${args.name}" created successfully with ID: ${result.data?.id}`,
+    `Auth config details: ${JSON.stringify(result.data, null, 2)}`,
+  ]);
 }
 
 async function executeGetAuthConfig(
   args: { configId: number },
-  server: McpServer,
   config: BrowserStackConfig,
 ): Promise<CallToolResult> {
-  try {
-    trackMCP(
-      "getAccessibilityAuthConfig",
-      server.server.getClientVersion()!,
-      undefined,
-      config,
-    );
+  const authConfig = new AccessibilityAuthConfig();
+  const auth = setupAuth(config);
+  authConfig.setAuth(auth);
 
-    const authConfig = new AccessibilityAuthConfig();
-    const auth = setupAuth(config);
-    authConfig.setAuth(auth);
+  const result = await authConfig.getAuthConfig(args.configId);
 
-    const result = await authConfig.getAuthConfig(args.configId);
-
-    return createSuccessResponse([
-      `✅ Auth config retrieved successfully`,
-      `Auth config details: ${JSON.stringify(result.data, null, 2)}`,
-    ]);
-  } catch (error) {
-    return handleMCPError("getAccessibilityAuthConfig", server, config, error);
-  }
+  return createSuccessResponse([
+    `✅ Auth config retrieved successfully`,
+    `Auth config details: ${JSON.stringify(result.data, null, 2)}`,
+  ]);
 }
 
 function createScanFailureResponse(
@@ -430,9 +310,7 @@ export default function addAccessibilityTools(
           "Any accessibility, a11y, WCAG, or web accessibility question",
         ),
     },
-    async (args) => {
-      return await executeAccessibilityRAG(args, server, config);
-    },
+    async (args) => queryAccessibilityRAG(args.query, config),
   );
 
   tools.startAccessibilityScan = server.tool(
@@ -450,9 +328,15 @@ export default function addAccessibilityTools(
         .optional()
         .describe("Enable advanced accessibility rules in the scan settings"),
     },
-    async (args, context) => {
-      return await executeAccessibilityScan(args, context, server, config);
-    },
+    async (args, context) =>
+      runAccessibilityScan(
+        args.name,
+        args.pageURL,
+        context,
+        config,
+        args.authConfigId,
+        args.advancedRules,
+      ),
   );
 
   tools.createAccessibilityAuthConfig = server.tool(
@@ -481,13 +365,7 @@ export default function addAccessibilityTools(
         .optional()
         .describe("CSS selector for submit button (required for form auth)"),
     },
-    async (args) => {
-      return await executeCreateAuthConfig(
-        args as AuthConfigArgs,
-        server,
-        config,
-      );
-    },
+    async (args) => executeCreateAuthConfig(args as AuthConfigArgs, config),
   );
 
   tools.getAccessibilityAuthConfig = server.tool(
@@ -496,9 +374,7 @@ export default function addAccessibilityTools(
     {
       configId: z.number().describe("ID of the auth configuration to retrieve"),
     },
-    async (args) => {
-      return await executeGetAuthConfig(args, server, config);
-    },
+    async (args) => executeGetAuthConfig(args, config),
   );
 
   tools.fetchAccessibilityIssues = server.tool(
@@ -516,9 +392,8 @@ export default function addAccessibilityTools(
         .optional()
         .describe("Character offset for pagination (default: 0)"),
     },
-    async (args) => {
-      return await executeFetchAccessibilityIssues(args, server, config);
-    },
+    async (args) =>
+      fetchAccessibilityIssues(args.scanId, args.scanRunId, config, args.cursor),
   );
 
   return tools;

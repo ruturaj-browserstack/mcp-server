@@ -1,7 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import { BrowserStackConfig } from "../lib/types.js";
 
 import {
@@ -202,35 +201,7 @@ export default function registerGetFailureLogs(
         )
         .describe("The types of logs to fetch."),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "getFailureLogs",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await getFailureLogs(args, config);
-      } catch (error) {
-        trackMCP(
-          "getFailureLogs",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to fetch failure logs: ${
-                error instanceof Error ? error.message : "Unknown error"
-              }`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => getFailureLogs(args, config),
   );
 
   return tools;

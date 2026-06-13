@@ -13,7 +13,6 @@ import {
   SessionTestCode,
 } from "./selfheal-utils/fetch-test-code.js";
 import logger from "../logger.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import { BrowserStackConfig } from "../lib/types.js";
 
 // Local helper: returns the server-configured BrowserStack credentials, or
@@ -596,33 +595,7 @@ export default function addSelfHealTools(
         .describe("Build UUID. Fetches the build's self-healing report.")
         .optional(),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "fetchSelfHealedSelectors",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await fetchSelfHealSelectorTool(args, config);
-      } catch (error) {
-        trackMCP(
-          "fetchSelfHealedSelectors",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        const context = args.sessionId
-          ? `fetching self-heal selectors for sessionId=${args.sessionId}`
-          : args.buildUuid
-            ? `fetching self-healing report for buildUuid=${args.buildUuid}`
-            : "fetching self-heal suggestions";
-        return {
-          content: [{ type: "text", text: friendlyApiError(error, context) }],
-          isError: true,
-        };
-      }
-    },
+    async (args) => fetchSelfHealSelectorTool(args, config),
   );
 
   const locatorRefSchema = z.object({
@@ -670,33 +643,7 @@ export default function addSelfHealTools(
         "Sessions to plan edits for. See tool description for accepted shapes.",
       ),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "prepareSelfHealingPlan",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await prepareSelfHealingPlanTool(args, config);
-      } catch (error) {
-        trackMCP(
-          "prepareSelfHealingPlan",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: friendlyApiError(error, "preparing self-healing plan"),
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => prepareSelfHealingPlanTool(args, config),
   );
 
   return tools;

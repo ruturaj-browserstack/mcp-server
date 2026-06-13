@@ -2,8 +2,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getLatestO11YBuildInfo } from "../lib/api.js";
-import { trackMCP } from "../lib/instrumentation.js";
-import logger from "../logger.js";
 import { BrowserStackConfig } from "../lib/types.js";
 
 export async function getFailuresInLastRun(
@@ -71,37 +69,7 @@ export default function addObservabilityTools(
           "Name of the project to get failures for. This is the 'projectName' key in the browserstack.yml file. If not sure, ask the user for the project name.",
         ),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "getFailuresInLastRun",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await getFailuresInLastRun(
-          args.buildName,
-          args.projectName,
-          config,
-        );
-      } catch (error) {
-        logger.error("Failed to get failures in the last run: %s", error);
-        trackMCP(
-          "getFailuresInLastRun",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to get failures in the last run. Error: ${error}. Please open an issue on GitHub if this is an issue with BrowserStack`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) =>
+      getFailuresInLastRun(args.buildName, args.projectName, config),
   );
 }

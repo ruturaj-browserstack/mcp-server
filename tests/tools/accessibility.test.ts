@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import addAccessibilityTools from "../../src/tools/accessibility";
+import { withInstrumentation } from "../../src/lib/tool-middleware";
 
 vi.mock("../../src/tools/accessiblity-utils/accessibility-rag", () => ({
   queryAccessibilityRAG: vi.fn().mockResolvedValue({
@@ -70,7 +71,10 @@ describe("Accessibility Tools", () => {
       }),
       server: { getClientVersion: vi.fn().mockReturnValue({ version: "1.0" }) },
     };
-    addAccessibilityTools(serverMock, mockConfig);
+    addAccessibilityTools(
+      withInstrumentation(serverMock, mockConfig as any),
+      mockConfig,
+    );
   });
 
   it("registers all 5 accessibility tools", () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { registerPercyTools } from "../../src/tools/percy-sdk";
+import { withInstrumentation } from "../../src/lib/tool-middleware";
 import { setUpPercyHandler, simulatePercyChangeHandler } from "../../src/tools/sdk-utils/handler";
 import { updateTestsWithPercyCommands } from "../../src/tools/add-percy-snapshots";
 import { runPercyScan } from "../../src/tools/run-percy-scan";
@@ -35,6 +36,7 @@ vi.mock("../../src/logger", () => ({
   default: { error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 vi.mock("../../src/index", () => ({ trackMCP: vi.fn() }));
+vi.mock("../../src/lib/instrumentation", () => ({ trackMCP: vi.fn() }));
 
 const mockConfig = {
   "browserstack-username": "fake-user",
@@ -55,7 +57,7 @@ describe("Percy SDK Tools", () => {
       prompt: vi.fn(),
       server: { getClientVersion: vi.fn().mockReturnValue({ version: "1.0" }) },
     };
-    registerPercyTools(serverMock, mockConfig);
+    registerPercyTools(withInstrumentation(serverMock, mockConfig as any), mockConfig);
   });
 
   it("registers all Percy tools", () => {
@@ -83,11 +85,13 @@ describe("Percy SDK Tools", () => {
       Promise.reject(new Error("fail")),
     );
 
-    // The handler doesn't await simulatePercyChangeHandler, so the rejection
-    // propagates through the returned promise. The try-catch won't catch it.
-    await expect(
-      handlers["percyVisualTestIntegrationAgent"]({ framework: "bad" }),
-    ).rejects.toThrow("fail");
+    // The instrumentation middleware awaits the handler and converts the
+    // rejection into a standard error envelope (no longer re-thrown).
+    const result = await handlers["percyVisualTestIntegrationAgent"]({
+      framework: "bad",
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("fail");
   });
 
   it("expandPercyVisualTesting - SUCCESS", async () => {
@@ -104,9 +108,11 @@ describe("Percy SDK Tools", () => {
       Promise.reject(new Error("fail")),
     );
 
-    await expect(
-      handlers["expandPercyVisualTesting"]({ language: "bad" }),
-    ).rejects.toThrow("fail");
+    const result = await handlers["expandPercyVisualTesting"]({
+      language: "bad",
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("fail");
   });
 
   it("addPercySnapshotCommands - SUCCESS", async () => {

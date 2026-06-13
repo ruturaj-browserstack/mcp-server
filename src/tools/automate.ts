@@ -3,7 +3,6 @@ import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { fetchAutomationScreenshots } from "./automate-utils/fetch-screenshots.js";
 import { SessionType } from "../lib/constants.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import logger from "../logger.js";
 import { BrowserStackConfig } from "../lib/types.js";
 
@@ -84,35 +83,7 @@ export default function addAutomationTools(
         .enum([SessionType.Automate, SessionType.AppAutomate])
         .describe("Type of BrowserStack session"),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "fetchAutomationScreenshots",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await fetchAutomationScreenshotsTool(args, config);
-      } catch (error) {
-        trackMCP(
-          "fetchAutomationScreenshots",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error during fetching automate screenshots: ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => fetchAutomationScreenshotsTool(args, config),
   );
 
   return tools;

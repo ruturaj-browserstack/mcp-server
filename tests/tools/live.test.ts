@@ -1,8 +1,13 @@
 import { startBrowserSession } from '../../src/tools/live-utils/start-session';
 import * as local from '../../src/lib/local';
-import logger from '../../src/logger';
 import addBrowserLiveTools from '../../src/tools/live';
+import { withInstrumentation } from '../../src/lib/tool-middleware';
 import { beforeEach, it, expect, describe, vi, Mock } from 'vitest'
+
+const mockConfig = {
+  'browserstack-username': 'fake-user',
+  'browserstack-access-key': 'fake-key',
+} as any;
 
 vi.mock('../../src/tools/live-utils/start-session', () => ({
   startBrowserSession: vi.fn()
@@ -40,7 +45,7 @@ describe('startBrowserLiveSession', () => {
       }
     };
 
-    addBrowserLiveTools(serverMock);
+    addBrowserLiveTools(withInstrumentation(serverMock, mockConfig), mockConfig);
 
     (startBrowserSession as Mock).mockResolvedValue('https://live.browserstack.com/123456');
     (local.isLocalURL as Mock).mockReturnValue(false);
@@ -81,14 +86,15 @@ describe('startBrowserLiveSession', () => {
   it('should handle session start failure', async () => {
     (startBrowserSession as Mock).mockRejectedValue(new Error('Session start failed'));
     const result = await serverMock.handler(validDesktopArgs);
-    expect(logger.error).toHaveBeenCalled();
-    expect(result.content[0].text).toContain('Failed to start a browser live session');
+    // The instrumentation middleware now owns the thrown-error envelope.
+    expect(result.content[0].text).toContain('Failed to run browser live session');
+    expect(result.isError).toBe(true);
   });
 
   it('should fail on schema validation error (missing desiredBrowser)', async () => {
     const invalidArgs = { ...validDesktopArgs, desiredBrowser: undefined };
     const result = await serverMock.handler(invalidArgs);
-    expect(result.content[0].text).toContain('Failed to start a browser live session');
+    expect(result.content[0].text).toContain('Failed to run browser live session');
     expect(result.isError).toBe(true);
   });
 });

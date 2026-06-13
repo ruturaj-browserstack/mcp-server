@@ -4,7 +4,6 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import logger from "../logger.js";
 import { getBrowserStackAuth } from "../lib/get-auth.js";
 import { BrowserStackConfig } from "../lib/types.js";
-import { trackMCP } from "../lib/instrumentation.js";
 import { maybeCompressBase64 } from "../lib/utils.js";
 import { remote } from "webdriverio";
 import { AppTestPlatform } from "./appautomate-utils/native-execution/types.js";
@@ -336,35 +335,7 @@ export default function addAppAutomationTools(
           "The path to the .apk or .ipa file. Required for app installation.",
         ),
     },
-    async (args) => {
-      try {
-        trackMCP(
-          "takeAppScreenshot",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        return await takeAppScreenshot({ ...args, config });
-      } catch (error) {
-        trackMCP(
-          "takeAppScreenshot",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error during app automation or screenshot capture: ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => takeAppScreenshot({ ...args, config }),
   );
 
   tools.runAppTestsOnBrowserStack = server.tool(
@@ -372,39 +343,13 @@ export default function addAppAutomationTools(
     RUN_APP_AUTOMATE_DESCRIPTION,
     RUN_APP_AUTOMATE_SCHEMA,
     async (args) => {
-      try {
-        trackMCP(
-          "runAppTestsOnBrowserStack",
-          server.server.getClientVersion()!,
-          undefined,
-          config,
-        );
-        const devicesAsArrays: Array<Array<string>> = args.devices.map(
-          (device) => [device.platform, device.deviceName, device.osVersion],
-        );
-        return await runAppTestsOnBrowserStack(
-          { ...args, devices: devicesAsArrays },
-          config,
-        );
-      } catch (error) {
-        trackMCP(
-          "runAppTestsOnBrowserStack",
-          server.server.getClientVersion()!,
-          error,
-          config,
-        );
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error running App Automate test: ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
-      }
+      const devicesAsArrays: Array<Array<string>> = args.devices.map(
+        (device) => [device.platform, device.deviceName, device.osVersion],
+      );
+      return runAppTestsOnBrowserStack(
+        { ...args, devices: devicesAsArrays },
+        config,
+      );
     },
   );
 
@@ -412,23 +357,7 @@ export default function addAppAutomationTools(
     "setupBrowserStackAppAutomateTests",
     SETUP_APP_AUTOMATE_DESCRIPTION,
     SETUP_APP_AUTOMATE_SCHEMA,
-    async (args) => {
-      try {
-        return await setupAppAutomateHandler(args, config);
-      } catch (error) {
-        const error_message =
-          error instanceof Error ? error.message : "Unknown error";
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to bootstrap project with BrowserStack App Automate SDK. Error: ${error_message}. Please open an issue on GitHub if the problem persists`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    },
+    async (args) => setupAppAutomateHandler(args, config),
   );
 
   return tools;
