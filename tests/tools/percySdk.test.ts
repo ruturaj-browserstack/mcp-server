@@ -26,12 +26,6 @@ vi.mock("../../src/tools/review-agent-utils/percy-approve-reject", () => ({
 vi.mock("../../src/tools/list-test-files", () => ({
   addListTestFiles: vi.fn(),
 }));
-vi.mock("../../src/lib/utils", () => ({
-  handleMCPError: vi.fn().mockReturnValue({
-    content: [{ type: "text", text: "Error" }],
-    isError: true,
-  }),
-}));
 vi.mock("../../src/logger", () => ({
   default: { error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));

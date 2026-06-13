@@ -4,7 +4,6 @@ import { fetchFromBrowserStackAPI } from "../../src/lib/utils";
 
 vi.mock("../../src/lib/utils", () => ({
   fetchFromBrowserStackAPI: vi.fn(),
-  handleMCPError: vi.fn(),
 }));
 vi.mock("../../src/logger", () => ({
   default: { error: vi.fn(), info: vi.fn(), debug: vi.fn() },

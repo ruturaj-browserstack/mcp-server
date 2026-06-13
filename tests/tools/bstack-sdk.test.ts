@@ -6,12 +6,6 @@ import { runTestsOnBrowserStackHandler } from "../../src/tools/sdk-utils/handler
 vi.mock("../../src/tools/sdk-utils/handler", () => ({
   runTestsOnBrowserStackHandler: vi.fn(),
 }));
-vi.mock("../../src/lib/utils", () => ({
-  handleMCPError: vi.fn().mockReturnValue({
-    content: [{ type: "text", text: "Error occurred" }],
-    isError: true,
-  }),
-}));
 vi.mock("../../src/logger", () => ({
   default: { error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));

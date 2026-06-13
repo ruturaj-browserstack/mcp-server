@@ -2,9 +2,6 @@ import sharp from "sharp";
 import type { ApiResponse } from "./apiClient.js";
 import { BrowserStackConfig } from "./types.js";
 import { getBrowserStackAuth } from "./get-auth.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { trackMCP } from "../index.js";
 
 export function sanitizeUrlParam(param: string): string {
   // Remove any characters that could be used for command injection
@@ -64,30 +61,6 @@ export async function fetchFromBrowserStackAPI(
   }
 
   return res.json();
-}
-
-function errorContent(message: string): CallToolResult {
-  return {
-    content: [{ type: "text", text: message }],
-    isError: true,
-  };
-}
-
-export function handleMCPError(
-  toolName: string,
-  server: McpServer,
-  config: BrowserStackConfig,
-  error: unknown,
-) {
-  trackMCP(toolName, server.server.getClientVersion()!, error, config);
-
-  const errorMessage = error instanceof Error ? error.message : "Unknown error";
-
-  const readableToolName = toolName.replace(/([A-Z])/g, " $1").toLowerCase();
-
-  return errorContent(
-    `Failed to ${readableToolName}: ${errorMessage}. Please open an issue on GitHub if the problem persists`,
-  );
 }
 
 export function isDataUrlPayloadTooLarge(
