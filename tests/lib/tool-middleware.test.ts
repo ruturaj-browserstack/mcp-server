@@ -79,10 +79,27 @@ describe("withInstrumentation", () => {
 
     // Original result is returned unchanged (author's text preserved)...
     expect(result).toBe(returnedError);
-    // ...but it is classified as a failure for analytics.
+    // ...but it is classified as a failure for analytics, carrying the
+    // result's own text as the tracked error message.
     expect(trackMCP).toHaveBeenCalledTimes(1);
     const errorArg = (trackMCP as Mock).mock.calls[0][2];
     expect(errorArg).toBeInstanceOf(Error);
+    expect(errorArg.message).toBe("domain failure");
+  });
+
+  it("falls back to 'tool_error' when an isError result has no text content", async () => {
+    const { fake, calls } = makeFakeServer();
+    const proxy = withInstrumentation(fake, mockConfig as any);
+
+    const returnedError: CallToolResult = {
+      content: [{ type: "image", data: "x", mimeType: "image/png" }],
+      isError: true,
+    };
+    proxy.tool("t", "d", {}, vi.fn().mockResolvedValue(returnedError));
+
+    await calls[0].handler({});
+    const errorArg = (trackMCP as Mock).mock.calls[0][2];
+    expect(errorArg.message).toBe("tool_error");
   });
 
   it("fires trackMCP once with the error and returns a standard envelope when the handler throws", async () => {

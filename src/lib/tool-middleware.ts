@@ -44,11 +44,25 @@ function toolErrorResult(toolName: string, error: unknown): CallToolResult {
 }
 
 /**
+ * Pulls a human-readable message out of a handler-returned `isError` result so
+ * the telemetry event carries the tool's own failure text (e.g. "Failed to
+ * create project/folder: ...") rather than a generic marker. Falls back to
+ * `"tool_error"` when the result has no usable text content.
+ */
+function returnedErrorMessage(result: CallToolResult): string {
+  const text = result.content?.find(
+    (c): c is { type: "text"; text: string } => c.type === "text",
+  )?.text;
+  return text && text.trim().length > 0 ? text : "tool_error";
+}
+
+/**
  * Instrumentation middleware: fires exactly one `trackMCP` event per tool
  * invocation, after the handler settles, reflecting the true outcome.
  *
  * - clean result            -> success
- * - returned `isError: true` -> failure (author's result text preserved)
+ * - returned `isError: true` -> failure tracked with the result's own text
+ *                               (author's result is returned unchanged)
  * - thrown error            -> failure + standard error envelope (no re-throw)
  *
  * The client version is read at call time (the client connects after tools are
@@ -67,7 +81,7 @@ export function instrumentationMiddleware(
         trackMCP(
           toolName,
           clientInfo,
-          result?.isError ? new Error("tool_error") : undefined,
+          result?.isError ? new Error(returnedErrorMessage(result)) : undefined,
           config,
         );
         return result;
