@@ -393,7 +393,12 @@ export default function addAccessibilityTools(
         .describe("Character offset for pagination (default: 0)"),
     },
     async (args) =>
-      fetchAccessibilityIssues(args.scanId, args.scanRunId, config, args.cursor),
+      fetchAccessibilityIssues(
+        args.scanId,
+        args.scanRunId,
+        config,
+        args.cursor,
+      ),
   );
 
   return tools;

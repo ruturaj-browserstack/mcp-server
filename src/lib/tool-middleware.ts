@@ -9,9 +9,7 @@ import { BrowserStackConfig } from "./types.js";
  * (the callback is always the last positional argument across every overload),
  * so the concrete `args`/`extra` types are irrelevant to the wrapper.
  */
-type ToolHandler = (
-  ...args: any[]
-) => CallToolResult | Promise<CallToolResult>;
+type ToolHandler = (...args: any[]) => CallToolResult | Promise<CallToolResult>;
 
 /**
  * A middleware decorates a tool handler with cross-cutting behaviour.

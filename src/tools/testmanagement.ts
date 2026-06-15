@@ -565,8 +565,7 @@ export default function addTestManagementTools(
     "createTestCasesFromFile",
     "Generate test cases from a file in BrowserStack Test Management using the Test Case Generator AI Agent.",
     CreateTestCasesFromFileSchema.shape,
-    (args, context) =>
-      createTestCasesFromFileTool(args, context, config),
+    (args, context) => createTestCasesFromFileTool(args, context, config),
   );
 
   tools.createLCASteps = server.tool(
