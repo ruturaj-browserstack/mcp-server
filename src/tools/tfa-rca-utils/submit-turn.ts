@@ -1,7 +1,6 @@
 import { apiClient } from "../../lib/apiClient.js";
 import { getBrowserStackAuth } from "../../lib/get-auth.js";
 import { BrowserStackConfig } from "../../lib/types.js";
-import { parseTfaStatus } from "./status-parser.js";
 import {
   O11Y_BASE_URL,
   POLL_INITIAL_DELAY_MS,
@@ -10,7 +9,13 @@ import {
   RCA_CHAT_POLL_PATH,
   RCA_CHAT_SUBMIT_PATH,
 } from "./constants.js";
-import { PENDING_STATUS, TfaRcaTurnResult } from "./types.js";
+import {
+  PENDING_STATUS,
+  TfaAsk,
+  TfaRcaTurnResult,
+  TfaStatus,
+  TurnResponse,
+} from "./types.js";
 
 interface TurnContext {
   sendNotification?: (notification: any) => Promise<void>;
@@ -53,6 +58,62 @@ async function notify(
       total: 100,
     },
   });
+}
+
+/** Map a raw status string from the wire onto the `TfaStatus` enum. */
+function toTfaStatus(raw: unknown): TfaStatus {
+  switch (raw) {
+    case "RESOLVED":
+      return TfaStatus.RESOLVED;
+    case "BLOCKED":
+      return TfaStatus.BLOCKED;
+    default:
+      return TfaStatus.NEEDS_INFO;
+  }
+}
+
+/** Map one wire ask (snake_case) to the client `TfaAsk` (camelCase). */
+function toAsk(raw: any): TfaAsk {
+  return {
+    what: raw?.what ?? "",
+    why: raw?.why ?? "",
+    evidenceType: raw?.evidence_type ?? "other",
+    priority: raw?.priority ?? "medium",
+  };
+}
+
+/**
+ * Read the LLM-enforced structured turn from the completed `rcaChat` poll body.
+ *
+ * The poll envelope's own `status` field is the lifecycle state
+ * (`working`/`completed`/`failed`); the agent's `TurnResponse` is passed
+ * through under `turn` so its `status` (NEEDS_INFO/RESOLVED/BLOCKED) never
+ * collides with the lifecycle one. The agent's model validator guarantees the
+ * sub-object matching the turn status is present; we still default-fill the
+ * lists so the skill never sees `undefined`.
+ */
+function readStructuredTurn(data: any): TurnResponse {
+  const turn = data.turn ?? {};
+  const status = toTfaStatus(turn.status);
+  const needsInfo = turn.needs_info ?? {};
+  const blocked = turn.blocked ?? {};
+
+  return {
+    status,
+    confidence: turn.confidence ?? "unknown",
+    questions: Array.isArray(needsInfo.questions) ? needsInfo.questions : [],
+    asks: Array.isArray(needsInfo.asks) ? needsInfo.asks.map(toAsk) : [],
+    suggestions: Array.isArray(needsInfo.suggestions)
+      ? needsInfo.suggestions
+      : [],
+    hypotheses: Array.isArray(needsInfo.hypotheses) ? needsInfo.hypotheses : [],
+    rca: status === TfaStatus.RESOLVED ? (turn.rca ?? undefined) : undefined,
+    reason: status === TfaStatus.BLOCKED ? blocked.reason : undefined,
+    unmetAsks:
+      status === TfaStatus.BLOCKED && Array.isArray(blocked.unmet_asks)
+        ? blocked.unmet_asks
+        : undefined,
+  };
 }
 
 /** Map a submit (POST) non-2xx into a clean, group-scope-safe domain error. */
@@ -153,17 +214,20 @@ export async function submitTfaRcaTurn(
       }
 
       if (status === "completed") {
-        const replyMarkdown: string = data.replyMarkdown ?? "";
-        const parsed = parseTfaStatus(replyMarkdown);
+        const turn = readStructuredTurn(data);
         await notify(context, "TFA agent turn complete.", 100);
         return {
-          status: parsed.status,
-          confidence: parsed.confidence,
+          status: turn.status,
+          confidence: turn.confidence,
           threadId,
           turnId,
-          replyMarkdown,
-          tasks: parsed.tasks,
-          questions: parsed.questions,
+          questions: turn.questions,
+          asks: turn.asks,
+          suggestions: turn.suggestions,
+          hypotheses: turn.hypotheses,
+          rca: turn.rca,
+          reason: turn.reason,
+          unmetAsks: turn.unmetAsks,
         };
       }
       // status === "working" (or any other in-progress value) → keep polling.
@@ -177,8 +241,10 @@ export async function submitTfaRcaTurn(
         confidence: "unknown",
         threadId,
         turnId,
-        tasks: [],
         questions: [],
+        asks: [],
+        suggestions: [],
+        hypotheses: [],
       };
     }
 

@@ -40,37 +40,39 @@ function nonOk(status: number, data: any = {}) {
   return { ok: false, status, data };
 }
 
+// ---- Structured `rcaChat` poll fixtures (mirror the o11y pass-through) ----
+
 /**
- * Drive a turn that uses real setTimeout-based delays under fake timers.
- * Attach to the promise first (so rejections are always observed), then
- * advance timers concurrently.
+ * Build a completed poll body in the wire shape. The poll lifecycle field
+ * `status` is "completed"; the structured `TurnResponse` rides under `turn`
+ * (its own status/confidence/needs_info/rca/blocked), mirroring the o11y
+ * `rcaChat` pass-through. `extra` lets a test add envelope-level noise
+ * (threadId, a stray meta blob) the util must not echo.
  */
-async function runWithTimers<T>(p: Promise<T>): Promise<T> {
-  const settled = p.then(
-    (v) => ({ ok: true as const, v }),
-    (e) => ({ ok: false as const, e }),
-  );
-  await vi.runAllTimersAsync();
-  const r = await settled;
-  if (r.ok) return r.v;
-  throw r.e;
+function completed(turn: Record<string, any>, extra: Record<string, any> = {}) {
+  return ok({ status: "completed", threadId: "t-1", turn, ...extra });
 }
 
 describe("tfaRcaTurnTool", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("happy submit+poll → RESOLVED, isError falsy", async () => {
+  it("RESOLVED turn → tool returns structured rca, isError falsy", async () => {
     post.mockResolvedValue(
       ok({ turnId: "u-1", threadId: "t-1", status: "working" }),
     );
     get.mockResolvedValueOnce(ok({ status: "working" })).mockResolvedValueOnce(
-      ok({
-        status: "completed",
-        threadId: "t-1",
-        replyMarkdown:
-          'Done.\n<!-- tfa-status: {"status":"RESOLVED","confidence":"high"} -->',
-        meta: { huge: "blob".repeat(1000) },
-      }),
+      completed(
+        {
+          status: "RESOLVED",
+          confidence: "high",
+          rca: {
+            root_cause: "Config map deleted on deploy.",
+            possible_fix: "Re-add the key.",
+            failure_type: "infra",
+          },
+        },
+        { meta: { huge: "blob".repeat(1000) } },
+      ),
     );
 
     const result = await runWithTimers(
@@ -85,22 +87,38 @@ describe("tfaRcaTurnTool", () => {
     expect(payload.status).toBe("RESOLVED");
     expect(payload.confidence).toBe("high");
     expect(payload.threadId).toBe("t-1");
-    expect(payload.tasks).toEqual([]);
+    expect(payload.rca.root_cause).toBe("Config map deleted on deploy.");
+    expect(payload.rca.possible_fix).toBe("Re-add the key.");
+    expect(payload.rca.failure_type).toBe("infra");
     // Response trimmed: no raw meta blob echoed.
     expect(result.content[0].text).not.toContain("blob");
   });
 
-  it("NEEDS_INFO with tasks → status + tasks + threadId echoed", async () => {
+  it("NEEDS_INFO turn → typed asks + questions read directly from structure", async () => {
     post.mockResolvedValue(
       ok({ turnId: "u-2", threadId: "t-2", status: "working" }),
     );
     get.mockResolvedValue(
-      ok({
-        status: "completed",
-        threadId: "t-2",
-        replyMarkdown:
-          '1. Check deploy log\n<!-- tfa-status: {"status":"NEEDS_INFO","confidence":"medium"} -->',
-      }),
+      completed(
+        {
+          status: "NEEDS_INFO",
+          confidence: "medium",
+          needs_info: {
+            questions: ["Which service owns this endpoint?"],
+            asks: [
+              {
+                what: "deploy log for service X",
+                why: "confirm the rollout time",
+                evidence_type: "deploy",
+                priority: "high",
+              },
+            ],
+            suggestions: ["Compare against the last green build."],
+            hypotheses: ["A bad deploy dropped the config map."],
+          },
+        },
+        { threadId: "t-2" },
+      ),
     );
 
     const result = await runWithTimers(
@@ -111,8 +129,83 @@ describe("tfaRcaTurnTool", () => {
     );
     const payload = JSON.parse(result.content[0].text as string);
     expect(payload.status).toBe("NEEDS_INFO");
-    expect(payload.tasks).toEqual(["Check deploy log"]);
+    expect(payload.confidence).toBe("medium");
     expect(payload.threadId).toBe("t-2");
+    expect(payload.questions).toEqual(["Which service owns this endpoint?"]);
+    // Typed ask is routable by evidenceType (AE1).
+    expect(payload.asks).toHaveLength(1);
+    expect(payload.asks[0].evidenceType).toBe("deploy");
+    expect(payload.asks[0].what).toBe("deploy log for service X");
+    expect(payload.asks[0].priority).toBe("high");
+    expect(payload.suggestions).toEqual([
+      "Compare against the last green build.",
+    ]);
+    expect(payload.hypotheses).toEqual([
+      "A bad deploy dropped the config map.",
+    ]);
+    // No RCA on a non-final turn.
+    expect(payload.rca).toBeUndefined();
+  });
+
+  it("BLOCKED turn → reason + unmetAsks read from structure", async () => {
+    post.mockResolvedValue(
+      ok({ turnId: "u-bl", threadId: "t-bl", status: "working" }),
+    );
+    get.mockResolvedValue(
+      completed(
+        {
+          status: "BLOCKED",
+          confidence: "low",
+          blocked: {
+            reason: "No access to the k8s cluster.",
+            unmet_asks: ["pod restart count", "node events"],
+          },
+        },
+        { threadId: "t-bl" },
+      ),
+    );
+
+    const result = await runWithTimers(
+      tfaRcaTurnTool(
+        { testRunId: "tr-bl", message: "digest" },
+        mockConfig as any,
+      ),
+    );
+    const payload = JSON.parse(result.content[0].text as string);
+    expect(payload.status).toBe("BLOCKED");
+    expect(payload.confidence).toBe("low");
+    expect(payload.reason).toBe("No access to the k8s cluster.");
+    expect(payload.unmetAsks).toEqual(["pod restart count", "node events"]);
+    expect(payload.rca).toBeUndefined();
+  });
+
+  it("status read directly from the enforced field; no marker/inference", async () => {
+    post.mockResolvedValue(
+      ok({ turnId: "u-st", threadId: "t-st", status: "working" }),
+    );
+    // A body that the old inference path would have read as RESOLVED via a
+    // "## Final RCA" heading must NOT change the enforced NEEDS_INFO status.
+    get.mockResolvedValue(
+      completed(
+        { status: "NEEDS_INFO", confidence: "low" },
+        {
+          threadId: "t-st",
+          replyMarkdown: "## Final RCA\nstale markdown that should be ignored",
+        },
+      ),
+    );
+
+    const result = await runWithTimers(
+      tfaRcaTurnTool(
+        { testRunId: "tr-st", message: "digest" },
+        mockConfig as any,
+      ),
+    );
+    const payload = JSON.parse(result.content[0].text as string);
+    expect(payload.status).toBe("NEEDS_INFO");
+    // The marker/markdown is never echoed back to the client.
+    expect(result.content[0].text).not.toContain("Final RCA");
+    expect(result.content[0].text).not.toContain("replyMarkdown");
   });
 
   it("threadId passthrough → POST body carries thread_id", async () => {
@@ -120,7 +213,7 @@ describe("tfaRcaTurnTool", () => {
       ok({ turnId: "u-3", threadId: "t-1", status: "working" }),
     );
     get.mockResolvedValue(
-      ok({ status: "completed", replyMarkdown: "## Final RCA\nok" }),
+      completed({ status: "RESOLVED", confidence: "high", rca: {} }),
     );
 
     await runWithTimers(
@@ -137,11 +230,10 @@ describe("tfaRcaTurnTool", () => {
 
   it("resume soft-PENDING → polls turnId without re-submitting", async () => {
     get.mockResolvedValue(
-      ok({
-        status: "completed",
-        threadId: "t-9",
-        replyMarkdown: "## Final RCA",
-      }),
+      completed(
+        { status: "RESOLVED", confidence: "high", rca: {} },
+        { threadId: "t-9" },
+      ),
     );
 
     const result = await runWithTimers(
@@ -239,7 +331,7 @@ describe("tfaRcaTurnTool", () => {
       ok({ turnId: "u-b", threadId: "t-b", status: "working" }),
     );
     get.mockResolvedValue(
-      ok({ status: "completed", replyMarkdown: "## Final RCA" }),
+      completed({ status: "RESOLVED", confidence: "high" }),
     );
 
     await runWithTimers(
@@ -258,6 +350,22 @@ describe("tfaRcaTurnTool", () => {
     );
   });
 });
+
+/**
+ * Drive a turn that uses real setTimeout-based delays under fake timers.
+ * Attach to the promise first (so rejections are always observed), then
+ * advance timers concurrently.
+ */
+async function runWithTimers<T>(p: Promise<T>): Promise<T> {
+  const settled = p.then(
+    (v) => ({ ok: true as const, v }),
+    (e) => ({ ok: false as const, e }),
+  );
+  await vi.runAllTimersAsync();
+  const r = await settled;
+  if (r.ok) return r.v;
+  throw r.e;
+}
 
 // ---- Handler-level tests (instrumentation + isError envelope) ----
 
@@ -290,7 +398,7 @@ describe("tfaRcaTurn handler instrumentation", () => {
       ok({ turnId: "u-1", threadId: "t-1", status: "working" }),
     );
     get.mockResolvedValue(
-      ok({ status: "completed", replyMarkdown: "## Final RCA" }),
+      completed({ status: "RESOLVED", confidence: "high" }),
     );
 
     const { server, captured } = buildFakeServer();

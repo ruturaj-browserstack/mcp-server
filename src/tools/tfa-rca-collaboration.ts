@@ -27,9 +27,15 @@ export async function tfaRcaTurnTool(
             status: result.status,
             confidence: result.confidence,
             threadId: result.threadId,
-            replyMarkdown: result.replyMarkdown,
-            tasks: result.tasks,
             questions: result.questions,
+            asks: result.asks,
+            suggestions: result.suggestions,
+            hypotheses: result.hypotheses,
+            ...(result.rca !== undefined && { rca: result.rca }),
+            ...(result.reason !== undefined && { reason: result.reason }),
+            ...(result.unmetAsks !== undefined && {
+              unmetAsks: result.unmetAsks,
+            }),
             ...(result.status === "PENDING" && { turnId: result.turnId }),
           },
           null,
@@ -48,7 +54,7 @@ export default function addTfaRcaCollaborationTools(
 
   tools.tfaRcaTurn = server.tool(
     TOOL_NAME,
-    "Submit one collaborative RCA turn for a test run to the TFA agent; returns its reply, status, and tasks.",
+    "Submit one collaborative RCA turn for a test run to the TFA agent; returns status, asks, and RCA.",
     TFA_RCA_TURN_PARAMS,
     async (args, context) => {
       try {
