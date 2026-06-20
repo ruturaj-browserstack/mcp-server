@@ -1,13 +1,17 @@
 import { z } from "zod";
 
+import appConfig from "../../config.js";
+
 /**
- * Hardcoded o11y base, mirroring `rca-agent-utils/rca-data.ts`. The MCP server
- * talks ONLY to o11y-api (boundary discipline, R9). Do NOT read
- * `BROWSERSTACK_TFA_CHAT_BASE_URL` or any `process.env` here — if a configurable
- * base is ever genuinely needed, add it to `src/config.ts`, never read env in
- * tool/util code.
+ * O11y base for the `rcaChat` proxy. The MCP server talks ONLY to o11y-api
+ * (boundary discipline, R9). The value is process-startup config resolved in
+ * `src/config.ts` from `O11Y_TFA_RCA_BASE_URL` (default rengg-tfa) — never read
+ * `process.env` here. Resolved per call so a config built per server instance
+ * (multi-tenant) is honored.
  */
-export const O11Y_BASE_URL = "https://api-observability.browserstack.com";
+export function getO11yBaseUrl(): string {
+  return appConfig.O11Y_TFA_RCA_BASE_URL;
+}
 
 /** Submit one collaborative turn for a test run. */
 export const RCA_CHAT_SUBMIT_PATH = "/ext/v1/testRuns/{testRunId}/rcaChat";

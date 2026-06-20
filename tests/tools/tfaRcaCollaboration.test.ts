@@ -5,11 +5,22 @@ import addTfaRcaCollaborationTools, {
 import { apiClient } from "../../src/lib/apiClient";
 import { trackMCP } from "../../src/lib/instrumentation";
 import {
-  O11Y_BASE_URL,
   POLL_INITIAL_DELAY_MS,
   POLL_INTERVAL_MS,
   POLL_MAX_WAIT_MS,
 } from "../../src/tools/tfa-rca-utils/constants";
+
+const DEFAULT_O11Y_HOST = "api-observability-rengg-tfa.bsstag.com";
+
+// The o11y base URL is process-startup config (src/config.ts), resolved per
+// call inside the util. Mock the singleton so tests can flip the default vs an
+// override without touching process.env at runtime in tool code.
+vi.mock("../../src/config", () => ({
+  default: {
+    REMOTE_MCP: false,
+    O11Y_TFA_RCA_BASE_URL: "https://api-observability-rengg-tfa.bsstag.com",
+  },
+}));
 
 vi.mock("../../src/lib/apiClient", () => ({
   apiClient: { post: vi.fn(), get: vi.fn() },
@@ -26,6 +37,11 @@ const mockConfig = {
   "browserstack-username": "fake-user",
   "browserstack-access-key": "fake-key",
 };
+
+// Handle to the mocked process-startup config singleton so a test can override
+// the o11y base URL the way a different startup env would.
+import appConfig from "../../src/config";
+const DEFAULT_O11Y_BASE_URL = "https://api-observability-rengg-tfa.bsstag.com";
 
 // Make poll delays instant so the cap-exceeded test can fast-forward.
 vi.useFakeTimers();
@@ -54,7 +70,11 @@ function completed(turn: Record<string, any>, extra: Record<string, any> = {}) {
 }
 
 describe("tfaRcaTurnTool", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Restore the default (rengg-tfa) base URL after any override test.
+    (appConfig as any).O11Y_TFA_RCA_BASE_URL = DEFAULT_O11Y_BASE_URL;
+  });
 
   it("RESOLVED turn → tool returns structured rca, isError falsy", async () => {
     post.mockResolvedValue(
@@ -326,7 +346,7 @@ describe("tfaRcaTurnTool", () => {
     expect(payload.threadId).toBe("t-8");
   });
 
-  it("base URL is o11y, not misc-services/localhost", async () => {
+  it("default base URL is o11y rengg-tfa, not misc-services/localhost", async () => {
     post.mockResolvedValue(
       ok({ turnId: "u-b", threadId: "t-b", status: "working" }),
     );
@@ -341,13 +361,54 @@ describe("tfaRcaTurnTool", () => {
       ),
     );
 
-    expect(post.mock.calls[0][0].url).toContain(
-      "api-observability.browserstack.com",
-    );
+    expect(post.mock.calls[0][0].url).toContain(DEFAULT_O11Y_HOST);
     expect(post.mock.calls[0][0].url).not.toContain("localhost");
-    expect(get.mock.calls[0][0].url).toContain(
-      "api-observability.browserstack.com",
+    expect(get.mock.calls[0][0].url).toContain(DEFAULT_O11Y_HOST);
+  });
+
+  it("config override → submit + poll URLs target the override host", async () => {
+    (appConfig as any).O11Y_TFA_RCA_BASE_URL =
+      "https://api-observability.bsstag.com";
+
+    post.mockResolvedValue(
+      ok({ turnId: "u-ov", threadId: "t-ov", status: "working" }),
     );
+    get.mockResolvedValue(
+      completed({ status: "RESOLVED", confidence: "high" }),
+    );
+
+    await runWithTimers(
+      tfaRcaTurnTool(
+        { testRunId: "tr-ov", message: "digest" },
+        mockConfig as any,
+      ),
+    );
+
+    // Both submit (POST) and poll (GET) honor the overridden host...
+    expect(post.mock.calls[0][0].url).toContain("api-observability.bsstag.com");
+    expect(post.mock.calls[0][0].url).not.toContain(DEFAULT_O11Y_HOST);
+    expect(get.mock.calls[0][0].url).toContain("api-observability.bsstag.com");
+    expect(get.mock.calls[0][0].url).not.toContain(DEFAULT_O11Y_HOST);
+
+    // ...while path templating is unchanged under the override (regression).
+    expect(post.mock.calls[0][0].url).toContain("/ext/v1/testRuns/tr-ov/rcaChat");
+    expect(get.mock.calls[0][0].url).toContain(
+      "/ext/v1/testRuns/tr-ov/rcaChat/u-ov",
+    );
+    // ...and the auth header is unchanged (still Basic, base64 of creds).
+    expect(post.mock.calls[0][0].headers.Authorization).toBe(
+      `Basic ${Buffer.from("fake-user:fake-key").toString("base64")}`,
+    );
+  });
+
+  it("o11y base is not exposed as a Zod tool-input field", () => {
+    const { server, captured } = buildFakeServer();
+    addTfaRcaCollaborationTools(server as any, mockConfig as any);
+    // The schema captured at registration must carry no endpoint/base-url field.
+    const fieldNames = Object.keys(captured.schema ?? {});
+    expect(fieldNames).toEqual(["testRunId", "message", "threadId", "turnId"]);
+    expect(fieldNames).not.toContain("baseUrl");
+    expect(fieldNames).not.toContain("o11yBaseUrl");
   });
 });
 
@@ -371,18 +432,20 @@ async function runWithTimers<T>(p: Promise<T>): Promise<T> {
 
 interface CapturedHandler {
   handler: (args: any, context: any) => Promise<any>;
+  schema: Record<string, any>;
 }
 
 function buildFakeServer(): { server: any; captured: CapturedHandler } {
-  const captured: CapturedHandler = { handler: async () => ({}) };
+  const captured: CapturedHandler = { handler: async () => ({}), schema: {} };
   const server = {
     server: { getClientVersion: () => ({ name: "test", version: "1.0" }) },
     tool: (
       _name: string,
       _desc: string,
-      _schema: any,
+      schema: any,
       handler: (args: any, context: any) => Promise<any>,
     ) => {
+      captured.schema = schema;
       captured.handler = handler;
       return {};
     },
@@ -455,7 +518,10 @@ describe("tfaRcaTurn timing constants sanity", () => {
       POLL_INITIAL_DELAY_MS + POLL_INTERVAL_MS,
     );
   });
-  it("o11y base constant is the observability host", () => {
-    expect(O11Y_BASE_URL).toBe("https://api-observability.browserstack.com");
+  it("o11y base resolver defaults to the rengg-tfa host", async () => {
+    const { getO11yBaseUrl } = await import(
+      "../../src/tools/tfa-rca-utils/constants"
+    );
+    expect(getO11yBaseUrl()).toBe(DEFAULT_O11Y_BASE_URL);
   });
 });

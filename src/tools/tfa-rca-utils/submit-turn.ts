@@ -2,7 +2,7 @@ import { apiClient } from "../../lib/apiClient.js";
 import { getBrowserStackAuth } from "../../lib/get-auth.js";
 import { BrowserStackConfig } from "../../lib/types.js";
 import {
-  O11Y_BASE_URL,
+  getO11yBaseUrl,
   POLL_INITIAL_DELAY_MS,
   POLL_INTERVAL_MS,
   POLL_MAX_WAIT_MS,
@@ -143,14 +143,15 @@ export async function submitTfaRcaTurn(
     Authorization: authHeader,
   };
 
+  const baseUrl = getO11yBaseUrl();
+
   let turnId = args.turnId;
   let threadId = args.threadId;
 
   // Submit only when we are not resuming an existing turn.
   if (!turnId) {
     const submitUrl =
-      O11Y_BASE_URL +
-      RCA_CHAT_SUBMIT_PATH.replace("{testRunId}", args.testRunId);
+      baseUrl + RCA_CHAT_SUBMIT_PATH.replace("{testRunId}", args.testRunId);
 
     await notify(context, "Submitting RCA turn to TFA agent...", 5);
 
@@ -184,7 +185,7 @@ export async function submitTfaRcaTurn(
 
   // Poll to completion, soft-PENDING on wall-clock cap.
   const pollUrl =
-    O11Y_BASE_URL +
+    baseUrl +
     RCA_CHAT_POLL_PATH.replace("{testRunId}", args.testRunId).replace(
       "{turnId}",
       turnId,
