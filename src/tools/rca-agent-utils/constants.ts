@@ -34,4 +34,8 @@ export const LIST_TEST_IDS_PARAMS = {
     .describe(
       "Filter tests by status. If not provided, all tests are returned. Example for RCA usecase always use failed status",
     ),
+  includeFailureDetail: z
+    .boolean()
+    .optional()
+    .describe("Add per-test failure signature for clustering. Default false."),
 };
