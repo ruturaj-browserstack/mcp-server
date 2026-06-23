@@ -105,6 +105,23 @@ describe("getTestIds — failure signature extraction", () => {
     expect(row.failure?.error_summary).toBe("E".repeat(200));
   });
 
+  it("handles object-shaped TEST_FAILURE entries ({ text })", async () => {
+    mockFetchOnce({
+      hierarchy: [
+        failedNode(105, "text error", {
+          retries: [
+            { logs: { TEST_FAILURE: [{ text: "Timeout waiting for X" }] } },
+          ],
+        }),
+      ],
+      pagination: { has_next: false, next_page: null },
+    });
+
+    const [row] = await getTestIds("build-1", AUTH, TestStatus.FAILED, true);
+
+    expect(row.failure?.error_summary).toBe("Timeout waiting for X");
+  });
+
   it("handles object-shaped TEST_FAILURE entries ({ message })", async () => {
     mockFetchOnce({
       hierarchy: [
