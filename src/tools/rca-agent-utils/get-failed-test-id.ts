@@ -1,4 +1,5 @@
 import logger from "../../logger.js";
+import { getAutomationBaseUrl } from "./constants.js";
 import {
   TestStatus,
   FailedTestInfo,
@@ -17,7 +18,7 @@ export async function getTestIds(
   status?: TestStatus,
   includeFailureDetail = false,
 ): Promise<FailedTestInfo[]> {
-  const baseUrl = `https://api-automation.browserstack.com/ext/v1/builds/${buildId}/testRuns`;
+  const baseUrl = `${getAutomationBaseUrl()}/ext/v1/builds/${buildId}/testRuns`;
   let url = status ? `${baseUrl}?test_statuses=${status}` : baseUrl;
   let allFailedTests: FailedTestInfo[] = [];
   let requestNumber = 0;

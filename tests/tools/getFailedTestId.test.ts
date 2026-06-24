@@ -55,6 +55,24 @@ describe("getTestIds — failure signature extraction", () => {
     expect(result[0]).not.toHaveProperty("failure");
   });
 
+  it("calls the configured Automate base URL (default prod)", async () => {
+    mockFetchOnce({
+      hierarchy: [],
+      pagination: { has_next: false, next_page: null },
+    });
+
+    await getTestIds("build-1", AUTH, TestStatus.FAILED);
+
+    // Default base from config; override via BROWSERSTACK_AUTOMATION_BASE_URL
+    // (e.g. a rengg/staging host) redirects the call without code changes.
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "https://api-automation.browserstack.com/ext/v1/builds/build-1/testRuns",
+      ),
+      expect.anything(),
+    );
+  });
+
   it("includeFailureDetail: populates category, error_summary, file_path, flaky flags", async () => {
     mockFetchOnce({
       hierarchy: [

@@ -40,6 +40,16 @@ const DEFAULT_O11Y_TFA_RCA_BASE_URL =
   "https://api-observability-rengg-tfa.bsstag.com";
 
 /**
+ * Base URL for the Automate test-runs API (`/ext/v1/builds/{id}/testRuns`) that
+ * `listTestIds` calls. Overridable at startup via `BROWSERSTACK_AUTOMATION_BASE_URL`
+ * so the tool can target a non-prod env (e.g. rengg-tfa staging) where a build
+ * actually lives, instead of the prod default. Per-process config, never a
+ * per-call arg.
+ */
+const DEFAULT_BROWSERSTACK_AUTOMATION_BASE_URL =
+  "https://api-automation.browserstack.com";
+
+/**
  * USE_OWN_LOCAL_BINARY_PROCESS:
  *   If true, the system will not start a new local binary process, but will use the user's own process.
  */
@@ -51,6 +61,7 @@ export class Config {
     public readonly REMOTE_MCP: boolean,
     public readonly UPLOAD_BASE_DIR: string | undefined,
     public readonly O11Y_TFA_RCA_BASE_URL: string,
+    public readonly BROWSERSTACK_AUTOMATION_BASE_URL: string,
   ) {}
 }
 
@@ -66,6 +77,10 @@ const config = new Config(
     process.env.O11Y_TFA_RCA_BASE_URL.length > 0
     ? process.env.O11Y_TFA_RCA_BASE_URL
     : DEFAULT_O11Y_TFA_RCA_BASE_URL,
+  process.env.BROWSERSTACK_AUTOMATION_BASE_URL &&
+    process.env.BROWSERSTACK_AUTOMATION_BASE_URL.length > 0
+    ? process.env.BROWSERSTACK_AUTOMATION_BASE_URL
+    : DEFAULT_BROWSERSTACK_AUTOMATION_BASE_URL,
 );
 
 export default config;
