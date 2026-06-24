@@ -90,7 +90,11 @@ function extractFailedTestIds(
   let failedTests: FailedTestInfo[] = [];
 
   for (const node of hierarchy) {
-    if (node.details?.status === status && node.details?.run_count) {
+    // Match on status alone — the observability_url `details=<id>` check below
+    // already filters to real test nodes (suite/hook nodes carry no status and
+    // no such URL). Do NOT also require run_count: JUnit-uploaded builds report
+    // run_count=0 even for genuinely failed tests, which would drop them all.
+    if (node.details?.status === status) {
       if (node.details?.observability_url) {
         const idMatch = node.details.observability_url.match(/details=(\d+)/);
         if (idMatch) {

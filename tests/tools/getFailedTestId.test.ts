@@ -168,6 +168,17 @@ describe("getTestIds — failure signature extraction", () => {
     expect(row).not.toHaveProperty("failure");
   });
 
+  it("extracts a failed test even when run_count is 0 (JUnit-uploaded builds)", async () => {
+    mockFetchOnce({
+      hierarchy: [failedNode(142, "uploaded test", { run_count: 0 })],
+      pagination: { has_next: false, next_page: null },
+    });
+
+    const result = await getTestIds("build-1", AUTH, TestStatus.FAILED);
+
+    expect(result).toEqual([{ test_id: "142", test_name: "uploaded test" }]);
+  });
+
   it("extracts signatures from nested children", async () => {
     mockFetchOnce({
       hierarchy: [
